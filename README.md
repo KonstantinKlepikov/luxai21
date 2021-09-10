@@ -99,3 +99,11 @@ You can run your own local leaderboard / tournament to evaluate several bots at 
 This will run a leaderboard ranked by trueskill and print results as a table to your console. Agents are auto matched with opponents with similar ratings. Recommended to add --storeReplay=false --storeLogs=false as letting this run for a long time will generate a lot of replays and log files.
 
 See `lux-ai-2021 --help` for more options.
+
+## Make submission
+
+from simple folder
+
+`!tar -czf submission.tar.gz *`
+
+`kaggle competitions submit -c lux-ai-2021 -f submission.py -m "first submission"`
