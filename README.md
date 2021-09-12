@@ -104,6 +104,6 @@ See `lux-ai-2021 --help` for more options.
 
 from simple folder
 
-`!tar -czf submission.tar.gz *`
+`sh make_sub.sh` or `!sh make_sub.sh` form jupyter notebook
 
-`kaggle competitions submit -c lux-ai-2021 -f submission.py -m "first submission"`
+`kaggle competitions submit -c lux-ai-2021 -f submission.py -m "submission"`
