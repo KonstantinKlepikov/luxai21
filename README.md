@@ -14,7 +14,7 @@ For a full list of commands from the CLI, run
 
 `lux-ai-2021 --help`
 
-## Ресурсы
+## Resources
 
 [Инструкция как пользоваться cli](https://github.com/Lux-AI-Challenge/Lux-Design-2021)
 
@@ -37,7 +37,7 @@ Kaggle Environments was created to evaluate episodes. While other libraries have
 
 To get started, download the simple folder from this repository or via this [URL](https://github.com/Lux-AI-Challenge/Lux-Design-2021/raw/master/kits/python/simple/simple.tar.gz)
 
-Then navigate to that folder via command line e.g. `cd simple` or for windows chdir simple.
+Then navigate to that folder via command line e.g. `cd simple`.
 
 Your main code will go into `agent.py` and you can create and use files to help you as well. You should leave `main.py` and the entire lux subfolder alone. Read the `agent.py` file to get an idea of how a bot is programmed and a feel for the Python API.
 
@@ -59,7 +59,7 @@ To run the visualizer locally, first unzip the [release](https://github.com/Lux-
 
 `sudo npm i -g serve`
 
-Then run `serve dist` (for this project from `kernel` folder run serve `vis`)
+Then run `serve dist` (for this project from root folder run `serve vis`)
 
 If you would like to view replays in higher quality, add "?scale=2" to the end of the visualizer url. For lower quality you can set as low as "?scale=1". Scale ranges from 1 to 3 with the default being 1.5.
 
@@ -67,7 +67,7 @@ e.g. http://localhost:5000/?scale=2 or https://2021vis.lux-ai.org/?scale=2
 
 ## CLI Usage
 
-## CLI General
+### CLI General
 
 The CLI tool has several options. For example, one option is the seed and to set a seed of 100 simply run
 
@@ -100,10 +100,11 @@ This will run a leaderboard ranked by trueskill and print results as a table to 
 
 See `lux-ai-2021 --help` for more options.
 
-## Make submission
+## Summary pipline
 
 from simple folder
 
-`sh make_sub.sh` or `!sh make_sub.sh` form jupyter notebook
-
-`kaggle competitions submit -c lux-ai-2021 -f submission.py -m "submission"`
+- make game: `sudo lux-ai-2021 main.py main.py --python=python3 --out=replays/replay.json`
+- run visualisation: `serve vis`
+- make submission file `sh make_sub.sh` or `!sh make_sub.sh` form jupyter notebook
+- make submit to kaggle `kaggle competitions submit -c lux-ai-2021 -f submissions/submission.tar.gz -m "submission"`

@@ -1,54 +1,15 @@
 # for kaggle-environments
 from lux.game import Game
-from lux.game_map import Cell, RESOURCE_TYPES
+from lux.game_map import Cell, RESOURCE_TYPES, Position
 from lux.constants import Constants
 from lux.game_constants import GAME_CONSTANTS
 from lux import annotate
-import math
-import sys
-
-### Define helper functions
-
-# this snippet finds all resources stored on the map and puts them into a list so we can search over them
-def find_resources(game_state):
-    resource_tiles: list[Cell] = []
-    width, height = game_state.map_width, game_state.map_height
-    for y in range(height):
-        for x in range(width):
-            cell = game_state.map.get_cell(x, y)
-            if cell.has_resource():
-                resource_tiles.append(cell)
-    return resource_tiles
-
-# the next snippet finds the closest resources that we can mine given position on a map
-def find_closest_resources(pos, player, resource_tiles):
-    closest_dist = math.inf
-    closest_resource_tile = None
-    for resource_tile in resource_tiles:
-        # we skip over resources that we can't mine due to not having researched them
-        if resource_tile.resource.type == Constants.RESOURCE_TYPES.COAL and not player.researched_coal(): continue
-        if resource_tile.resource.type == Constants.RESOURCE_TYPES.URANIUM and not player.researched_uranium(): continue
-        dist = resource_tile.pos.distance_to(pos)
-        if dist < closest_dist:
-            closest_dist = dist
-            closest_resource_tile = resource_tile
-    return closest_resource_tile
-
-def find_closest_city_tile(pos, player):
-    closest_city_tile = None
-    if len(player.cities) > 0:
-        closest_dist = math.inf
-        # the cities are stored as a dictionary mapping city id to the city object, which has a citytiles field that
-        # contains the information of all citytiles in that city
-        for k, city in player.cities.items():
-            for city_tile in city.citytiles:
-                dist = city_tile.pos.distance_to(pos)
-                if dist < closest_dist:
-                    closest_dist = dist
-                    closest_city_tile = city_tile
-    return closest_city_tile
+from helper import (
+    get_cells, move_unit, go_home, find_nearest_position
+)
 
 game_state = None
+
 def agent(observation, configuration):
     global game_state
 
@@ -67,26 +28,57 @@ def agent(observation, configuration):
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
     width, height = game_state.map.width, game_state.map.height
+    
+    ##############################
+    ### NOVEL CODE STARTS HERE ###
+    ##############################
 
-    resource_tiles = find_resources(game_state)
-    
+    # get all resource tiles
+    researched_resource_cells = get_cells('researched resource', height, width, observation, game_state, player)
+    citytile_cells = get_cells('player citytile', height, width, observation, game_state, player)
+
+    # calculate number of citytiles
+    num_citytiles = len(citytile_cells)
+
+    # iterate over units
     for unit in player.units:
-        # if the unit is a worker (can mine resources) and can perform an action this turn
         if unit.is_worker() and unit.can_act():
-            # we want to mine only if there is space left in the worker's cargo
-            if unit.get_cargo_space_left() > 0:
-                # find the closest resource if it exists to this unit
-                closest_resource_tile = find_closest_resources(unit.pos, player, resource_tiles)
-                if closest_resource_tile is not None:
-                    # create a move action to move this unit in the direction of the closest resource tile and add to our actions list
-                    action = unit.move(unit.pos.direction_to(closest_resource_tile.pos))
-                    actions.append(action)
+
+            # if night and there are cities, return home:
+            if game_state.turn % 40 > 30 and len(player.cities) > 0:
+                go_home(unit, citytile_cells, actions)
+
+            # if there is cargo space, find nearest resource and move towards it
+            elif unit.get_cargo_space_left() > 0:
+                nearest_resource_position = find_nearest_position(unit.pos, researched_resource_cells)
+                move_unit(unit, nearest_resource_position, citytile_cells, actions)
+
+            # if cargo is full
             else:
-                # find the closest citytile and move the unit towards it to drop resources to a citytile to fuel the city
-                closest_city_tile = find_closest_city_tile(unit.pos, player)
-                if closest_city_tile is not None:
-                    # create a move action to move this unit in the direction of the closest resource tile and add to our actions list
-                    action = unit.move(unit.pos.direction_to(closest_city_tile.pos))
-                    actions.append(action)
-    
+                # if there are no cities, build one if possible
+                if len(player.cities) == 0:
+                    if unit.can_build(game_state.map):
+                        actions.append(unit.build_city)
+
+                elif False: # some build condition here
+                    if unit.can_build(game_state.map):
+                        actions.append(unit.build_city)
+
+                else:
+                    nearest_citytile_position = find_nearest_position(unit.pos, citytile_cells)
+                    move_unit(unit, nearest_citytile_position, citytile_cells, actions)
+                
+    # iterate through cities
+    for k, city in player.cities.items():
+        for citytile in city.citytiles:
+            if citytile.can_act():
+
+                # if there is space for more units, build a worker
+                if num_citytiles > len(player.units):
+                    actions.append(citytile.build_worker())
+                
+                # else research
+                else:
+                    actions.append(citytile.research())
+
     return actions
