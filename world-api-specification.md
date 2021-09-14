@@ -16,7 +16,7 @@ The `game_state` object is provided to you and contains the complete information
 
 Additionally in the game state, are the following nested objects, `map` of type [GameMap](#GameMap), and `players` which is a list with two [Player](#Player) objects indexed by the player's team id. The kits will show how to retrieve those objects. The rest of this section details the properties and methods of each type of object used in the kits.
 
-### <u>GameMap</u>
+### GameMap
 
 The map is organized such that the top left corner of the map is at `(0, 0)` and the bottom right is at `(width - 1, height - 1)`. The map is always square.
 
@@ -31,7 +31,7 @@ Methods:
 - `get_cell_by_pos(pos: Position) -> Cell` - returns the [Cell](#Cell) at the given pos
 - `get_cell(x: int, y: int) -> Cell` - returns the [Cell](#Cell) at the given x, y coordinates
 
-### <u>Position</u>
+### Position
 
 Properties:
 
@@ -50,7 +50,7 @@ Methods:
 
 - `direction_to(target_pos: Position) -> DIRECTIONS` - returns the direction that would move you closest to `target_pos` from this [Position](#Position) if you took a single step. In particular, will return `DIRECTIONS.CENTER` if this [Position](#Position) is equal to the `target_pos`. Note that this does not check for potential collisions with other units but serves as a basic pathfinding method
 
-### <u>Cell</u>
+### Cell
 
 Properties:
 
@@ -63,7 +63,7 @@ Methods:
 
 - `has_resource() -> bool` - returns true if this [Cell](#Cell) has a non-depleted Resource, false otherwise
 
-### <u>City</u>
+### City
 
 Properties:
 
@@ -76,7 +76,7 @@ Methods:
 
 - `get_light_upkeep() -> float` - returns the light upkeep per turn of the [City](#City). Fuel in the [City](#City) is subtracted by the light upkeep each turn of night.
 
-### <u>CityTile</u>
+### CityTile
 
 Properties:
 
@@ -95,7 +95,7 @@ Methods:
 
 - `build_cart() -> str` - returns the build cart action. When applied and requirements are met, a cart will be built at the [City](#City).
 
-### <u>Unit</u>
+### Unit
 
 Properties:
 
@@ -117,7 +117,7 @@ Methods:
 - `build_city(): str` - returns the build [City](#City) action. When applied, [Unit](#Unit) will try to build a [City](#City) right under itself provided it is an empty tile with no [City](#City) or resources and the worker is carrying 100 units of resources. All resources are consumed if the city is succesfully built.
 - `pillage(): str` - returns the pillage action. When applied, [Unit](#Unit) will pillage the tile it is currently on top of and remove 0.5 of the road level.
 
-### <u>Player</u>
+### Player
 
 This contains information on a particular player of a particular team.
 
@@ -134,7 +134,7 @@ Methods:
 - `researched_coal() - bool` - whether or not this player's team has researched coal and can mine coal.
 - `researched_uranium() - bool` - whether or not this player's team has researched uranium and can mine uranium.
 
-### <u>Annotate</u>
+### Annotate
 
 The annotation object lets you create annotation commands that show up on the visualizer when debug mode is turned on. Note that these commands are stripped by competition servers but are available to see when running matches locally.
 
@@ -152,7 +152,7 @@ Methods
 
 Note that all of these will be colored according to the team that created the annotation (blue or orange)
 
-### <u>GameConstants</u>
+### GameConstants
 
 This will contain constants on all game parameters like the max turns, the light upkeep of CityTiles etc.
 

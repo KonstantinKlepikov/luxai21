@@ -48,7 +48,7 @@ There are 3 kinds of resources: Wood, Coal, and Uranium (in order of increasing 
 
 Wood in particular can regrow. Each turn, every wood tile's wood amount increases by 2.5% of its current wood amount rounded up. Wood tiles that have been depleted will not regrow. Only wood tiles with less than 500 wood will regrow.
 
-| Resource Type | Research PointsPre-requisite | Fuel Valueper Unit | Units Collectedper Turn |
+| Resource Type | Research PointsPre-requisite | Fuel Valueper Unit | Units Collected per Turn |
 |---------------|------------------------------|--------------------|-------------------------|
 | Wood          | 0                            | 1                  | 20                      |
 | Coal          | 50                           | 10                 | 5                       |
@@ -265,3 +265,7 @@ Our team at the Lux AI Challenge reserves the right to make any changes on game 
 Наша команда Lux AI Challenge оставляет за собой право вносить любые изменения в правила игры во время соревнований. Мы будем работать над тем, чтобы процесс принятия решений был максимально прозрачным и избегал внесения изменений на поздних этапах конкурса.
 
 [ссылка](https://www.lux-ai.org/specs-2021#roads)
+
+## Rules diagram
+
+![rules diagram](rules-diagram.png)
