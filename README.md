@@ -63,7 +63,7 @@ Then run `serve dist` (for this project from root folder run `serve vis`)
 
 If you would like to view replays in higher quality, add "?scale=2" to the end of the visualizer url. For lower quality you can set as low as "?scale=1". Scale ranges from 1 to 3 with the default being 1.5.
 
-e.g. http://localhost:5000/?scale=2 or https://2021vis.lux-ai.org/?scale=2
+e.g. [http://localhost:5000/?scale=2](http://localhost:5000/?scale=2) or [https://2021vis.lux-ai.org/?scale=2](https://2021vis.lux-ai.org/?scale=2)
 
 ## CLI Usage
 
@@ -104,7 +104,8 @@ See `lux-ai-2021 --help` for more options.
 
 from simple folder
 
-- make game: `sudo lux-ai-2021 main.py main.py --python=python3 --out=replays/replay.json`
+- make game with cli: `sudo lux-ai-2021 main.py main.py --python=python3 --out=replays/replay.json` **uncorrect work**
+- make game with python:`python runner.py`
 - run visualisation: `serve vis`
 - make submission file `sh make_sub.sh` or `!sh make_sub.sh` form jupyter notebook
 - make submit to kaggle `kaggle competitions submit -c lux-ai-2021 -f submissions/submission.tar.gz -m "submission"`

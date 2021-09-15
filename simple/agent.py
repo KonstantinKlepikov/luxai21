@@ -4,13 +4,22 @@ from lux.game_map import Cell, RESOURCE_TYPES, Position
 from lux.constants import Constants
 from lux.game_constants import GAME_CONSTANTS
 from lux import annotate
-import extractdata
+from extractdata import get_turn_state, get_times_of_days, MapState
 import sys
+import time
+from utility import init_logger
+
+
+logger = init_logger(log_file='run.log')
+logger.info(f'Start Logging...')
 
 game_state = None
-TIMES_OD_DAYS = extractdata.get_times_of_days()
+TIMES_OD_DAYS = get_times_of_days()
+
 
 def agent(observation, configuration):
+    start = time.time()
+    
     global game_state
 
     ### Do not edit ###
@@ -21,21 +30,51 @@ def agent(observation, configuration):
         game_state.id = observation.player
     else:
         game_state._update(observation["updates"])
-        print(observation, file=sys.stderr)
     
+    ### Bot code ###
     actions = []
     
-    turn_state = extractdata.get_turn_state(
+    turn_state = get_turn_state(
         game_state=game_state, 
         observation=observation, 
-        times_of_days=TIMES_OD_DAYS
+        times_of_days=TIMES_OD_DAYS,
+        )    
+    for key, val in turn_state._asdict().items():
+        if key not in ['player', 'opponent', 'gamemap']:
+            logger.info('{}: {}'.format(key, val))
+  
+    map_state = MapState(
+        gamemap=turn_state.gamemap,
+        width=turn_state.width,
+        height=turn_state.height,
+        player=turn_state.player,
+        opponent=turn_state.opponent,
         )
+    
+    map_state.set_resources()    
+    logger.info('bd_wood: {}'.format(map_state.bd_wood))
+    logger.info('bd_coal: {}'.format(map_state.bd_coal))
+    logger.info('bd_uranium: {}'.format(map_state.bd_uranium))
+   
+    map_state.set_unit_position()    
+    logger.info('bd_unit: {}'.format(map_state.bd_unit))
+  
+    map_state.set_unit_properties()
+    logger.info('unit_df: {}'.format(map_state.unit_df))
+    
+    map_state.set_city_properties()
+    logger.info('city_df: {}'.format(map_state.city_df))
+    
+    map_state.set_resource_tiles_df(game_state=game_state)
+    logger.info('resource_tiles_df: {}'.format(map_state.resource_tiles_df))
+    
+    map_state.set_team_df()
+    logger.info('team_df: {}'.format(map_state.team_df))
+    
+    map_state.set_citytile_df()
+    logger.info('citytile_df: {}'.format(map_state.citytile_df))
 
-    print(turn_state.step, file=sys.stderr)
-    print(turn_state.time_of_day, file=sys.stderr)
-    print(turn_state.player, file=sys.stderr)
-    print(turn_state.opponent, file=sys.stderr)
-    print(turn_state.width, file=sys.stderr)
-    print(turn_state.height, file=sys.stderr)
+    end = time.time()
+    logger.info('time on this step: {}'.format(end - start))
 
     return actions

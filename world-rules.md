@@ -26,7 +26,7 @@ The rest of the document will go through the key features of this game.
 
 The world of Lux is represented as a 2d grid. Coordinates increase east (right) and south (down). The map is always a square and can be 12, 16, 24, or 32 tiles long. The (0, 0) coordinate is at the top left.
 
-![game_board](game_board.png)
+![game_board](images/game_board.png)
 
 The map has various features including Resources (Wood, Coal, Uranium), Units (Workers, Carts), CityTiles, and Road.
 
@@ -268,4 +268,4 @@ Our team at the Lux AI Challenge reserves the right to make any changes on game 
 
 ## Rules diagram
 
-![rules diagram](rules-diagram.png)
+![rules diagram](images/rules-diagram.png)
