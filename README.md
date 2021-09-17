@@ -105,7 +105,7 @@ See `lux-ai-2021 --help` for more options.
 from simple folder
 
 - make game with cli: `sudo lux-ai-2021 main.py main.py --python=python3 --out=replays/replay.json` **uncorrect work**
-- make game with python:`python runner.py`
+- make game with python:`python runner.py` or set agents by `PLAYER=agent.py OPPONENT=simple_agent python runner.py`
 - run visualisation: `serve vis`
 - make submission file `sh make_sub.sh` or `!sh make_sub.sh` form jupyter notebook
 - make submit to kaggle `kaggle competitions submit -c lux-ai-2021 -f submissions/submission.tar.gz -m "submission"`
