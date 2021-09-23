@@ -4,10 +4,10 @@ from lux.game_map import Cell, RESOURCE_TYPES, Position
 from lux.constants import Constants
 from lux.game_constants import GAME_CONSTANTS
 from lux import annotate
-from extractdata import get_turn_state, get_times_of_days, MapState
+from extractdata import get_turn_state, MapState
 import sys
 import time
-from utility import init_logger
+from utility import init_logger, get_times_of_days
 
 
 logger = init_logger(log_file='run.log')

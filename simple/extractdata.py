@@ -1,26 +1,7 @@
-from lux.constants import Constants
-from lux.game_constants import GAME_CONSTANTS
 from lux.game_map import Cell
-from lux.game_objects import Unit
-from lux import annotate
 from collections import namedtuple
 import numpy as np
 import pandas as pd
-
-
-def get_times_of_days() -> dict:
-    
-    day_list = list(range(0, 30))
-    night_list = list(range(310, 360))
-    mult = [0, 80, 160, 240]
-    
-    for i in list(range(70, 110)):
-        day_list.extend([num + i for num in mult])
-            
-    for i in list(range(30, 70)):
-        night_list.extend([num + i for num in mult])
-
-    return {'day_list': day_list, 'night_list': night_list}
 
 
 def get_turn_state(game_state, observation, times_of_days) -> namedtuple:

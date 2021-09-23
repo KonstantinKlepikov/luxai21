@@ -1,6 +1,6 @@
 from lux.game import Game
 import numpy as np
-from extractdata import get_times_of_days
+from utility import get_times_of_days
 
 
 day_or_night_calender = get_times_of_days()
@@ -8,15 +8,14 @@ day_or_night_calender = get_times_of_days()
 
 class MapState:
     
-    """Game state maping in 3-dimmensional array
+    """Game state maps in 3-dimmensional array
     
     Array is orgnized as (x, y, feature vector)
     
     resource {True: 1, False: 0}
     type of resource {None: 0, 'wood': 1, 'coal': 2, 'uranium': 3}
     is cititile {True: 1, False: 0}
-    can act {True: 1, False: 0}
-    
+    can act {True: 1, False: 0}    
     """
     
     resources = {'wood': 1, 'coal': 2, 'uranium': 3}
@@ -46,6 +45,7 @@ class MapState:
         'unit_can_act': 20,
     }
 
+
     def __init__(self, game_state: Game) -> None:
         
         self.game_state = game_state
@@ -55,7 +55,8 @@ class MapState:
         self.cityes = {**self.game_state.players[0].cities, **self.game_state.players[1].cities}
         self.units = self.game_state.players[0].units + self.game_state.players[1].units
 
-    def set_map_state(self) -> None:
+
+    def set_state(self) -> None:
         
         self.game_state_massive = np.zeros([self.height, self.width, self.feature_lenght], np.float16)
         
@@ -96,7 +97,18 @@ class MapState:
             self.game_state_massive[w, h, self.fmap['unit_cargo_uranium']] = unit.cargo.uranium
             self.game_state_massive[w, h, self.fmap['unit_cargo_space_left']] = unit.get_cargo_space_left()
             self.game_state_massive[w, h, self.fmap['unit_can_build']] = unit.can_build(self.game_state.map)
-            self.game_state_massive[w, h, self.fmap['unit_can_act']] = unit.can_act()          
+            self.game_state_massive[w, h, self.fmap['unit_can_act']] = unit.can_act()
+
+    
+    def get_state(self) -> np.array:
+       
+        return self.game_state_massive
+
+
+    def get_mapper(self) -> dict:
+        
+        return self.fmap
+
 
 class UnitActions:
     pass
@@ -107,9 +119,12 @@ class CityActions:
 
 
 class GameState:
+    """GameState mapps in single vectore current game statement
+    """
     
     day_state = {'day': 0, 'night': 1}
-    
+
+
     def __init__(self, game_state: Game) -> None:
         
         self.height = game_state.map.height
@@ -118,19 +133,53 @@ class GameState:
         self.research_point_1 = game_state.players[1].research_points
         self.city_tiles_count_0 = game_state.players[0].city_tile_count
         self.city_tiles_count_1 = game_state.players[1].city_tile_count
+        self.cities_count_0 = len(game_state.players[0].cities.keys())
+        self.cities_count_1 = len(game_state.players[1].cities.keys())
+        self.workers_count_0 = len(game_state.players[0].units)
+        self.workers_count_1 = len(game_state.players[1].units)
         self.step = game_state.turn
         self.day_or_night = 1
         self.game_lenght = 360
-        
-    def get_day_or_night(self) -> None:
+
+
+    def set_state(self) -> None:
 
         if self.step in day_or_night_calender['day_list']:
             self.day_or_night = 1
         elif self.step in day_or_night_calender['night_list']:
             self.day_or_night = 0
-            
-    def get_game_state(self) -> np.array:
+
+
+    def get_state(self) -> np.array:
         
         n_array = np.array(list(self.__dict__.values()), np.int8)
         
         return n_array
+
+
+    def get_mapper(self) -> dict:
+        
+        mapper = {key: val for val, key in enumerate(self.__dict__.keys())}
+        
+        return mapper
+
+
+class Storage:
+    
+    """Set and get dict with all statement across the game
+    
+    Counter represents game turn
+    """
+    
+    def __init__(self) -> None:
+        self.storage = {}
+        self.counter = 0
+        
+    def set_storage(self, massive: np.array) -> None:
+        
+        self.storage[self.counter] = massive
+        self.counter += 1
+        
+    def get_storage(self) -> dict:
+        
+        return self.storage
