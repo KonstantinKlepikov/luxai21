@@ -1,41 +1,50 @@
 from lux.game import Game
 import numpy as np
+from extractdata import get_times_of_days
 
 
-class Geometry:
+day_or_night_calender = get_times_of_days()
+
+
+class MapState:
     
     """Game state maping in 3-dimmensional array
     
     Array is orgnized as (x, y, feature vector)
     
-    0. resource {True: 1, False: 0}
-    1. type of resource {None: 0, 'wood': 1, 'coal': 2, 'uranium': 3}
-    2. resource amout
-    3. road amount
-    4. is cititile {True: 1, False: 0}
-    5. citiid
-    6. city team
-    7. city cooldown
-    8. can act {True: 1, False: 0}
-    9. city id
-    10. city light upkeep
-    11. is unit
-    12. unit id
-    13. unit team
-    14. unit cooldown
-    15. cargo wood
-    16. cargo coal
-    17. cargo uranium
-    18. cargo space left
-    19. can build
-    20. can act
+    resource {True: 1, False: 0}
+    type of resource {None: 0, 'wood': 1, 'coal': 2, 'uranium': 3}
+    is cititile {True: 1, False: 0}
+    can act {True: 1, False: 0}
     
     """
     
     resources = {'wood': 1, 'coal': 2, 'uranium': 3}
     teams = {0: 1, 1: 2}
     feature_lenght = 21
-
+    fmap = {
+        'is_resource': 0,
+        'resource_type': 1,
+        'resource_amount': 2,
+        'road': 3,
+        'is_citytile': 4,
+        'city_id': 5,
+        'city_team': 6,
+        'city_cooldown': 7,
+        'city_can_act': 8,
+        'city_fuel': 9,
+        'city_light_upkeep': 10,
+        'is_unit': 11,
+        'unit_id': 12,
+        'unit_team': 13,
+        'unit_cooldown': 14,
+        'unit_cargo_wood': 15,
+        'unit_cargo-coal': 16,
+        'unit_cargo_uranium': 17,
+        'unit_cargo_space_left': 18,
+        'unit_can_build': 19,
+        'unit_can_act': 20,
+    }
 
     def __init__(self, game_state: Game) -> None:
         
@@ -56,38 +65,38 @@ class Geometry:
                 cell = self.game_state.map.get_cell(w, h)
                 
                 if cell.has_resource():
-                    self.game_state_massive[w, h, 0] = 1
-                    self.game_state_massive[w, h, 1] = self.resources[cell.resource.type]
-                    self.game_state_massive[w, h, 2] = cell.resource.amount
+                    self.game_state_massive[w, h, self.fmap['is_resource']] = 1
+                    self.game_state_massive[w, h, self.fmap['resource_type']] = self.resources[cell.resource.type]
+                    self.game_state_massive[w, h, self.fmap['resource_amount']] = cell.resource.amount
                     
                 if cell.road:
-                    self.game_state_massive[w, h, 3] = cell.road
+                    self.game_state_massive[w, h, self.fmap['road']] = cell.road
                     
                 if cell.citytile:
-                    self.game_state_massive[w, h, 4] = 1
-                    self.game_state_massive[w, h, 5] = int(cell.citytile.cityid[2:])
-                    self.game_state_massive[w, h, 6] = self.teams[cell.citytile.team]
-                    self.game_state_massive[w, h, 7] = cell.citytile.cooldown
+                    self.game_state_massive[w, h, self.fmap['is_citytile']] = 1
+                    self.game_state_massive[w, h, self.fmap['city_id']] = int(cell.citytile.cityid[2:])
+                    self.game_state_massive[w, h, self.fmap['city_team']] = self.teams[cell.citytile.team]
+                    self.game_state_massive[w, h, self.fmap['city_cooldown']] = cell.citytile.cooldown
                     
                     if cell.citytile.can_act():
-                        self.game_state_massive[w, h, 8] = 1
+                        self.game_state_massive[w, h, self.fmap['city_can_act']] = 1
                         
                     if self.cityes.get(cell.citytile.cityid, None):
-                        self.game_state_massive[w, h, 9] = self.cityes[cell.citytile.cityid].fuel
-                        self.game_state_massive[w, h, 10] = self.cityes[cell.citytile.cityid].get_light_upkeep()
+                        self.game_state_massive[w, h, self.fmap['city_fuel']] = self.cityes[cell.citytile.cityid].fuel
+                        self.game_state_massive[w, h, self.fmap['city_light_upkeep']] = self.cityes[cell.citytile.cityid].get_light_upkeep()
 
         for unit in self.units:
             w, h = unit.pos.x, unit.pos.y
-            self.game_state_massive[w, h, 11] = 1
-            self.game_state_massive[w, h, 12] = int(unit.id[2:])
-            self.game_state_massive[w, h, 13] = self.teams[unit.team]
-            self.game_state_massive[w, h, 14] = unit.cooldown
-            self.game_state_massive[w, h, 15] = unit.cargo.wood
-            self.game_state_massive[w, h, 16] = unit.cargo.coal
-            self.game_state_massive[w, h, 17] = unit.cargo.uranium
-            self.game_state_massive[w, h, 18] = unit.get_cargo_space_left()
-            self.game_state_massive[w, h, 19] = unit.can_build(self.game_state.map)
-            self.game_state_massive[w, h, 20] = unit.can_act()          
+            self.game_state_massive[w, h, self.fmap['is_unit']] = 1
+            self.game_state_massive[w, h, self.fmap['unit_id']] = int(unit.id[2:])
+            self.game_state_massive[w, h, self.fmap['unit_team']] = self.teams[unit.team]
+            self.game_state_massive[w, h, self.fmap['unit_cooldown']] = unit.cooldown
+            self.game_state_massive[w, h, self.fmap['unit_cargo_wood']] = unit.cargo.wood
+            self.game_state_massive[w, h, self.fmap['unit_cargo-coal']] = unit.cargo.coal
+            self.game_state_massive[w, h, self.fmap['unit_cargo_uranium']] = unit.cargo.uranium
+            self.game_state_massive[w, h, self.fmap['unit_cargo_space_left']] = unit.get_cargo_space_left()
+            self.game_state_massive[w, h, self.fmap['unit_can_build']] = unit.can_build(self.game_state.map)
+            self.game_state_massive[w, h, self.fmap['unit_can_act']] = unit.can_act()          
 
 class UnitActions:
     pass
@@ -98,9 +107,30 @@ class CityActions:
 
 
 class GameState:
-    pass
-
-
-if __name__ == '__main__':
     
-    pass
+    day_state = {'day': 0, 'night': 1}
+    
+    def __init__(self, game_state: Game) -> None:
+        
+        self.height = game_state.map.height
+        self.width = game_state.map.width
+        self.research_point_0 = game_state.players[0].research_points
+        self.research_point_1 = game_state.players[1].research_points
+        self.city_tiles_count_0 = game_state.players[0].city_tile_count
+        self.city_tiles_count_1 = game_state.players[1].city_tile_count
+        self.step = game_state.turn
+        self.day_or_night = 1
+        self.game_lenght = 360
+        
+    def get_day_or_night(self) -> None:
+
+        if self.step in day_or_night_calender['day_list']:
+            self.day_or_night = 1
+        elif self.step in day_or_night_calender['night_list']:
+            self.day_or_night = 0
+            
+    def get_game_state(self) -> np.array:
+        
+        n_array = np.array(list(self.__dict__.values()), np.int8)
+        
+        return n_array
