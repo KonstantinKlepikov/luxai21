@@ -12,6 +12,5 @@ if __name__ == "__main__":
     if 'OPPONENT' in os.environ:
         OPPONENT = os.environ['OPPONENT']
 
-    print(PLAYER, OPPONENT)
-    env = make('lux_ai_2021', configuration={'seed': 562124210, 'loglevel': 2, 'annotations': True}, debug=False)
+    env = make('lux_ai_2021', configuration={'seed': 562124210, 'loglevel': 2, 'annotations': True}, debug=True)
     steps = env.run([PLAYER, OPPONENT])

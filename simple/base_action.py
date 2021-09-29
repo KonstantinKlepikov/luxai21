@@ -1,6 +1,7 @@
 from lux.game import Game
 import numpy as np
 from utility import get_times_of_days
+from typing import Union
 
 
 day_or_night_calender = get_times_of_days()
@@ -8,7 +9,7 @@ day_or_night_calender = get_times_of_days()
 
 class MapState:
     
-    """Game state maps in 3-dimmensional array
+    """Game state maps current map statement in 3-dimmensional array
     
     Array is orgnized as (x, y, feature vector)
     
@@ -110,16 +111,8 @@ class MapState:
         return self.fmap
 
 
-class UnitActions:
-    pass
-
-
-class CityActions:
-    pass
-
-
 class GameState:
-    """GameState mapps in single vectore current game statement
+    """GameState maps current game statement to single vector
     """
     
     day_state = {'day': 0, 'night': 1}
@@ -183,3 +176,105 @@ class Storage:
     def get_storage(self) -> dict:
         
         return self.storage
+    
+    
+class TileState:
+    
+    def __init__(self, game_state: Game, x: int, y: int) -> None:
+        self.game_state = game_state
+        self.cell = game_state.map.get_cell(x, y)
+        self.__has_resource = False
+        self.__is_road = False
+        self.__is_city = False
+        self.__is_worker = False
+        self.__resource_type = False
+        self.__player_units_pos = []
+        self.__opponent_units_pos = []
+        self.__units_pos = []
+        self.__tile_owner = None
+        
+    @property
+    def _units_pos(self) -> list:
+        if not self.__units_pos:
+            self.__player_units_pos = [pos.pos for pos in self.game_state.players[0].units]
+            self.__opponent_units_pos = [pos.pos for pos in self.game_state.players[1].units]
+            self.__units_pos = self.__player_units_pos + self.__opponent_units_pos
+        return self.__units_pos
+    
+    @property
+    def _tile_owner(self) -> int:
+        if not self.__tile_owner:
+            if self.is_city:
+                self.__tile_owner = self.cell.citytile.team
+            elif self.is_worker:
+                if self.cell.pos in self.__player_units_pos:
+                    self.__tile_owner = 0
+                else:
+                    self.__tile_owner = 1
+        return self.__tile_owner
+    
+    @property
+    def _resource_type(self) -> bool:
+        if not self.__resource_type and self.has_resource:
+            self.__resource_type = self.cell.resource.type
+        return self.__resource_type
+    
+    @property
+    def is_city(self) -> bool:
+        if not self.__is_city and self.cell.citytile:
+            self.__is_city = True
+        return self.__is_city
+    
+    @property
+    def is_worker(self) -> bool:
+        if not self.__is_worker:
+            if self.cell.pos in self._units_pos:
+                self.__is_worker = True
+        return self.__is_worker
+    
+    @property
+    def has_resource(self) -> bool:
+        if not self.__has_resource and self.cell.has_resource():
+            self.__has_resource = True
+        return self.__has_resource
+    
+    @property
+    def is_road(self) -> bool:
+        if not self.__is_road and self.cell.road:
+            self.__is_road = True
+        return self.__is_road
+
+    def is_empty(self) -> True:
+        if not self.has_resource and not self.is_road and not self.is_city and not self.is_worker:
+            return True
+    
+    def is_wood(self) -> True:
+        if self._resource_type == 'wood':
+            return True
+
+    def is_coal(self) -> True:
+        if self._resource_type == 'coal':
+            return True
+
+    def is_uranium(self) -> True:
+        if self._resource_type == 'uranium':
+            return True
+        
+    def is_owned(self) -> bool:
+            return isinstance(self._tile_owner, int)
+        
+    def is_owned_by_player(self) -> True:
+        if self._tile_owner == 0:
+            return True
+    
+    def is_owned_by_opponent(self) -> True:
+        if self._tile_owner == 1:
+            return True
+
+
+class UnitActions:
+    pass
+
+
+class CityActions:
+    pass

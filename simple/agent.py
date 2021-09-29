@@ -1,26 +1,28 @@
-# for kaggle-environments
 from lux.game import Game
 from lux.game_map import Cell, RESOURCE_TYPES, Position
 from lux.constants import Constants
 from lux.game_constants import GAME_CONSTANTS
 from lux import annotate
-from extractdata import get_turn_state, MapState
 import sys
 import time
-from utility import init_logger, get_times_of_days
+from utility import init_logger
+from base_action import MapState, GameState, Storage, TileState
 
 
-logger = init_logger(log_file='run.log')
+logger = init_logger(log_file='errorlogs/run.log')
 logger.info(f'Start Logging...')
 
 game_state = None
-TIMES_OD_DAYS = get_times_of_days()
+storaged_map_state = Storage()
+storaged_game_state = Storage()
 
 
 def agent(observation, configuration):
     start = time.time()
     
     global game_state
+    global storaged_map_state
+    global storaged_game_state
 
     ### Do not edit ###
     if observation["step"] == 0:
@@ -34,47 +36,38 @@ def agent(observation, configuration):
     ### Bot code ###
     actions = []
     
-    turn_state = get_turn_state(
-        game_state=game_state, 
-        observation=observation, 
-        times_of_days=TIMES_OD_DAYS,
-        )    
-    for key, val in turn_state._asdict().items():
-        if key not in ['player', 'opponent', 'gamemap']:
-            logger.info('{}: {}'.format(key, val))
-  
-    map_state = MapState(
-        gamemap=turn_state.gamemap,
-        width=turn_state.width,
-        height=turn_state.height,
-        player=turn_state.player,
-        opponent=turn_state.opponent,
-        )
+    if game_state.turn == 0:
+        logger.info('Agent is running!')
+        actions.append(annotate.circle(0, 0))
+        
+    current_game_state = GameState(game_state)
+    current_game_state.set_state()
+    storaged_game_state.set_storage(current_game_state.get_state())
     
-    map_state.set_resources()    
-    logger.info('bd_wood: {}'.format(map_state.bd_wood))
-    logger.info('bd_coal: {}'.format(map_state.bd_coal))
-    logger.info('bd_uranium: {}'.format(map_state.bd_uranium))
-   
-    map_state.set_unit_position()    
-    logger.info('bd_unit: {}'.format(map_state.bd_unit))
-  
-    map_state.set_unit_properties()
-    logger.info('unit_df: {}'.format(map_state.unit_df))
+    current_map_state = MapState(game_state)
+    current_map_state.set_state()
+    storaged_map_state.set_storage(current_map_state.get_state())
     
-    map_state.set_city_properties()
-    logger.info('city_df: {}'.format(map_state.city_df))
+    units = game_state.players[0].units
+    logger.info('Units: {}'.format(units))
     
-    map_state.set_resource_tiles_df(game_state=game_state)
-    logger.info('resource_tiles_df: {}'.format(map_state.resource_tiles_df))
+    tilestate = TileState(game_state=game_state, x=units[0].pos.x, y=units[0].pos.y)
+    logger.info('Is empty: {}'.format(tilestate.is_empty()))
+    logger.info('Is worker: {}'.format(tilestate.is_worker))
+    logger.info('Is city: {}'.format(tilestate.is_city))
+    logger.info('Is road: {}'.format(tilestate.is_road))
+    logger.info('Has resource: {}'.format(tilestate.has_resource))
+    logger.info('Is wood: {}'.format(tilestate.is_wood()))
+    logger.info('Is coal: {}'.format(tilestate.is_coal()))
+    logger.info('Is uranium: {}'.format(tilestate.is_uranium()))
+    logger.info('Is owned: {}'.format(tilestate.is_owned()))
+    logger.info('Is owned by player: {}'.format(tilestate.is_owned_by_player()))
+    logger.info('Is owned by opponent: {}'.format(tilestate.is_owned_by_opponent()))
     
-    map_state.set_team_df()
-    logger.info('team_df: {}'.format(map_state.team_df))
-    
-    map_state.set_citytile_df()
-    logger.info('citytile_df: {}'.format(map_state.citytile_df))
-
     end = time.time()
     logger.info('time on this step: {}'.format(end - start))
-
+    
     return actions
+
+# logger.info('storaged_game_state: {}'.format(storaged_game_state.get_storage()))
+# logger.info('storaged_map_state: {}'.format(storaged_map_state.get_storage()))
