@@ -1,7 +1,9 @@
 from lux.game import Game
+from lux.game_map import Position
+from lux.game_constants import GAME_CONSTANTS
 import numpy as np
 from utility import get_times_of_days
-from typing import Union
+import math
 
 
 day_or_night_calender = get_times_of_days()
@@ -158,7 +160,6 @@ class GameState:
 
 
 class Storage:
-    
     """Set and get dict with all statement across the game
     
     Counter represents game turn
@@ -179,6 +180,8 @@ class Storage:
     
     
 class TileState:
+    """Get tile statement
+    """
     
     def __init__(self, game_state: Game, x: int, y: int) -> None:
         self.game_state = game_state
@@ -221,12 +224,16 @@ class TileState:
     
     @property
     def is_city(self) -> bool:
+        """Is tile city
+        """
         if not self.__is_city and self.cell.citytile:
             self.__is_city = True
         return self.__is_city
     
     @property
     def is_worker(self) -> bool:
+        """Is tile worker
+        """
         if not self.__is_worker:
             if self.cell.pos in self._units_pos:
                 self.__is_worker = True
@@ -234,43 +241,89 @@ class TileState:
     
     @property
     def has_resource(self) -> bool:
+        """Has tile resource
+        """
         if not self.__has_resource and self.cell.has_resource():
             self.__has_resource = True
         return self.__has_resource
     
     @property
     def is_road(self) -> bool:
+        """Is tile Road
+        """
         if not self.__is_road and self.cell.road:
             self.__is_road = True
         return self.__is_road
 
     def is_empty(self) -> True:
+        """Is tile empty
+        """
         if not self.has_resource and not self.is_road and not self.is_city and not self.is_worker:
             return True
     
     def is_wood(self) -> True:
+        """Has tile wood resource
+        """
         if self._resource_type == 'wood':
             return True
 
     def is_coal(self) -> True:
+        """Has tile coal resource
+        """
         if self._resource_type == 'coal':
             return True
 
     def is_uranium(self) -> True:
+        """Has tile uranium resource
+        """
         if self._resource_type == 'uranium':
             return True
         
     def is_owned(self) -> bool:
-            return isinstance(self._tile_owner, int)
+        """Is on tile something owned by somebody
+        """
+        return isinstance(self._tile_owner, int)
         
     def is_owned_by_player(self) -> True:
+        """Is on tile something owned by player
+        """
         if self._tile_owner == 0:
             return True
     
     def is_owned_by_opponent(self) -> True:
+        """Is on tile something owned by opponent
+        """
         if self._tile_owner == 1:
             return True
 
+
+class Geometric:
+    """Get geometric calculation acros map
+    """
+    
+    def __init__(self, pos: Position) -> None:
+        self.pos = pos
+    
+    def get_closest_pos(self, positions: list) -> Position:
+        """Get closest position
+
+        Args:
+            positions (list): list of Position objects
+
+        Returns:
+            Position: closest Position object
+        """
+
+        closest_dist = math.inf
+        closest_pos = None
+        for position in positions:
+            dist = self.pos.distance_to(position)
+            if dist < closest_dist:
+                closest_dist = dist
+                closest_pos = position
+                
+        return closest_pos
+    
 
 class UnitActions:
     pass

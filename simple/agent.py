@@ -6,7 +6,9 @@ from lux import annotate
 import sys
 import time
 from utility import init_logger
-from base_action import MapState, GameState, Storage, TileState
+from base_action import (
+    MapState, GameState, Storage, TileState, Geometric
+)
 
 
 logger = init_logger(log_file='errorlogs/run.log')
@@ -47,11 +49,9 @@ def agent(observation, configuration):
     current_map_state = MapState(game_state)
     current_map_state.set_state()
     storaged_map_state.set_storage(current_map_state.get_state())
-    
-    units = game_state.players[0].units
-    logger.info('Units: {}'.format(units))
-    
-    tilestate = TileState(game_state=game_state, x=units[0].pos.x, y=units[0].pos.y)
+
+
+    tilestate = TileState(game_state=game_state, x=0, y=0)
     logger.info('Is empty: {}'.format(tilestate.is_empty()))
     logger.info('Is worker: {}'.format(tilestate.is_worker))
     logger.info('Is city: {}'.format(tilestate.is_city))
@@ -64,6 +64,11 @@ def agent(observation, configuration):
     logger.info('Is owned by player: {}'.format(tilestate.is_owned_by_player()))
     logger.info('Is owned by opponent: {}'.format(tilestate.is_owned_by_opponent()))
     
+    
+    geometric = Geometric(pos=Position(0, 0))
+    logger.info('Closest position: {}'.format(geometric.get_closest_pos(positions=[Position(1, 1), Position(5, 5)])))
+    
+    logger.info('Turn is: {}'.format(game_state.turn))
     end = time.time()
     logger.info('time on this step: {}'.format(end - start))
     
