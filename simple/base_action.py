@@ -462,15 +462,30 @@ class UnitActions:
         return self.actions
 
 
-class Cityes:
+class CityActions:
+    
     def __init__(self, game_state: Game, citytile: CityTile) -> None:
+        self.game_state = game_state
         self.citytile = citytile
         self.can_act = citytile.can_act()
-        self.can_build = None
+        self.__can_build = False
         self.actions = []
+        
+    @property
+    def can_build(self) -> bool:
+        if not self.__can_build:
+            sum_units = len(self.game_state.players[0].units)
+            sum_sityes = len(self.game_state.players[0].cities.keys())
+            if sum_units - sum_sityes:
+                self.__can_build = True
+        return self.__can_build
+            
         
     def set_actions(self) -> list:
         if self.can_act:
             self.actions.append('research')
+            if self.can_build:
+                self.actions.append('build_worker')
+                self.actions.append('build_cart')
         
         return self.actions

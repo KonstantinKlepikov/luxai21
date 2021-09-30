@@ -1,13 +1,12 @@
 from lux.game import Game
-from lux.game_map import Cell, RESOURCE_TYPES, Position
-from lux.constants import Constants
+from lux.game_map import Position
 from lux.game_constants import GAME_CONSTANTS
 from lux import annotate
 import sys
 import time
 from utility import init_logger
 from base_action import (
-    MapState, GameState, Storage, TileState, Geometric, UnitActions
+    MapState, GameState, Storage, TileState, Geometric, UnitActions, CityActions,
 )
 
 
@@ -79,6 +78,11 @@ def agent(observation, configuration):
     
     unit_actions = UnitActions(game_state=game_state, unit=unit)
     logger.info('Unit actions: {}'.format(unit_actions.set_actions()))
+    
+    
+    city = list(game_state.players[0].cities.values())[0].citytiles[0]
+    city_actions = CityActions(game_state=game_state, citytile=city)
+    logger.info('City actions: {}'.format(city_actions.set_actions()))
     
     
     logger.info('Turn is: {}'.format(game_state.turn))
