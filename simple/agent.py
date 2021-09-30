@@ -50,10 +50,12 @@ def agent(observation, configuration):
     current_map_state.set_state()
     storaged_map_state.set_storage(current_map_state.get_state())
 
+    unit = game_state.players[0].units[0].pos
 
-    tilestate = TileState(game_state=game_state, x=0, y=0)
+    tilestate = TileState(game_state=game_state, x=unit.x, y=unit.y)
     logger.info('Is empty: {}'.format(tilestate.is_empty()))
     logger.info('Is worker: {}'.format(tilestate.is_worker))
+    logger.info('Is cart: {}'.format(tilestate.is_cart))
     logger.info('Is city: {}'.format(tilestate.is_city))
     logger.info('Is road: {}'.format(tilestate.is_road))
     logger.info('Has resource: {}'.format(tilestate.has_resource))

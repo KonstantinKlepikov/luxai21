@@ -190,20 +190,39 @@ class TileState:
         self.__is_road = False
         self.__is_city = False
         self.__is_worker = False
+        self.__is_cart = False
         self.__resource_type = False
-        self.__player_units_pos = []
-        self.__opponent_units_pos = []
-        self.__units_pos = []
+        self.__player_units = []
+        self.__opponent_units = []
+        self.__worker_pos = []
+        self.__cart_pos = []
         self.__tile_owner = None
         
-    @property
-    def _units_pos(self) -> list:
-        if not self.__units_pos:
-            self.__player_units_pos = [pos.pos for pos in self.game_state.players[0].units]
-            self.__opponent_units_pos = [pos.pos for pos in self.game_state.players[1].units]
-            self.__units_pos = self.__player_units_pos + self.__opponent_units_pos
-        return self.__units_pos
     
+    @property
+    def _player_units(self) -> list:
+        if not self.__player_units:
+            self.__player_units = self.game_state.players[0].units
+        return self.__player_units
+    
+    @property
+    def _opponent_units(self) -> list:
+        if not self.__opponent_units:
+            self.__opponent_units = self.game_state.players[1].units
+        return self.__opponent_units
+    
+    @property
+    def _workers_pos(self) -> list:
+        if not self.__worker_pos:
+            self.__worker_pos = [unit.pos for unit in self._player_units + self._opponent_units if unit.is_worker()]
+        return self.__worker_pos
+    
+    @property
+    def _cart_pos(self) -> list:
+        if not self.__cart_pos:
+            self.__cart_pos = [unit.pos for unit in self._player_units + self._opponent_units if unit.is_cart()]
+        return self.__cart_pos
+
     @property
     def _tile_owner(self) -> int:
         if not self.__tile_owner:
@@ -235,9 +254,18 @@ class TileState:
         """Is tile worker
         """
         if not self.__is_worker:
-            if self.cell.pos in self._units_pos:
+            if self.cell.pos in self._workers_pos:
                 self.__is_worker = True
         return self.__is_worker
+    
+    @property
+    def is_cart(self) -> bool:
+        """Is tile worker
+        """
+        if not self.__is_cart:
+            if self.cell.pos in self._cart_pos:
+                self.__is_cart = True
+        return self.__is_cart
     
     @property
     def has_resource(self) -> bool:
