@@ -7,7 +7,7 @@ import sys
 import time
 from utility import init_logger
 from base_action import (
-    MapState, GameState, Storage, TileState, Geometric
+    MapState, GameState, Storage, TileState, Geometric, UnitActions
 )
 
 
@@ -50,9 +50,11 @@ def agent(observation, configuration):
     current_map_state.set_state()
     storaged_map_state.set_storage(current_map_state.get_state())
 
-    unit = game_state.players[0].units[0].pos
+    unit = game_state.players[0].units[0]
+    # unit = Position(0, 0)
+    logger.info('Tile: {}'.format(unit.pos))
 
-    tilestate = TileState(game_state=game_state, x=unit.x, y=unit.y)
+    tilestate = TileState(game_state=game_state, pos=unit.pos)
     logger.info('Is empty: {}'.format(tilestate.is_empty()))
     logger.info('Is worker: {}'.format(tilestate.is_worker))
     logger.info('Is cart: {}'.format(tilestate.is_cart))
@@ -68,7 +70,16 @@ def agent(observation, configuration):
     
     
     geometric = Geometric(pos=Position(0, 0))
+    logger.info('Distance: {}'.format(geometric.get_distance(target_pos=Position(3, 3))))
+    logger.info('Direction: {}'.format(geometric.get_direction(target_pos=Position(3, 3))))
+    logger.info('Position by direction: {}'.format(geometric.get_position_by_direction(pos_dir='w')))
+    logger.info('Agacent positions: {}'.format(geometric.get_ajacent_positions()))
     logger.info('Closest position: {}'.format(geometric.get_closest_pos(positions=[Position(1, 1), Position(5, 5)])))
+    
+    
+    unit_actions = UnitActions(game_state=game_state, unit=unit)
+    logger.info('Unit actions: {}'.format(unit_actions.set_actions()))
+    
     
     logger.info('Turn is: {}'.format(game_state.turn))
     end = time.time()

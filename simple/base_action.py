@@ -1,10 +1,15 @@
+from lux.game_objects import Unit, CityTile
 from lux.game import Game
 from lux.game_map import Position
-from lux.game_constants import GAME_CONSTANTS
+from lux.game_constants import GAME_CONSTANTS as c
 import numpy as np
 from utility import get_times_of_days
 import math
+import random
 
+"""GAME_CONSTANTS
+{'UNIT_TYPES': {'WORKER': 0, 'CART': 1}, 'RESOURCE_TYPES': {'WOOD': 'wood', 'COAL': 'coal', 'URANIUM': 'uranium'}, 'DIRECTIONS': {'NORTH': 'n', 'WEST': 'w', 'EAST': 'e', 'SOUTH': 's', 'CENTER': 'c'}, 'PARAMETERS': {'DAY_LENGTH': 30, 'NIGHT_LENGTH': 10, 'MAX_DAYS': 360, 'LIGHT_UPKEEP': {'CITY': 23, 'WORKER': 4, 'CART': 10}, 'WOOD_GROWTH_RATE': 1.025, 'MAX_WOOD_AMOUNT': 500, 'CITY_BUILD_COST': 100, 'CITY_ADJACENCY_BONUS': 5, 'RESOURCE_CAPACITY': {'WORKER': 100, 'CART': 2000}, 'WORKER_COLLECTION_RATE': {'WOOD': 20, 'COAL': 5, 'URANIUM': 2}, 'RESOURCE_TO_FUEL_RATE': {'WOOD': 1, 'COAL': 10, 'URANIUM': 40}, 'RESEARCH_REQUIREMENTS': {'COAL': 50, 'URANIUM': 200}, 'CITY_ACTION_COOLDOWN': 10, 'UNIT_ACTION_COOLDOWN': {'CART': 3, 'WORKER': 2}, 'MAX_ROAD': 6, 'MIN_ROAD': 0, 'CART_ROAD_DEVELOPMENT_RATE': 0.75, 'PILLAGE_RATE': 0.5}}
+"""
 
 day_or_night_calender = get_times_of_days()
 
@@ -183,9 +188,9 @@ class TileState:
     """Get tile statement
     """
     
-    def __init__(self, game_state: Game, x: int, y: int) -> None:
+    def __init__(self, game_state: Game, pos: Position) -> None:
         self.game_state = game_state
-        self.cell = game_state.map.get_cell(x, y)
+        self.cell = game_state.map.get_cell(pos.x, pos.y)
         self.__has_resource = False
         self.__is_road = False
         self.__is_city = False
@@ -203,25 +208,33 @@ class TileState:
     def _player_units(self) -> list:
         if not self.__player_units:
             self.__player_units = self.game_state.players[0].units
+
         return self.__player_units
-    
+
+
     @property
     def _opponent_units(self) -> list:
         if not self.__opponent_units:
             self.__opponent_units = self.game_state.players[1].units
+            
         return self.__opponent_units
+    
     
     @property
     def _workers_pos(self) -> list:
         if not self.__worker_pos:
             self.__worker_pos = [unit.pos for unit in self._player_units + self._opponent_units if unit.is_worker()]
+            
         return self.__worker_pos
+    
     
     @property
     def _cart_pos(self) -> list:
         if not self.__cart_pos:
             self.__cart_pos = [unit.pos for unit in self._player_units + self._opponent_units if unit.is_cart()]
+            
         return self.__cart_pos
+
 
     @property
     def _tile_owner(self) -> int:
@@ -233,13 +246,17 @@ class TileState:
                     self.__tile_owner = 0
                 else:
                     self.__tile_owner = 1
+                    
         return self.__tile_owner
+    
     
     @property
     def _resource_type(self) -> bool:
         if not self.__resource_type and self.has_resource:
             self.__resource_type = self.cell.resource.type
+            
         return self.__resource_type
+    
     
     @property
     def is_city(self) -> bool:
@@ -247,7 +264,9 @@ class TileState:
         """
         if not self.__is_city and self.cell.citytile:
             self.__is_city = True
+            
         return self.__is_city
+    
     
     @property
     def is_worker(self) -> bool:
@@ -256,7 +275,9 @@ class TileState:
         if not self.__is_worker:
             if self.cell.pos in self._workers_pos:
                 self.__is_worker = True
+                
         return self.__is_worker
+    
     
     @property
     def is_cart(self) -> bool:
@@ -265,7 +286,9 @@ class TileState:
         if not self.__is_cart:
             if self.cell.pos in self._cart_pos:
                 self.__is_cart = True
+                
         return self.__is_cart
+    
     
     @property
     def has_resource(self) -> bool:
@@ -273,7 +296,9 @@ class TileState:
         """
         if not self.__has_resource and self.cell.has_resource():
             self.__has_resource = True
+            
         return self.__has_resource
+    
     
     @property
     def is_road(self) -> bool:
@@ -281,7 +306,9 @@ class TileState:
         """
         if not self.__is_road and self.cell.road:
             self.__is_road = True
+            
         return self.__is_road
+
 
     def is_empty(self) -> True:
         """Is tile empty
@@ -289,11 +316,13 @@ class TileState:
         if not self.has_resource and not self.is_road and not self.is_city and not self.is_worker:
             return True
     
+    
     def is_wood(self) -> True:
         """Has tile wood resource
         """
         if self._resource_type == 'wood':
             return True
+
 
     def is_coal(self) -> True:
         """Has tile coal resource
@@ -301,22 +330,26 @@ class TileState:
         if self._resource_type == 'coal':
             return True
 
+
     def is_uranium(self) -> True:
         """Has tile uranium resource
         """
         if self._resource_type == 'uranium':
             return True
         
+        
     def is_owned(self) -> bool:
         """Is on tile something owned by somebody
         """
         return isinstance(self._tile_owner, int)
+        
         
     def is_owned_by_player(self) -> True:
         """Is on tile something owned by player
         """
         if self._tile_owner == 0:
             return True
+    
     
     def is_owned_by_opponent(self) -> True:
         """Is on tile something owned by opponent
@@ -331,6 +364,59 @@ class Geometric:
     
     def __init__(self, pos: Position) -> None:
         self.pos = pos
+
+
+    def get_distance(self, target_pos: Position) -> float:
+        """Get distance betwin positions
+        Args:
+            target_pos (Position): position object
+
+        Returns:
+            float: the Manhattan (rectilinear) distance 
+        """
+        
+        return self.pos.distance_to(target_pos)
+    
+    
+    def get_direction(self, target_pos: Position) -> str:
+        """Get directin to target position
+        Returns the direction that would move you closest to target_pos from this Position 
+        if you took a single step. In particular, will return DIRECTIONS.CENTER if this Position 
+        is equal to the target_pos. Note that this does not check for potential collisions with 
+        other units but serves as a basic pathfinding method
+        Args:
+            target_pos (Position): position object
+
+        Returns:
+            str: DIRECTIONS prefix 
+            s - south 
+            n - nord
+            w - west
+            e - east
+            c - center
+        """
+        
+        return self.pos.direction_to(target_pos)
+    
+    
+    def get_position_by_direction(self, pos_dir: str, eq: int = 1) -> Position:
+        """Get position by direction"""
+                
+        return self.pos.translate(pos_dir, eq)
+    
+    
+    def get_ajacent_positions(self) -> list:
+        """Get ajacent positions
+
+        Returns:
+            list: List of ajacent objscts positions
+        """        
+        ajacent_pos = []
+        for i in c['DIRECTIONS'].values():
+            ajacent_pos.append(self.pos.translate(i, 1))
+            
+        return ajacent_pos
+
     
     def get_closest_pos(self, positions: list) -> Position:
         """Get closest position
@@ -341,7 +427,6 @@ class Geometric:
         Returns:
             Position: closest Position object
         """
-
         closest_dist = math.inf
         closest_pos = None
         for position in positions:
@@ -351,11 +436,41 @@ class Geometric:
                 closest_pos = position
                 
         return closest_pos
-    
+
 
 class UnitActions:
-    pass
+    
+    def __init__(self, game_state: Game, unit: Unit) -> None:
+        self.unit = unit
+        self.can_build = unit.can_build(game_state.map)
+        self.can_act = unit.can_act()
+        self.cargo_space_left = unit.get_cargo_space_left()
+        self.actions = []
 
 
-class CityActions:
-    pass
+    def set_actions(self) -> list:
+        if self.can_act:
+            self.actions.append('move')
+            if not self.unit.get_cargo_space_left():
+                self.actions.append('transfere')
+                if self.unit.is_worker():
+                    self.actions.append('mine')
+                    self.actions.append('pillage')
+            if self.can_build:
+                self.actions.append('build')
+        
+        return self.actions
+
+
+class Cityes:
+    def __init__(self, game_state: Game, citytile: CityTile) -> None:
+        self.citytile = citytile
+        self.can_act = citytile.can_act()
+        self.can_build = None
+        self.actions = []
+        
+    def set_actions(self) -> list:
+        if self.can_act:
+            self.actions.append('research')
+        
+        return self.actions
