@@ -144,3 +144,6 @@ kernels/*.csv
 
 # Luxai Errorlogs
 errorlogs/
+
+# replays
+replays/

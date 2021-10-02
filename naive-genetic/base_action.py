@@ -5,7 +5,7 @@ from lux.game_constants import GAME_CONSTANTS as c
 import numpy as np
 from utility import get_times_of_days
 import math
-import random
+from typing import List
 
 
 """GAME_CONSTANTS
@@ -414,7 +414,8 @@ class Geometric:
         """        
         ajacent_pos = []
         for i in c['DIRECTIONS'].values():
-            ajacent_pos.append(self.pos.translate(i, 1))
+            if i != 'c':
+                ajacent_pos.append(self.pos.translate(i, 1))
             
         return ajacent_pos
 
@@ -437,18 +438,53 @@ class Geometric:
                 closest_pos = position
                 
         return closest_pos
-    
-    
-class UnitPerformance:
 
+
+class UnitPerformance:
+    """Perform unit object with his posible actions
+    """
 
     def __init__(self, game_state: Game, unit: Unit) -> None:
         self.unit = unit
         self.game_state = game_state
-        self.actions = {key: None for key in ['obj', 'move', 'transfer', 'mine', 'pillage', 'build', 'pass']}
+        self.actions = {key: False for key in ['obj', 'move', 'transfer', 'mine', 'pillage', 'build', 'u_pass']}
+        self.geometric = Geometric(unit.pos)
+        self.__tile_states = []
+        self.__current_tile_state = False
+        
+    
+    @property 
+    def _tile_states(self) -> List[TileState]:
+        """Get list of statements of ajacent tiles
+
+        Returns:
+            list: list of statements
+        """
+        if not self.__tile_states:
+            ajacent = self.geometric.get_ajacent_positions()
+            for pos in ajacent:
+                tile_state = TileState(game_state=self.game_state, pos=pos)
+                self.__tile_states.append(tile_state)
+        return self.__tile_states
+    
+    @property
+    def _current_tile_state(self) -> TileState:
+        """Current cell statement
+
+        Returns:
+            TileState: statements
+        """
+        if not self.__current_tile_state:
+            self.__current_tile_state = TileState(game_state=self.game_state, pos=self.unit.pos)
+        return self.__current_tile_state
     
     
     def _get_unit_type(self) -> str:
+        """Get unit type
+
+        Returns:
+            str: CART or WORKER
+        """
         if self.unit.is_cart():
             return 'CART'
         elif self.unit.is_worker():
@@ -456,34 +492,68 @@ class UnitPerformance:
 
        
     def _set_move(self) -> None:
+        """Set move action
+        """
         self.actions['move'] = True
 
 
-    def _set_transfer(self, unit_type: str) -> None: # TODO: get the agacent of other units
-        if c['PARAMETERS']['RESOURCE_CAPACITY'][unit_type] - self.unit.get_cargo_space_left():
-            self.actions['transfer'] = True
+    def _set_transfer(self) -> None:
+        """Set transfere action
+        """
+        unit_type = self._get_unit_type()
+        for state in self._tile_states:
+            if state.is_owned_by_player() and (state.is_worker or state.is_cart):
+                if c['PARAMETERS']['RESOURCE_CAPACITY'][unit_type] - self.unit.get_cargo_space_left():
+                    self.actions['transfer'] = True
+                    break
 
 
-    def _set_mine(self) -> None: # TODO: get the agacent of resources
-        if self.unit.can_act() and not self.unit.get_cargo_space_left():
-            self.actions['mine'] = True
+    def _set_mine(self) -> None:
+        """Set mine action
+        
+        Units cant mine from the cityes
+        """
+        if not self.unit.get_cargo_space_left() and not self._current_tile_state.is_city:
+            for state in self._tile_states:
+                if state.is_wood():
+                    self.actions['mine'] = True
+                    break
+                elif self.game_state.players[0].researched_coal() and state.is_coal():
+                    self.actions['mine'] = True
+                    break
+                elif self.game_state.players[0].researched_uranium() and state.is_uranium():
+                    self.actions['mine'] = True
+                    break
             
     
-    def _set_pillage(self) -> None: # TODO: get the agacent of roads
-        self.actions['pillage'] = True
+    def _set_pillage(self) -> None:
+        """Set pillage action
+        
+        Roads can be created only by carts. Roads dont have owners. 
+        Citytiles has 6 road status by defoult
+        """
+        if self._current_tile_state.is_road and not self._current_tile_state.is_owned_by_player():
+            self.actions['pillage'] = True
 
 
     def _set_build_city(self) -> None:
+        """Set build city action
+        """
         if self.unit.can_build(self.game_state.map):
             self.actions['build'] = True
 
 
     def get_actions(self) -> dict:
+        """Set all possible actions
+
+        Returns:
+            dict: object and his posible actions
+        """
         self.actions['obj'] = self.unit
+        self.actions['u_pass'] = True
         if self.unit.can_act():
-            _unit_type = self._get_unit_type()
             self._set_move()
-            self._set_transfer(_unit_type)
+            self._set_transfer()
             if self.unit.is_worker():
                 self._set_mine()
                 self._set_pillage()
@@ -493,16 +563,20 @@ class UnitPerformance:
 
 
 class CityPerformance:
+    """Perform citytile object with his posible actions
+    """
     
     def __init__(self, game_state: Game, citytile: CityTile) -> None:
         self.game_state = game_state
         self.citytile = citytile
         self.__can_build = False
-        self.actions = {key: None for key in ['obj', 'research', 'build_cart', 'build_worker', 'pass']}
+        self.actions = {key: False for key in ['obj', 'research', 'build_cart', 'build_worker', 'c_pass']}
 
 
     @property
     def can_build(self) -> bool:
+        """Set citytile can build
+        """
         if not self.__can_build:
             sum_units = len(self.game_state.players[0].units)
             sum_sityes = len(self.game_state.players[0].cities.keys())
@@ -512,18 +586,30 @@ class CityPerformance:
     
     
     def _set_research(self) -> None:
+        """Set citytile can research
+        """
         if not self.game_state.players[0].researched_uranium():
             self.actions['research'] = True
     
 
     def _set_build(self) ->None:
+        """Set citytile can build carts or workers
+        
+        City cant build units if citytiles == units, owned by player
+        """
         if self.can_build:
             self.actions['build_worker'] = True
             self.actions['build_cart'] = True
 
 
     def get_actions(self) -> dict:
+        """Set all possible actions
+
+        Returns:
+            dict: object and his posible actions
+        """
         self.actions['obj'] = self.citytile
+        self.actions['c_pass'] = True
         if self.citytile.can_act():
             self._set_research()
             self._set_build()

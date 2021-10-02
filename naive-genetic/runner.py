@@ -1,5 +1,6 @@
 from kaggle_environments import make
 import os
+import json
 
 PLAYER = 'agent.py'
 OPPONENT = 'simple_agent'
@@ -18,3 +19,7 @@ if __name__ == "__main__":
 
     env = make('lux_ai_2021', configuration={'seed': 562124210, 'loglevel': 2, 'annotations': True}, debug=DEBUG)
     steps = env.run([PLAYER, OPPONENT])
+
+    replay = env.toJSON()
+    with open("replays/replay.json", "w") as f:
+        json.dump(replay, f)
