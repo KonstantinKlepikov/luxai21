@@ -1,11 +1,16 @@
 from lux.game_objects import Unit, CityTile
 from lux.game import Game
-from lux.game_map import Position
+from lux.game_map import Position, Cell
 from lux.game_constants import GAME_CONSTANTS as c
 import numpy as np
 from utility import get_times_of_days
 import math
 from typing import List
+from utility import init_logger
+
+
+logger = init_logger(log_file='errorlogs/utility.log')
+logger.info(f'Start Logging...')
 
 
 """GAME_CONSTANTS
@@ -406,7 +411,7 @@ class Geometric:
         return self.pos.translate(pos_dir, eq)
     
     
-    def get_ajacent_positions(self) -> list:
+    def get_ajacent_positions(self) -> List[Position]:
         """Get ajacent positions
 
         Returns:
@@ -440,6 +445,24 @@ class Geometric:
         return closest_pos
 
 
+    def get_resource_tiles(self, game_state: Game) -> List[Position]:
+        """Get list of resource tiles
+
+        Args:
+            game_state (Game): game state object
+
+        Returns:
+            List[Position]: list of positions objects
+        """
+        resource_tiles: list[Cell] = []
+        for y in range(game_state.map_height):
+            for x in range(game_state.map_width):
+                cell = game_state.map.get_cell(x, y)
+                if cell.has_resource():
+                    resource_tiles.append(cell)
+        return resource_tiles
+
+
 class UnitPerformance:
     """Perform unit object with his posible actions
     """
@@ -447,7 +470,7 @@ class UnitPerformance:
     def __init__(self, game_state: Game, unit: Unit) -> None:
         self.unit = unit
         self.game_state = game_state
-        self.actions = {key: False for key in ['obj', 'move', 'transfer', 'mine', 'pillage', 'build', 'u_pass']}
+        self.actions = {}
         self.geometric = Geometric(unit.pos)
         self.__tile_states = []
         self.__current_tile_state = False
@@ -494,7 +517,12 @@ class UnitPerformance:
     def _set_move(self) -> None:
         """Set move action
         """
-        self.actions['move'] = True
+        logger.info(f'Cargo space left {self.unit.get_cargo_space_left()}')
+        if self.unit.get_cargo_space_left():
+            self.actions['move_to_closest_resource'] = True
+        else:
+            self.actions['move_to_closest_citytile'] = True
+        self.actions['move_random'] = True
 
 
     def _set_transfer(self) -> None:
@@ -503,7 +531,7 @@ class UnitPerformance:
         unit_type = self._get_unit_type()
         for state in self._tile_states:
             if state.is_owned_by_player() and (state.is_worker or state.is_cart):
-                if c['PARAMETERS']['RESOURCE_CAPACITY'][unit_type] - self.unit.get_cargo_space_left():
+                if not c['PARAMETERS']['RESOURCE_CAPACITY'][unit_type] - self.unit.get_cargo_space_left():
                     self.actions['transfer'] = True
                     break
 
@@ -513,7 +541,7 @@ class UnitPerformance:
         
         Units cant mine from the cityes
         """
-        if not self.unit.get_cargo_space_left() and not self._current_tile_state.is_city:
+        if self.unit.get_cargo_space_left() and not self._current_tile_state.is_city:
             for state in self._tile_states:
                 if state.is_wood():
                     self.actions['mine'] = True
@@ -570,7 +598,7 @@ class CityPerformance:
         self.game_state = game_state
         self.citytile = citytile
         self.__can_build = False
-        self.actions = {key: False for key in ['obj', 'research', 'build_cart', 'build_worker', 'c_pass']}
+        self.actions = {}
 
 
     @property

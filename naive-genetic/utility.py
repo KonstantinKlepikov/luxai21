@@ -48,7 +48,9 @@ def get_times_of_days() -> Dict[str, List[int]]:
 class Probability:
     """Гnreduced probabilityes of actions nominated in range 0-100
     """
-    move: int = random.randint(0, 100)
+    move_to_closest_resource: int = random.randint(0, 100)
+    move_to_closest_citytile: int = random.randint(0, 100)
+    move_to_closest_random: int = random.randint(0, 100)
     transfer: int = random.randint(0, 100)
     mine: int = random.randint(0, 100)
     pillage: int = random.randint(0, 100)

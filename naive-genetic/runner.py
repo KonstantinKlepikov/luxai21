@@ -17,7 +17,7 @@ if __name__ == "__main__":
     if 'DEBUG' in os.environ:
         DEBUG = os.environ['DEBUG']
 
-    env = make('lux_ai_2021', configuration={'seed': 562124210, 'loglevel': 2, 'annotations': True}, debug=DEBUG)
+    env = make('lux_ai_2021', configuration={'seed': 562124210, 'loglevel': 2, 'annotations': False}, debug=DEBUG)
     steps = env.run([PLAYER, OPPONENT])
 
     replay = env.toJSON()

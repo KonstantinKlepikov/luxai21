@@ -146,4 +146,4 @@ kernels/*.csv
 errorlogs/
 
 # replays
-replays/
+*/replays/
