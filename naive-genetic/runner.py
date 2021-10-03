@@ -6,6 +6,7 @@ PLAYER = 'agent.py'
 OPPONENT = 'simple_agent'
 DEBUG = False
 
+
 if __name__ == "__main__":
     
     if 'PLAYER' in os.environ:

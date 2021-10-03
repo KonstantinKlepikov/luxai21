@@ -7,10 +7,9 @@ from utility import get_times_of_days
 import math
 from typing import List
 from utility import init_logger
+import random
 
-
-logger = init_logger(log_file='errorlogs/utility.log')
-logger.info(f'Start Logging...')
+logger = init_logger(log_file='errorlogs/run.log')
 
 
 """GAME_CONSTANTS
@@ -189,7 +188,8 @@ class Storage:
         
         return self.storage
     
-    
+
+# FIXME: refactoring of properties
 class TileState:
     """Get tile statement
     """
@@ -205,6 +205,7 @@ class TileState:
         self.__resource_type = False
         self.__player_units = []
         self.__opponent_units = []
+        self.__player_units_pos = []
         self.__worker_pos = []
         self.__cart_pos = []
         self.__tile_owner = None
@@ -224,6 +225,13 @@ class TileState:
             self.__opponent_units = self.game_state.players[1].units
             
         return self.__opponent_units
+    
+    
+    @property
+    def _player_units_pos(self) -> list:
+        if not self.__player_units_pos:
+            self.__player_units_pos = [unit.pos for unit in self._player_units]
+        return self.__player_units_pos
     
     
     @property
@@ -437,12 +445,12 @@ class Geometric:
         closest_dist = math.inf
         closest_pos = None
         for position in positions:
-            dist = self.pos.distance_to(position)
+            dist = self.pos.distance_to(position.pos)
             if dist < closest_dist:
                 closest_dist = dist
                 closest_pos = position
                 
-        return closest_pos
+        return closest_pos.pos
 
 
     def get_resource_tiles(self, game_state: Game) -> List[Position]:
@@ -486,8 +494,12 @@ class UnitPerformance:
         if not self.__tile_states:
             ajacent = self.geometric.get_ajacent_positions()
             for pos in ajacent:
-                tile_state = TileState(game_state=self.game_state, pos=pos)
-                self.__tile_states.append(tile_state)
+                try: # FIXME: list index out of range
+                    tile_state = TileState(game_state=self.game_state, pos=pos)
+                    self.__tile_states.append(tile_state)
+                except IndexError:
+                    continue
+                
         return self.__tile_states
     
     @property
@@ -517,7 +529,6 @@ class UnitPerformance:
     def _set_move(self) -> None:
         """Set move action
         """
-        logger.info(f'Cargo space left {self.unit.get_cargo_space_left()}')
         if self.unit.get_cargo_space_left():
             self.actions['move_to_closest_resource'] = True
         else:
@@ -643,3 +654,46 @@ class CityPerformance:
             self._set_build()
                 
         return self.actions
+
+
+def get_action(game_state: Game, obj_for_act: dict) -> str: #FIXME: refactoring
+    global c
+    if isinstance(obj_for_act['obj'], Unit):
+        if obj_for_act['action'] == 'move_to_closest_resource':
+            geo = Geometric(obj_for_act['obj'].pos)
+            res = geo.get_resource_tiles(game_state=game_state)
+            closest = geo.get_closest_pos(res)
+            dir_to_closest = obj_for_act['obj'].pos.direction_to(closest)
+            return obj_for_act['obj'].move(dir_to_closest)
+        if obj_for_act['action'] == 'move_to_closest_citytile':
+            cities = []
+            for city in game_state.players[0].cities.values():
+                logger.info(f'City: {city}')
+                cities = cities + city.citytiles
+            logger.info(f'Cities: {cities}')
+            geo = Geometric(obj_for_act['obj'].pos)
+            closest = geo.get_closest_pos(cities)
+            dir_to_closest = obj_for_act['obj'].pos.direction_to(closest)
+            return obj_for_act['obj'].move(dir_to_closest)
+        if obj_for_act['action'] == 'move_random':
+            seq = list(c['DIRECTIONS'].values())
+            return obj_for_act['obj'].move(random.choice(seq=seq))
+        if obj_for_act['action'] == 'transfer': # TODO: ned to know resource for trasfere and dest
+            return None
+        if obj_for_act['action'] == 'mine':
+            return None
+        if obj_for_act['action'] == 'pillage':
+            return obj_for_act['obj'].pillage()
+        if obj_for_act['action'] == 'build':
+            return obj_for_act['obj'].build_city()
+        if obj_for_act['action'] == 'u_pass':
+            return None
+    if isinstance(obj_for_act['obj'], CityTile):
+        if obj_for_act['action'] == 'research':
+            return obj_for_act['obj'].research()
+        if obj_for_act['action'] == 'build_cart':
+            return obj_for_act['obj'].build_cart()
+        if obj_for_act['action'] == 'build_worker':
+            return obj_for_act['obj'].build_worker()
+        if obj_for_act['action'] == 'c_pass':
+            return None

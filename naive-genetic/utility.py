@@ -1,5 +1,4 @@
 from logging import getLogger, INFO, FileHandler,  Formatter,  StreamHandler
-from dataclasses import dataclass
 from typing import List, Dict
 import random
 
@@ -44,22 +43,27 @@ def get_times_of_days() -> Dict[str, List[int]]:
     return {'day_list': days, 'night_list': nights}
 
 
-@dataclass
+def rnd():
+    return random.randint(0, 100)
+
+
 class Probability:
-    """Гnreduced probabilityes of actions nominated in range 0-100
+    """Probabilityes of actions nominated in range 0-100
     """
-    move_to_closest_resource: int = random.randint(0, 100)
-    move_to_closest_citytile: int = random.randint(0, 100)
-    move_to_closest_random: int = random.randint(0, 100)
-    transfer: int = random.randint(0, 100)
-    mine: int = random.randint(0, 100)
-    pillage: int = random.randint(0, 100)
-    build: int = random.randint(0, 100)
-    u_pass: int = random.randint(0, 100)
-    research: int = random.randint(0, 100)
-    build_cart: int = random.randint(0, 100)
-    build_worker: int = random.randint(0, 100)
-    c_pass: int = random.randint(0, 100)
+    
+    def __init__(self) -> None:
+        self.move_to_closest_resource: int = rnd()
+        self.move_to_closest_citytile: int = rnd()
+        self.move_random: int = rnd()
+        self.transfer: int = rnd()
+        self.mine: int = rnd()
+        self.pillage: int = rnd()
+        self.build: int = rnd()
+        self.u_pass: int = rnd()
+        self.research: int = rnd()
+        self.build_cart: int = rnd()
+        self.build_worker: int = rnd()
+        self.c_pass: int = rnd()
     
 
 def init_probability_timeline() -> List[Probability]:
@@ -69,7 +73,7 @@ def init_probability_timeline() -> List[Probability]:
         List[Probability]: lis of probability for each turn of game
     """
     timeline = []
-    for i in range(360):
+    for _ in range(360):
         prob = Probability()
         timeline.append(prob)
     return timeline

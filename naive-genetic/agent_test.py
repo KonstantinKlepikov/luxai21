@@ -1,24 +1,27 @@
+from random import choices
 from lux.game import Game
 from lux import annotate
 import time
-from utility import init_logger
+from utility import init_logger, init_probability_timeline
 from base_action import (
-    UnitPerformance, CityPerformance,
+    UnitPerformance, CityPerformance, get_action
 )
-
+import random
 
 logger = init_logger(log_file='errorlogs/run.log')
 logger.info(f'Start Logging...')
 
 game_state = None
+probability_timeline = init_probability_timeline()
+
+    # logger.info(f'Probability keys: {probability.__annotations__.keys()}')
 
 
 def agent(observation, configuration):
     start = time.time()
     
     global game_state
-    global storaged_map_state
-    global storaged_game_state
+    global probability_timeline
 
     ### Do not edit ###
     if observation["step"] == 0:
@@ -48,7 +51,42 @@ def agent(observation, configuration):
             act = CityPerformance(game_state=game_state, citytile=sitytile)
             city_performance.append(act.get_actions())
 
-    logger.info(f'Actions on turn {game_state.turn}:\nUnits: {unit_performance}\nCities: {city_performance}')
+    logger.info(f'Actions on turn {game_state.turn}')
+    
+    
+    performances = unit_performance + city_performance
+    
+    for per in performances:
+        for key in per.keys():
+            if key != 'obj':
+                per[key] = probability_timeline[game_state.turn].__dict__[key]
+            
+
+    logger.info(f'Current probability: {performances}')
+    
+
+    choosed = []
+    for per in performances:
+        population = [key for key in per.keys() if key != 'obj']
+        weights = [val[1] for val in per.items() if val[0] != 'obj']
+        s = sum(weights)
+        if not s:
+            s = 0.000000001
+        weights = [w / s for w in weights]
+        c = random.choices(population=population, weights=weights)
+        choosed.append({'obj': per['obj'], 'action': c[0]})
+        
+    logger.info(f'Current choices: {choosed}')
+    
+    
+    for ch in choosed:
+        
+        act = get_action(game_state=game_state, obj_for_act=ch)
+        if act:
+            actions.append(act)
+            logger.info(f'Act: {act}')
+
+    
     end = time.time()
     logger.info('time on this step: {}'.format(end - start))
     
