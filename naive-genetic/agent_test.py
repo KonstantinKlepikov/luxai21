@@ -14,8 +14,6 @@ logger.info(f'Start Logging...')
 game_state = None
 probability_timeline = init_probability_timeline()
 
-    # logger.info(f'Probability keys: {probability.__annotations__.keys()}')
-
 
 def agent(observation, configuration):
     start = time.time()
@@ -37,16 +35,18 @@ def agent(observation, configuration):
     
     if game_state.turn == 0:
         logger.info('Agent is running!')
-        actions.append(annotate.circle(0, 0))
+        
+    player = game_state.players[observation.player]
+    opponent = game_state.players[(observation.player + 1) % 2]
         
     unit_performance = []
     city_performance = []
     
-    for unit in game_state.players[0].units:
+    for unit in player.units:
         act = UnitPerformance(game_state=game_state, unit=unit)
         unit_performance.append(act.get_actions())
 
-    for city in game_state.players[0].cities.values():
+    for city in player.cities.values():
         for sitytile in city.citytiles:
             act = CityPerformance(game_state=game_state, citytile=sitytile)
             city_performance.append(act.get_actions())
