@@ -1,4 +1,3 @@
-from random import choices
 from lux.game import Game
 from lux import annotate
 import time
@@ -6,6 +5,7 @@ from utility import init_logger, init_probability_timeline
 from base_action import (
     UnitPerformance, CityPerformance, get_action
 )
+from statements import TilesMassives
 import random
 
 logger = init_logger(log_file='errorlogs/run.log')
@@ -38,12 +38,21 @@ def agent(observation, configuration):
         
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
+    tile_massives = TilesMassives(
+        game_state=game_state,
+        player=player,
+        opponent=opponent
+    )
         
     unit_performance = []
     city_performance = []
     
     for unit in player.units:
-        act = UnitPerformance(game_state=game_state, unit=unit)
+        act = UnitPerformance(
+            game_state=game_state, 
+            player=player,
+            opponent=opponent,
+            unit=unit)
         unit_performance.append(act.get_actions())
 
     for city in player.cities.values():

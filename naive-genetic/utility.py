@@ -1,5 +1,8 @@
 from logging import getLogger, INFO, FileHandler,  Formatter,  StreamHandler
+from lux.game_constants import GAME_CONSTANTS as c
 from typing import List, Dict
+from dataclasses import dataclass
+from dacite import from_dict
 import random
 
 
@@ -77,3 +80,20 @@ def init_probability_timeline() -> List[Probability]:
         prob = Probability()
         timeline.append(prob)
     return timeline
+
+
+def make_constants_dclass(const: dict) -> dataclass:
+    """Make constants datackases"""
+    
+    d_const = {}
+    for key, val in const.items():
+        for k, v in val.items():
+            d_const[key + '_' + k] = v
+    
+    Dclass = dataclass(type('GAME_CONST', (), {'__annotations__': {k: type(v) for k, v in d_const.items()}}))
+    d_class = from_dict(data_class=Dclass, data=d_const)
+
+    return d_class
+
+
+constants_dclass = make_constants_dclass(const=c)
