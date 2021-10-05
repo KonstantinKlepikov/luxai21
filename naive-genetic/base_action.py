@@ -2,12 +2,13 @@ from lux.game_objects import Unit, CityTile, Player
 from lux.game import Game
 from lux.game_map import Position, Cell
 from lux.game_constants import GAME_CONSTANTS as c
+from utility import constants_dclass as cs
 import numpy as np
 import math
 from typing import List
 from utility import init_logger
 import random
-from statements import TileState
+from statements import TileState, TilesMassives
 
 
 logger = init_logger(log_file='errorlogs/run.log')
@@ -65,7 +66,7 @@ class Geometric:
         return self.pos.translate(pos_dir, eq)
     
     
-    def get_ajacent_positions(self) -> List[Position]:
+    def get_ajacent_positions(self) -> List[Position]: # FIXME: out of range
         """Get ajacent positions
 
         Returns:
@@ -99,62 +100,22 @@ class Geometric:
         return closest_pos.pos
 
 
-    def get_resource_tiles(self, game_state: Game) -> List[Position]:
-        """Get list of resource tiles
-
-        Args:
-            game_state (Game): game state object
-
-        Returns:
-            List[Position]: list of positions objects
-        """
-        resource_tiles: list[Cell] = []
-        for y in range(game_state.map_height):
-            for x in range(game_state.map_width):
-                cell = game_state.map.get_cell(x, y)
-                if cell.has_resource():
-                    resource_tiles.append(cell)
-        return resource_tiles
-
-
 class UnitPerformance:
     """Perform unit object with his posible actions
     """
 
-    def __init__(self, game_state: Game, player: Player, opponent: Player, unit: Unit) -> None:
+    def __init__(self, tile_massives: TilesMassives, unit: Unit) -> None:
         self.unit = unit
-        self.game_state = game_state
-        self.player = player
-        self.opponent = opponent
+        self.tile_massives = tile_massives
+        self.__current_tile_state = None
+        self.__ajacent_tile_states = None
+        
         self.actions = {}
         self.geometric = Geometric(unit.pos)
-        self.__tile_states = []
+        self.__tile_states = None
         self.__current_tile_state = False
         
-    
-    @property 
-    def _tile_states(self) -> List[TileState]:
-        """Get list of statements of ajacent tiles
-
-        Returns:
-            list: list of statements
-        """
-        if not self.__tile_states:
-            ajacent = self.geometric.get_ajacent_positions()
-            for pos in ajacent:
-                try: # FIXME: list index out of range
-                    tile_state = TileState(
-                        game_state=self.game_state, 
-                        player=self.player,
-                        opponent=self.opponent,
-                        pos=pos
-                        )
-                    self.__tile_states.append(tile_state)
-                except IndexError:
-                    continue
-                
-        return self.__tile_states
-    
+        
     @property
     def _current_tile_state(self) -> TileState:
         """Current cell statement
@@ -162,14 +123,32 @@ class UnitPerformance:
         Returns:
             TileState: statements
         """
-        if not self.__current_tile_state:
-            self.__current_tile_state = TileState(
-                game_state=self.game_state, 
-                player=self.player,
-                opponent=self.opponent,
-                pos=self.unit.pos)
+        if self.__current_tile_state is None:
+            self.__current_tile_state = TileState(tile_massives=self.tile_massives, pos=self.unit.pos)
+
         return self.__current_tile_state
-    
+
+
+    @property 
+    def _ajacent_tile_states(self) -> List[TileState]:
+        """Get list of statements of ajacent tiles
+
+        Returns:
+            list: list of statements
+        """
+        if self.__ajacent_tile_states is None:
+            ajacent = self.geometric.get_ajacent_positions()
+            states = []
+            for pos in ajacent:
+                try: # FIXME: list index out of range (it is timless solution)
+                    tile_state = TileState(tile_massives=self.tile_massives, pos=pos)
+                    states.append(tile_state)
+                except IndexError:
+                    continue
+            self.__ajacent_tile_states = states
+                
+        return self.__ajacent_tile_states
+
     
     def _get_unit_type(self) -> str:
         """Get unit type
