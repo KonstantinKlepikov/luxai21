@@ -1,11 +1,9 @@
 from lux.game import Game
 from lux.game_objects import Player
 from lux.game_map import Position
-from lux.constants import Constants
 from utility import init_logger
+from utility import CONSTANTS as cs
 
-RESOURCE_TYPES = Constants.RESOURCE_TYPES
-RESOURCE_CAPACITY = Constants.RESOURCE_CAPACITY
 
 logger = init_logger(log_file='errorlogs/run.log')
 
@@ -350,7 +348,7 @@ class TilesCollection:
     @property
     def woods(self) -> list:
         if self.__woods is None:
-            self.__woods = [cell for cell in self.resources if cell.resource.type == RESOURCE_TYPES.WOOD]
+            self.__woods = [cell for cell in self.resources if cell.resource.type == cs.RESOURCE_TYPES.WOOD]
         return self.__woods
     
     @property
@@ -362,7 +360,7 @@ class TilesCollection:
     @property
     def coals(self) -> list:
         if self.__coals is None:
-            self.__coals = [cell for cell in self.resources if cell.resource.type == RESOURCE_TYPES.COAL]
+            self.__coals = [cell for cell in self.resources if cell.resource.type == cs.RESOURCE_TYPES.COAL]
         return self.__coals
     
     @property
@@ -374,7 +372,7 @@ class TilesCollection:
     @property
     def uraniums(self) -> list:
         if self.__uraniums is None:
-            self.__uraniums = [cell for cell in self.resources if cell.resource.type == RESOURCE_TYPES.URANIUM]
+            self.__uraniums = [cell for cell in self.resources if cell.resource.type == cs.RESOURCE_TYPES.URANIUM]
         return self.__uraniums
 
     @property
@@ -489,11 +487,11 @@ class TileState:
         """
         if self.__resource_type is None:
             if self.cell in self.tiles_collection.woods:
-                self.__resource_type = RESOURCE_TYPES.WOOD
+                self.__resource_type = cs.RESOURCE_TYPES.WOOD
             elif self.cell in self.tiles_collection.coals:
-                self.__resource_type = RESOURCE_TYPES.COAL
+                self.__resource_type = cs.RESOURCE_TYPES.COAL
             elif self.cell in self.tiles_collection.uraniums:
-                self.__resource_type = RESOURCE_TYPES.URANIUM
+                self.__resource_type = cs.RESOURCE_TYPES.URANIUM
             else:
                 self.__resource_type = 'notype'
                 

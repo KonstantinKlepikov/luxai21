@@ -1,21 +1,14 @@
 from lux.game_objects import Unit, CityTile
 from lux.game_map import Position
-from lux.constants import Constants
-from lux.game_constants import GAME_CONSTANTS as cs
 import math
 import random
 from typing import List
 from utility import init_logger
+from utility import CONSTANTS as cs
 from statements import TileState, TilesCollection, StatesCollectionsCollection
 
-RESOURCE_CAPACITY = Constants.RESOURCE_CAPACITY
-DIRECTIONS = Constants.DIRECTIONS
 
 logger = init_logger(log_file='errorlogs/run.log')
-
-"""GAME_CONSTANTS
-{'UNIT_TYPES': {'WORKER': 0, 'CART': 1}, 'RESOURCE_TYPES': {'WOOD': 'wood', 'COAL': 'coal', 'URANIUM': 'uranium'}, 'DIRECTIONS': {'NORTH': 'n', 'WEST': 'w', 'EAST': 'e', 'SOUTH': 's', 'CENTER': 'c'}, 'PARAMETERS': {'DAY_LENGTH': 30, 'NIGHT_LENGTH': 10, 'MAX_DAYS': 360, 'LIGHT_UPKEEP': {'CITY': 23, 'WORKER': 4, 'CART': 10}, 'WOOD_GROWTH_RATE': 1.025, 'MAX_WOOD_AMOUNT': 500, 'CITY_BUILD_COST': 100, 'CITY_ADJACENCY_BONUS': 5, 'RESOURCE_CAPACITY': {'WORKER': 100, 'CART': 2000}, 'WORKER_COLLECTION_RATE': {'WOOD': 20, 'COAL': 5, 'URANIUM': 2}, 'RESOURCE_TO_FUEL_RATE': {'WOOD': 1, 'COAL': 10, 'URANIUM': 40}, 'RESEARCH_REQUIREMENTS': {'COAL': 50, 'URANIUM': 200}, 'CITY_ACTION_COOLDOWN': 10, 'UNIT_ACTION_COOLDOWN': {'CART': 3, 'WORKER': 2}, 'MAX_ROAD': 6, 'MIN_ROAD': 0, 'CART_ROAD_DEVELOPMENT_RATE': 0.75, 'PILLAGE_RATE': 0.5}}
-"""
 
 
 class Geometric:
@@ -69,7 +62,7 @@ class Geometric:
             list: List of ajacent objscts positions
         """
         ajacent_pos = []
-        for i in cs['DIRECTIONS'].values():
+        for i in cs.DIRECTIONS:
             if i != 'c':
                 ajacent_pos.append(self.pos.translate(i, 1))
             
@@ -160,10 +153,10 @@ class UnitPerformance:
         """
         for state in self._ajacent_tile_states: # TODO: move to tolestatements
             if state.is_owned_by_player:
-                if state.is_worker and (RESOURCE_CAPACITY.WORKER - self.unit.get_cargo_space_left()):
+                if state.is_worker and (cs.RESOURCE_CAPACITY.WORKER - self.unit.get_cargo_space_left()):
                     self.actions['transfer'] = True
                     break
-                elif state.is_cart and (RESOURCE_CAPACITY.CART - self.unit.get_cargo_space_left()):
+                elif state.is_cart and (cs.RESOURCE_CAPACITY.CART - self.unit.get_cargo_space_left()):
                     self.actions['transfer'] = True
                     break
 
@@ -293,7 +286,7 @@ def get_action(tiles_collection: TilesCollection, obj_for_act: dict) -> str: #FI
             return obj_for_act['obj'].move(dir_to_closest)
 
         if obj_for_act['action'] == 'move_random':
-            seq = list(cs['DIRECTIONS'].values())
+            seq = cs.DIRECTIONS
             return obj_for_act['obj'].move(random.choice(seq=seq))
         
         if obj_for_act['action'] == 'transfer': # TODO: ned to know resource for trasfere and dest
