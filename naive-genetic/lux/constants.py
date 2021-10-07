@@ -20,3 +20,6 @@ class Constants:
         WOOD = "wood"
         URANIUM = "uranium"
         COAL = "coal"
+    class RESOURCE_CAPACITY:
+        WORKER = 100
+        CART = 2000

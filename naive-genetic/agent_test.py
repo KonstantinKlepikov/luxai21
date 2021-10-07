@@ -1,11 +1,10 @@
 from lux.game import Game
-from lux import annotate
 import time
 from utility import init_logger, init_probability_timeline
 from base_action import (
     UnitPerformance, CityPerformance, get_action
 )
-from statements import TilesMassives
+from statements import TilesCollection, StatesCollectionsCollection
 import random
 
 logger = init_logger(log_file='errorlogs/run.log')
@@ -38,33 +37,40 @@ def agent(observation, configuration):
         
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
-    tile_massives = TilesMassives(
+
+    tiles_collection = TilesCollection(
         game_state=game_state,
         player=player,
         opponent=opponent
     )
-        
-    unit_performance = []
-    city_performance = []
-    
-    for unit in player.units:
-        act = UnitPerformance(
-            game_state=game_state, 
-            player=player,
-            opponent=opponent,
-            unit=unit)
-        unit_performance.append(act.get_actions())
 
-    for city in player.cities.values():
-        for sitytile in city.citytiles:
-            act = CityPerformance(game_state=game_state, citytile=sitytile)
-            city_performance.append(act.get_actions())
+    states_collection = StatesCollectionsCollection(
+        game_state=game_state, 
+        tiles_collection=tiles_collection
+        )
+
+    # get possible performances
+    performances = []
+    
+    for unit in tiles_collection.player_units:
+        act = UnitPerformance(
+            tiles_collection=tiles_collection,
+            states_collection=states_collection,
+            unit=unit)
+        performances.append(act.get_actions())
+
+    for citytile in tiles_collection.player_citytiles:
+        act = CityPerformance(
+            tiles_collection=tiles_collection,
+            states_collection=states_collection,
+            citytile=citytile)
+        performances.append(act.get_actions())
+
 
     logger.info(f'Actions on turn {game_state.turn}')
+
     
-    
-    performances = unit_performance + city_performance
-    
+    # get probabilities of performancies
     for per in performances:
         for key in per.keys():
             if key != 'obj':
@@ -74,23 +80,24 @@ def agent(observation, configuration):
     logger.info(f'Current probability: {performances}')
     
 
-    choosed = []
+    # choice performance
+    choised = []
     for per in performances:
         population = [key for key in per.keys() if key != 'obj']
         weights = [val[1] for val in per.items() if val[0] != 'obj']
         s = sum(weights)
         if not s:
-            s = 0.000000001
+            s = 0.000000001 # prevent division by 0
         weights = [w / s for w in weights]
         c = random.choices(population=population, weights=weights)
-        choosed.append({'obj': per['obj'], 'action': c[0]})
+        choised.append({'obj': per['obj'], 'action': c[0]})
         
-    logger.info(f'Current choices: {choosed}')
+    logger.info(f'Current choices: {choised}')
     
-    
-    for ch in choosed:
+    # get actions
+    for obj_for_act in choised:
         
-        act = get_action(game_state=game_state, obj_for_act=ch)
+        act = get_action(tiles_collection=tiles_collection, obj_for_act=obj_for_act)
         if act:
             actions.append(act)
             logger.info(f'Act: {act}')

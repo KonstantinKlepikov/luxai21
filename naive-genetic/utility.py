@@ -47,11 +47,11 @@ def get_times_of_days() -> Dict[str, List[int]]:
 
 
 def rnd():
-    return random.randint(0, 100)
+    return random.randint(0, 10)
 
 
 class Probability:
-    """Probabilityes of actions nominated in range 0-100
+    """Probabilityes of actions nominated in range 0-10
     """
     
     def __init__(self) -> None:
@@ -83,7 +83,10 @@ def init_probability_timeline() -> List[Probability]:
 
 
 def make_constants_dclass(const: dict) -> dataclass:
-    """Make constants datackases"""
+    """Make constants datackases
+    
+    Dont use this function
+    """
     
     d_const = {}
     for key, val in const.items():
@@ -94,6 +97,3 @@ def make_constants_dclass(const: dict) -> dataclass:
     d_class = from_dict(data_class=Dclass, data=d_const)
 
     return d_class
-
-
-constants_dclass = make_constants_dclass(const=c)

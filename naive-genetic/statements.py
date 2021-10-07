@@ -1,14 +1,16 @@
 from lux.game import Game
 from lux.game_objects import Player
 from lux.game_map import Position
+from lux.constants import Constants
 from utility import init_logger
-from utility import constants_dclass as cs
 
+RESOURCE_TYPES = Constants.RESOURCE_TYPES
+RESOURCE_CAPACITY = Constants.RESOURCE_CAPACITY
 
 logger = init_logger(log_file='errorlogs/run.log')
 
 
-class TilesMassives:
+class TilesCollection:
     """Get massives of tiles"""
     
     def __init__(self, game_state: Game, player: Player, opponent: Player) -> None:
@@ -18,7 +20,7 @@ class TilesMassives:
         
         self.__map_cells = None
         
-        self.__player_units = None
+        self.player_units = player.units
         self.__player_units_pos = None
         self.__player_workers = None
         self.__player_workers_pos = None
@@ -30,7 +32,7 @@ class TilesMassives:
         self.__player_own = None
         self.__player_own_pos = None
         
-        self.__opponent_units = None
+        self.opponent_units = opponent.units
         self.__opponent_units_pos = None
         self.__opponent_workers = None
         self.__opponent_workers_pos = None
@@ -72,19 +74,12 @@ class TilesMassives:
     @property
     def map_cells(self) -> list:
         if self.__map_cells is None:
-            self.__map_cells = [cell for row in self.game_state.map for cell in row]
+            self.__map_cells = [cell for row in self.game_state.map.map for cell in row]
 
         return self.__map_cells
 
 
     # player
-    @property
-    def player_units(self) -> list:
-        if self.__player_units is None:
-            self.__player_units = self.player.units
-
-        return self.__player_units
-
     @property
     def player_units_pos(self) -> list:
         if self.__player_units_pos is None:
@@ -160,13 +155,6 @@ class TilesMassives:
 
 
     # opponent
-    @property
-    def opponent_units(self) -> list:
-        if self.__opponent_units is None:
-            self.__opponent_units = self.opponent.units
-            
-        return self.__opponent_units
-
     @property
     def opponent_units_pos(self) -> list:
         if self.__opponent_units_pos is None:
@@ -362,7 +350,7 @@ class TilesMassives:
     @property
     def woods(self) -> list:
         if self.__woods is None:
-            self.__woods = [cell for cell in self.resources if cell.resource.type == cs.RESOURCE_TYPES_WOOD]
+            self.__woods = [cell for cell in self.resources if cell.resource.type == RESOURCE_TYPES.WOOD]
         return self.__woods
     
     @property
@@ -374,7 +362,7 @@ class TilesMassives:
     @property
     def coals(self) -> list:
         if self.__coals is None:
-            self.__coals = [cell for cell in self.resources if cell.resource.type == cs.RESOURCE_TYPES_COAL]
+            self.__coals = [cell for cell in self.resources if cell.resource.type == RESOURCE_TYPES.COAL]
         return self.__coals
     
     @property
@@ -386,7 +374,7 @@ class TilesMassives:
     @property
     def uraniums(self) -> list:
         if self.__uraniums is None:
-            self.__uraniums = [cell for cell in self.resources if cell.resource.type == cs.RESOURCE_TYPES_URANIUM]
+            self.__uraniums = [cell for cell in self.resources if cell.resource.type == RESOURCE_TYPES.URANIUM]
         return self.__uraniums
 
     @property
@@ -400,85 +388,144 @@ class TileState:
     """Get tile statement
     """
     
-    def __init__(self, tile_massives: TilesMassives, pos: Position) -> None:
-        self.tile_massives = tile_massives
-        self.cell = tile_massives.game_state.map.get_cell(pos.x, pos.y)
+    def __init__(self, tiles_collection: TilesCollection, pos: Position) -> None:
+        self.tiles_collection = tiles_collection
+        self.cell = tiles_collection.game_state.map.get_cell(pos.x, pos.y)
         self.__is_owned_by_player = None
         self.__is_owned_by_opponent = None
         self.__is_owned = None
+    
         self.__is_resource = None
         self.__resource_type = None
+        self.__is_wood = None
+        self.__is_coal = None
+        self.__is_uranium = None
+
         self.__is_road = None
         self.__is_city = None
+        
         self.__is_worker = None
         self.__is_cart = None
+
         self.__is_empty = None
         
 
     @property
     def is_owned_by_player(self) -> bool:
         """Is owned by player
-
-        Returns:
-            bool
         """
         if self.__is_owned_by_player is None:
-            if self.cell in self.tile_massives.player_own:
+            if self.cell in self.tiles_collection.player_own:
                 self.__is_owned_by_player = True
                 self.__is_owned = True
-            self.__is_owned_by_player = False
+            else:
+                self.__is_owned_by_player = False
 
         return self.__is_owned_by_player
-
 
     @property
     def is_owned_by_opponent(self) -> bool:
         """Is owned by opponent
-
-        Returns:
-            bool
         """
         if self.__is_owned_by_opponent is None:
-            if self.cell in self.tile_massives.opponent_own:
+            if self.cell in self.tiles_collection.opponent_own:
                 self.__is_owned_by_opponent = True
                 self.__is_owned = True
-            self.__is_owned_by_opponent = False
+            else:
+                self.__is_owned_by_opponent = False
 
         return self.__is_owned_by_opponent
-    
     
     @property
     def is_owned(self) -> bool:
         """Is owned by any
-
-        Returns:
-            bool
         """
         if self.__is_owned is None:
-            if self.cell in self.tile_massives.own:
-                self.__is_owned = True
-            self.__is_owned = False
-            return self.__is_owned
-   
+            self.__is_owned = bool(self.cell in self.tiles_collection.own)
+        
+        return self.__is_owned
+
+
+
+    @property
+    def is_resource(self) -> bool:
+        """Is tile resource
+        """
+        if self.__is_resource is None:
+            self.__is_resource = bool(self.cell in self.tiles_collection.resources)
+
+        return self.__is_resource
+    
+    @property
+    def is_wood(self) -> bool:
+        """Is tile wood
+        """
+        if self.__is_wood is None:
+            self.__is_wood = bool(self.cell in self.tiles_collection.woods)
+
+        return self.__is_wood
+    
+    @property
+    def is_coal(self) -> bool:
+        """Is tile wood
+        """
+        if self.__is_coal is None:
+            self.__is_coal = bool(self.cell in self.tiles_collection.coals)
+            
+        return self.__is_coal
+    
+    @property
+    def is_uranium(self) -> bool:
+        """Is tile wood
+        """
+        if self.__is_uranium is None:
+            self.__is_uranium = bool(self.cell in self.tiles_collection.uraniums)
+            
+        return self.__is_uranium
+
+    @property
+    def resource_type(self) -> str:
+        """Returns type of resource
+        """
+        if self.__resource_type is None:
+            if self.cell in self.tiles_collection.woods:
+                self.__resource_type = RESOURCE_TYPES.WOOD
+            elif self.cell in self.tiles_collection.coals:
+                self.__resource_type = RESOURCE_TYPES.COAL
+            elif self.cell in self.tiles_collection.uraniums:
+                self.__resource_type = RESOURCE_TYPES.URANIUM
+            else:
+                self.__resource_type = 'notype'
+                
+        return self.__resource_type
+
+
+
+    @property
+    def is_road(self) -> bool:
+        """Is tile Road
+        """
+        if self.__is_road is None:
+            self.__is_road = bool(self.cell in self.tiles_collection.roads)
+            
+        return self.__is_road
+
     @property
     def is_city(self) -> bool:
         """Is tile city
         """
         if self.__is_city is None:
-            if self.cell in self.tile_massives.citytiles:
-                self.__is_city = True
-            self.__is_city = False
+            self.__is_city = bool(self.cell in self.tiles_collection.citytiles)
             
         return self.__is_city
-    
+
+
     @property
     def is_worker(self) -> bool:
         """Is tile worker
         """
         if self.__is_worker is None:
-            if self.cell in self.tile_massives.workers:
-                self.__is_worker = True
-            self.__is_worker = False 
+            self.__is_worker = bool(self.cell in self.tiles_collection.workers)
 
         return self.__is_worker
     
@@ -487,52 +534,34 @@ class TileState:
         """Is tile worker
         """
         if self.__is_cart is None:
-            if self.cell in self.tile_massives.carts:
-                self.__is_cart = True
-            self.__is_cart = False
+            self.__is_cart = bool(self.cell in self.tiles_collection.carts)
                 
         return self.__is_cart
-    
-    @property
-    def is_resource(self) -> bool:
-        """Has tile resource
-        """
-        if self.__is_resource is None:
-            if self.cell in self.tile_massives.resources:
-                self.__is_resource = True
-            self.__is_resource = False
-            
-        return self.__is_resource
-    
-    @property
-    def is_road(self) -> bool:
-        """Is tile Road
-        """
-        if self.__is_road is None:
-            if self.cell in self.tile_massives.roads:
-                self.__is_road = True
-            self.__is_road = False
-            
-        return self.__is_road
+
+
 
     @property
     def is_empty(self) -> bool:
         """Is tile empty
         """
         if self.__is_empty is None:
-            if self.cell in self.tile_massives.empty:
+            if self.cell in self.tiles_collection.empty:
                 self.__is_empty = True
-            self.__is_empty = False
+            else:
+                self.__is_empty = False
+    
         return self.__is_empty
     
-    @property
-    def resource_type(self) -> str:
-        if self.__resource_type is None:
-            if self.cell in self.tile_massives.woods:
-                self.__resource_type = cs.RESOURCE_TYPES_WOOD
-            elif self.cell in self.tile_massives.coals:
-                self.__resource_type = cs.RESOURCE_TYPES_COAL
-            elif self.cell in self.tile_massives.uraniums:
-                self.__resource_type = cs.RESOURCE_TYPES_URANIUM
-            self.__resource_type = 'notype'
-        return self.__resource_type
+
+
+class StatesCollectionsCollection:
+    
+    def __init__(self, game_state: Game, tiles_collection: TilesCollection) -> None:
+        self.states_map = [[None for _ in range(game_state.map.width)] for _ in range(game_state.map.height)]
+        self.tiles_collection = tiles_collection
+        
+    def get_state(self, pos: Position):
+        if self.states_map[pos.x][pos.y] is None:
+            self.states_map[pos.x][pos.y] = TileState(tiles_collection=self.tiles_collection, pos=pos)
+
+        return self.states_map[pos.x][pos.y]
