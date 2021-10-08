@@ -1,7 +1,7 @@
 from lux.game import Game
 import time
-from utility import init_logger, init_probability_timeline
-from base_action import (
+from utility import init_logger, init_genome
+from actions import (
     UnitPerformance, CityPerformance, get_action
 )
 from statements import TilesCollection, StatesCollectionsCollection
@@ -11,14 +11,14 @@ logger = init_logger(log_file='errorlogs/run.log')
 logger.info(f'Start Logging...')
 
 game_state = None
-probability_timeline = init_probability_timeline()
+genome = init_genome()
 
 
 def agent(observation, configuration):
     start = time.time()
     
     global game_state
-    global probability_timeline
+    global genome
 
     ### Do not edit ###
     if observation["step"] == 0:
@@ -74,7 +74,7 @@ def agent(observation, configuration):
     for per in performances:
         for key in per.keys():
             if key != 'obj':
-                per[key] = probability_timeline[game_state.turn].__dict__[key]
+                per[key] = genome[game_state.turn].__dict__[key]
             
 
     logger.info(f'Current probability: {performances}')
@@ -107,3 +107,31 @@ def agent(observation, configuration):
     logger.info('time on this step: {}'.format(end - start))
     
     return actions
+
+
+from kaggle_environments import evaluate
+import statistics
+
+NUM_EPISODES =  20
+
+
+def game_sample_runner() -> float:
+    
+    rewards = evaluate(
+        'lux_ai_2021', 
+        [agent, 'simple_agent'], 
+        configuration={'loglevel': 0, 'annotations': False}, 
+        num_episodes=NUM_EPISODES,
+        debug=False)
+    
+    # get first player rewards
+    rewards = [l[0] for l in rewards]
+    mean_r = statistics.mean(rewards)
+   
+    return mean_r
+
+
+if __name__ == '__main__':
+    
+    result = game_sample_runner()
+    logger.info(f'Mean result by {NUM_EPISODES} episodes: {result}')

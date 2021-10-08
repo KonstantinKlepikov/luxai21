@@ -5,7 +5,7 @@ from utility import init_logger
 from utility import CONSTANTS as cs
 
 
-logger = init_logger(log_file='errorlogs/run.log')
+# logger = init_logger(log_file='errorlogs/run.log')
 
 
 class TilesCollection:

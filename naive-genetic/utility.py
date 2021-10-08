@@ -1,5 +1,4 @@
 from logging import getLogger, INFO, FileHandler,  Formatter,  StreamHandler
-from os import name
 from lux.game_constants import GAME_CONSTANTS as cs
 from typing import List, Dict
 from collections import namedtuple
@@ -69,7 +68,7 @@ class Probability:
         self.c_pass: int = rnd()
     
 
-def init_probability_timeline() -> List[Probability]:
+def init_genome() -> List[Probability]:
     """Initialize probability timiline for start learning
 
     Returns:

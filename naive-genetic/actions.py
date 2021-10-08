@@ -8,7 +8,7 @@ from utility import CONSTANTS as cs
 from statements import TileState, TilesCollection, StatesCollectionsCollection
 
 
-logger = init_logger(log_file='errorlogs/run.log')
+# logger = init_logger(log_file='errorlogs/run.log')
 
 
 class Geometric:
