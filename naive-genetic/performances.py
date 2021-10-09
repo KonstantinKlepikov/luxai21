@@ -1,7 +1,6 @@
 from lux.game_objects import Unit, CityTile
 from lux.game_map import Position
 import math
-import random
 from typing import List
 from utility import init_logger
 from utility import CONSTANTS as cs
@@ -103,7 +102,7 @@ class UnitPerformance:
         self.states_collection = states_collection
         self.__current_tile_state = None
         self.__ajacent_tile_states = None
-        self.actions = {}
+        self.actions = {'obj': unit}
         self.geometric = Geometric(unit.pos)
         
     @property
@@ -142,10 +141,10 @@ class UnitPerformance:
         """Set move action
         """
         if self.unit.get_cargo_space_left():
-            self.actions['move_to_closest_resource'] = True
+            self.actions['move_to_closest_resource'] = None
         else:
-            self.actions['move_to_closest_citytile'] = True
-        self.actions['move_random'] = True
+            self.actions['move_to_closest_citytile'] = None
+        self.actions['move_random'] = None
 
 
     def _set_transfer(self) -> None:
@@ -154,10 +153,10 @@ class UnitPerformance:
         for state in self._ajacent_tile_states: # TODO: move to tolestatements
             if state.is_owned_by_player:
                 if state.is_worker and (cs.RESOURCE_CAPACITY.WORKER - self.unit.get_cargo_space_left()):
-                    self.actions['transfer'] = True
+                    self.actions['transfer'] = None
                     break
                 elif state.is_cart and (cs.RESOURCE_CAPACITY.CART - self.unit.get_cargo_space_left()):
-                    self.actions['transfer'] = True
+                    self.actions['transfer'] = None
                     break
 
     def _set_mine(self) -> None:
@@ -168,13 +167,13 @@ class UnitPerformance:
         if self.unit.get_cargo_space_left() and not self._current_tile_state.is_city:
             for state in self._ajacent_tile_states:
                 if state.is_wood:
-                    self.actions['mine'] = True
+                    self.actions['mine'] = None
                     break
                 elif self.tiles_collection.player.researched_coal() and state.is_coal:
-                    self.actions['mine'] = True
+                    self.actions['mine'] = None
                     break
                 elif self.tiles_collection.player.researched_uranium() and state.is_uranium:
-                    self.actions['mine'] = True
+                    self.actions['mine'] = None
                     break
     
     def _set_pillage(self) -> None:
@@ -184,13 +183,13 @@ class UnitPerformance:
         Citytiles has 6 road status by defoult
         """
         if self._current_tile_state.is_road:
-            self.actions['pillage'] = True
+            self.actions['pillage'] = None
 
     def _set_build_city(self) -> None:
         """Set build city action
         """
         if self.unit.can_build(self.tiles_collection.game_state.map):
-            self.actions['build'] = True
+            self.actions['build'] = None
 
     def get_actions(self) -> dict:
         """Set all possible actions
@@ -198,8 +197,7 @@ class UnitPerformance:
         Returns:
             dict: object and his posible actions
         """
-        self.actions['obj'] = self.unit
-        self.actions['u_pass'] = True
+        self.actions['u_pass'] = None
         if self.unit.can_act():
             self._set_move()
             self._set_transfer()
@@ -225,7 +223,7 @@ class CityPerformance:
         self.tiles_collection = tiles_collection
         self.states_collection = states_collection
         self.__can_build = None
-        self.actions = {}
+        self.actions = {'obj': citytile}
 
     @property
     def _can_build(self) -> bool:
@@ -242,17 +240,17 @@ class CityPerformance:
         """Set citytile can research
         """
         if not self.tiles_collection.player.researched_uranium():
-            self.actions['research'] = True
+            self.actions['research'] = None
     
 
-    def _set_build(self) ->None:
+    def _set_build(self) -> None:
         """Set citytile can build carts or workers
         
         City cant build units if citytiles == units, owned by player
         """
         if self._can_build:
-            self.actions['build_worker'] = True
-            self.actions['build_cart'] = True
+            self.actions['build_worker'] = None
+            self.actions['build_cart'] = None
 
 
     def get_actions(self) -> dict:
@@ -261,58 +259,9 @@ class CityPerformance:
         Returns:
             dict: object and his posible actions
         """
-        self.actions['obj'] = self.citytile
-        self.actions['c_pass'] = True
+        self.actions['c_pass'] = None
         if self.citytile.can_act():
             self._set_research()
             self._set_build()
                 
         return self.actions
-
-
-def get_action(tiles_collection: TilesCollection, obj_for_act: dict) -> str: #FIXME: refactoring
-    global c
-    if isinstance(obj_for_act['obj'], Unit):
-        geo = Geometric(obj_for_act['obj'].pos)
-        
-        if obj_for_act['action'] == 'move_to_closest_resource':
-            closest = geo.get_closest_pos(tiles_collection.resources)
-            dir_to_closest = obj_for_act['obj'].pos.direction_to(closest)
-            return obj_for_act['obj'].move(dir_to_closest)
-        
-        if obj_for_act['action'] == 'move_to_closest_citytile':
-            closest = geo.get_closest_pos(tiles_collection.citytiles)
-            dir_to_closest = obj_for_act['obj'].pos.direction_to(closest)
-            return obj_for_act['obj'].move(dir_to_closest)
-
-        if obj_for_act['action'] == 'move_random':
-            seq = cs.DIRECTIONS
-            return obj_for_act['obj'].move(random.choice(seq=seq))
-        
-        if obj_for_act['action'] == 'transfer': # TODO: ned to know resource for trasfere and dest
-            return None
-
-        if obj_for_act['action'] == 'mine':
-            return None
-
-        if obj_for_act['action'] == 'pillage':
-            return obj_for_act['obj'].pillage()
-
-        if obj_for_act['action'] == 'build':
-            return obj_for_act['obj'].build_city()
-
-        if obj_for_act['action'] == 'u_pass':
-            return None
-
-    if isinstance(obj_for_act['obj'], CityTile):
-        if obj_for_act['action'] == 'research':
-            return obj_for_act['obj'].research()
-
-        if obj_for_act['action'] == 'build_cart':
-            return obj_for_act['obj'].build_cart()
-
-        if obj_for_act['action'] == 'build_worker':
-            return obj_for_act['obj'].build_worker()
-
-        if obj_for_act['action'] == 'c_pass':
-            return None

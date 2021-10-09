@@ -1,18 +1,17 @@
 from kaggle_environments import evaluate
 import statistics
-from agent_test import agent
+import agent_train
 from utility import init_genome
 
-game_state = None
-genome = init_genome()
+agent_train.genome = init_genome()
 NUM_EPISODES =  20
 
 
 def game_sample_runner() -> float:
-    
+  
     rewards = evaluate(
         'lux_ai_2021', 
-        [agent, 'simple_agent'], 
+        [agent_train.agent, 'simple_agent'], 
         configuration={'loglevel': 0, 'annotations': False}, 
         num_episodes=NUM_EPISODES,
         debug=False)
@@ -23,6 +22,8 @@ def game_sample_runner() -> float:
    
     return mean_r
 
+
 if __name__ == '__main__':
     
-    game_sample_runner()
+    result = game_sample_runner()
+    print(result)

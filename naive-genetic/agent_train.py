@@ -1,18 +1,17 @@
 from lux.game import Game
-import time
-from utility import init_logger, init_genome
+from performances import UnitPerformance, CityPerformance
 from statements import TilesCollection, StatesCollectionsCollection
 from bot import get_actions
+from utility import init_logger
 
 logger = init_logger(log_file='errorlogs/run.log')
-logger.info(f'Start Logging...')
+logger.disabled = True
 
 game_state = None
-genome = init_genome()
+genome = None
 
 
 def agent(observation, configuration):
-    start = time.time()
     
     global game_state
     global genome
@@ -26,10 +25,9 @@ def agent(observation, configuration):
     else:
         game_state._update(observation["updates"])
     
-    ### Bot code ###   
-    if game_state.turn == 0:
-        logger.info('Agent is running!')
-        
+    ### Bot code ###
+    actions = []
+       
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
 
@@ -44,14 +42,28 @@ def agent(observation, configuration):
         tiles_collection=tiles_collection
         )
 
+    # get possible performances
+    performances = []
+    
+    for unit in tiles_collection.player_units:
+        act = UnitPerformance(
+            tiles_collection=tiles_collection,
+            states_collection=states_collection,
+            unit=unit)
+        performances.append(act.get_actions())
+
+    for citytile in tiles_collection.player_citytiles:
+        act = CityPerformance(
+            tiles_collection=tiles_collection,
+            states_collection=states_collection,
+            citytile=citytile)
+        performances.append(act.get_actions())
+    
     actions = get_actions(
         genome=genome,
         tiles_collection=tiles_collection,
         states_collection=states_collection,
         logger=logger
         )
-    
-    end = time.time()
-    logger.info('time on this step: {}'.format(end - start))
     
     return actions
