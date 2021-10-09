@@ -111,9 +111,10 @@ def get_actions(
         weights = [val[1] for val in per.items() if val[0] != 'obj']
         # get reduced probabilities
         s = sum(weights)
-        if not s:
-            s = 0.000000001 # prevent division by 0
-        weights = [w / s for w in weights]
+        try:
+            weights = [w / s for w in weights]
+        except ZeroDivisionError:
+            pass            
         # get random choice 
         c = random.choices(population=p_per, weights=weights)
         # append choiced performance, associated with object of unit or city

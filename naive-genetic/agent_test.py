@@ -29,7 +29,8 @@ def agent(observation, configuration):
     ### Bot code ###   
     if game_state.turn == 0:
         logger.info('Agent is running!')
-        
+    
+    logger.info(f'Current turn: {game_state.turn}')
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
 
@@ -53,5 +54,6 @@ def agent(observation, configuration):
     
     end = time.time()
     logger.info('time on this step: {}'.format(end - start))
+    logger.info('-'*20)
     
     return actions
