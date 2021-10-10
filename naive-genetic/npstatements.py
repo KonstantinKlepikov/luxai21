@@ -1,5 +1,5 @@
 from lux.game import Game
-from utility import get_times_of_days
+from bots.utility import get_times_of_days
 import numpy as np
 
 

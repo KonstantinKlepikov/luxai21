@@ -1,10 +1,10 @@
 from lux.game_objects import Unit, CityTile
 from lux.game_map import Position
+from bots.utility import init_logger
+from bots.utility import CONSTANTS as cs
+from bots.statements import TileState, TilesCollection, StatesCollectionsCollection
 import math
 from typing import List
-from utility import init_logger
-from utility import CONSTANTS as cs
-from statements import TileState, TilesCollection, StatesCollectionsCollection
 
 
 # logger = init_logger(log_file='errorlogs/run.log')

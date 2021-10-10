@@ -1,8 +1,8 @@
 from lux.game import Game
-from performances import UnitPerformance, CityPerformance
-from statements import TilesCollection, StatesCollectionsCollection
-from bot import get_actions
-from utility import init_logger
+from bots.performances import UnitPerformance, CityPerformance
+from bots.statements import TilesCollection, StatesCollectionsCollection
+from bots.bot import get_bot_actions
+from bots.utility import init_logger
 
 logger = init_logger(log_file='errorlogs/run.log')
 logger.disabled = True
@@ -59,7 +59,7 @@ def agent(observation, configuration):
             citytile=citytile)
         performances.append(act.get_actions())
     
-    actions = get_actions(
+    actions = get_bot_actions(
         genome=genome,
         tiles_collection=tiles_collection,
         states_collection=states_collection,

@@ -1,10 +1,14 @@
 from kaggle_environments import evaluate
+from bots.utility import init_genome
 import statistics
 import agent_train
-from utility import init_genome
 
-agent_train.genome = init_genome()
+
+POPULATION_RANGE = 5
 NUM_EPISODES =  20
+
+genomes = [init_genome() for _ in range(POPULATION_RANGE)]
+population = {key: {'reward': None, 'genome': value} for key, value in enumerate(genomes)}
 
 
 def game_sample_runner() -> float:
@@ -25,5 +29,12 @@ def game_sample_runner() -> float:
 
 if __name__ == '__main__':
     
-    result = game_sample_runner()
-    print(result)
+    for k, v in population.items():
+        
+        agent_train.genome = v['genome']
+        population[k]['reward'] = game_sample_runner()
+        
+    sort = list(population.items())
+    sort.sort(key=lambda i: i[1]['reward'])
+    for i in sort:
+        print(i[1]['reward'])

@@ -49,36 +49,35 @@ def rnd():
     return random.randint(0, 10)
 
 
-class Probability:
-    """Probabilityes of actions nominated in range 0-10
-    """
-    
-    def __init__(self) -> None:
-        self.move_to_closest_resource: int = rnd()
-        self.move_to_closest_citytile: int = rnd()
-        self.move_random: int = rnd()
-        self.transfer: int = rnd()
-        self.mine: int = rnd()
-        self.pillage: int = rnd()
-        self.build: int = rnd()
-        self.u_pass: int = rnd()
-        self.research: int = rnd()
-        self.build_cart: int = rnd()
-        self.build_worker: int = rnd()
-        self.c_pass: int = rnd()
-    
+"""Posible actions"""
+Probability = namedtuple(
+    'Probability', [
+        'move_to_closest_resource',
+        'move_to_closest_citytile',
+        'move_random',
+        'transfer',
+        'mine',
+        'pillage',
+        'build',
+        'u_pass',
+        'research',
+        'build_cart',
+        'build_worker',
+        'c_pass',
+        ]
+    )
 
-def init_genome() -> List[Probability]:
+
+def init_genome() -> List[namedtuple]:
     """Initialize probability timiline for start learning
 
     Returns:
         List[Probability]: lis of probability for each turn of game
     """
-    timeline = []
-    for _ in range(360):
-        prob = Probability()
-        timeline.append(prob)
-    return timeline
+    genome_init = [rnd() for _ in range(len(Probability._fields))]
+    prob = Probability._make(genome_init)
+    genome = [prob for _ in range(360)]
+    return genome
 
 
 def make_constants_nt(cs: dict) -> namedtuple:

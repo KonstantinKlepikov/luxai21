@@ -1,8 +1,8 @@
 from lux.game import Game
 import time
-from utility import init_logger, init_genome
-from statements import TilesCollection, StatesCollectionsCollection
-from bot import get_actions
+from bots.utility import init_logger, init_genome
+from bots.statements import TilesCollection, StatesCollectionsCollection
+from bots.bot import get_bot_actions
 
 logger = init_logger(log_file='errorlogs/run.log')
 logger.info(f'Start Logging...')
@@ -45,7 +45,7 @@ def agent(observation, configuration):
         tiles_collection=tiles_collection
         )
 
-    actions = get_actions(
+    actions = get_bot_actions(
         genome=genome,
         tiles_collection=tiles_collection,
         states_collection=states_collection,

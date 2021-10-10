@@ -1,9 +1,8 @@
 from lux.game import Game
 from lux.game_objects import Player
 from lux.game_map import Position
-from utility import init_logger
-from utility import CONSTANTS as cs
-
+from bots.utility import init_logger
+from bots.utility import CONSTANTS as cs
 
 # logger = init_logger(log_file='errorlogs/run.log')
 

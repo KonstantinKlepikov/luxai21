@@ -1,7 +1,7 @@
 from lux.game import Game
 from lux import annotate
 import time
-from utility import init_logger
+from bots.utility import init_logger
 
 
 logger = init_logger(log_file='errorlogs/run.log')
