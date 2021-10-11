@@ -1,14 +1,22 @@
 from lux.game import Game
 import time
-from bots.utility import init_logger, init_genome
+from bots.utility import init_logger, GenConstruct
 from bots.statements import TilesCollection, StatesCollectionsCollection
 from bots.bot import get_bot_actions
+import json
+
 
 logger = init_logger(log_file='errorlogs/run.log')
 logger.info(f'Start Logging...')
 
+
+with open("bots_dump/best_bot.json", "r") as f:
+    genome_list = json.load(f)
+gen_const = GenConstruct()
+genome = gen_const.convert_genome(vector=genome_list)
+
+
 game_state = None
-genome = init_genome()
 
 
 def agent(observation, configuration):

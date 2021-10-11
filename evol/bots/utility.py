@@ -45,54 +45,100 @@ def get_times_of_days() -> Dict[str, List[int]]:
     return {'day_list': days, 'night_list': nights}
 
 
-def rnd():
-    return random.randint(0, 10)
+class GenConstruct:
+    
+    def __init__(self) -> None:
+        self.Probability = namedtuple(
+            'Probability', [
+                'move_to_closest_resource',
+                'move_to_closest_citytile',
+                'move_random',
+                'transfer',
+                'mine',
+                'pillage',
+                'build',
+                'u_pass',
+                'research',
+                'build_cart',
+                'build_worker',
+                'c_pass',
+            ]
+        )
+        self.prob_len = len(self.Probability._fields)
+    
+    def rnd(self) -> int:
+        return random.randint(0, 10)
+    
+    def init_genome(self) -> List[namedtuple]:
+        """Initialize probability timiline for start learning
+
+        Returns:
+            List[namedtuple]: lis of probability for each turn of game
+        """
+        genome_init = [self.rnd() for _ in range(self.prob_len)]
+        prob = self.Probability._make(genome_init)
+        genome = [prob for _ in range(360)]
+        return genome
+    
+    def get_genome_vector(self) -> List[int]:
+        vector = [self.rnd() for _ in range(360*self.prob_len)]
+        return vector
+    
+    def convert_genome(self, vector: List[int]) -> List[namedtuple]:
+        genome = []
+        for i in range(360):
+            line_v = vector[i*self.prob_len: i*self.prob_len+self.prob_len]
+            genome_line = self.Probability._make(line_v)
+            genome.append(genome_line)
+        return genome
 
 
-"""Posible actions"""
-Probability = namedtuple(
-    'Probability', [
-        'move_to_closest_resource',
-        'move_to_closest_citytile',
-        'move_random',
-        'transfer',
-        'mine',
-        'pillage',
-        'build',
-        'u_pass',
-        'research',
-        'build_cart',
-        'build_worker',
-        'c_pass',
-        ]
-    )
+# def rnd() -> int:
+#     return random.randint(0, 10)
+
+# """Posible actions"""
+# Probability = namedtuple(
+#     'Probability', [
+#         'move_to_closest_resource',
+#         'move_to_closest_citytile',
+#         'move_random',
+#         'transfer',
+#         'mine',
+#         'pillage',
+#         'build',
+#         'u_pass',
+#         'research',
+#         'build_cart',
+#         'build_worker',
+#         'c_pass',
+#         ]
+#     )
+
+# def init_genome() -> List[namedtuple]:
+#     """Initialize probability timiline for start learning
+
+#     Returns:
+#         List[namedtuple]: lis of probability for each turn of game
+#     """
+#     genome_init = [rnd() for _ in range(len(Probability._fields))]
+#     prob = Probability._make(genome_init)
+#     genome = [prob for _ in range(360)]
+#     return genome
 
 
-def init_genome() -> List[namedtuple]:
-    """Initialize probability timiline for start learning
-
-    Returns:
-        List[Probability]: lis of probability for each turn of game
-    """
-    genome_init = [rnd() for _ in range(len(Probability._fields))]
-    prob = Probability._make(genome_init)
-    genome = [prob for _ in range(360)]
-    return genome
+# def get_genome_vector() -> List[int]:
+#     vector = [rnd() for _ in range(360*len(Probability._fields))]
+#     return vector
 
 
-def get_genome_vector() -> List[int]:
-    vector = [rnd() for _ in range(360*len(Probability._fields))]
-    return vector
-
-
-def convert_genome(vector: List[int]) -> List[namedtuple]:
-    line_lenght = len(Probability._fields)
-    genome = []
-    for i in range(360):
-        line_v = vector[i*line_lenght: i*line_lenght+line_lenght]
-        genome_line = Probability._make(line_v)
-        genome.append(genome_line)
-    return genome        
+# def convert_genome(vector: List[int]) -> List[namedtuple]:
+#     line_lenght = len(Probability._fields)
+#     genome = []
+#     for i in range(360):
+#         line_v = vector[i*line_lenght: i*line_lenght+line_lenght]
+#         genome_line = Probability._make(line_v)
+#         genome.append(genome_line)
+#     return genome        
 
 
 def make_constants_nt(cs: dict) -> namedtuple:

@@ -13,7 +13,9 @@ tar -czf submissions/submission.tar.gz \
 --exclude="submissions" \
 --exclude="runner.py" \
 --exclude="agent_test.py" \
+--exclude="agent_test_evol.py" \
 --exclude="agent_train.py" \
 --exclude="npstatements.py" \
 --exclude="tournament.py" \
+--exclude="evol.py" \
 *
