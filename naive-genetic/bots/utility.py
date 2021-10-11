@@ -80,6 +80,21 @@ def init_genome() -> List[namedtuple]:
     return genome
 
 
+def get_genome_vector() -> List[int]:
+    vector = [rnd() for _ in range(360*len(Probability._fields))]
+    return vector
+
+
+def convert_genome(vector: List[int]) -> List[namedtuple]:
+    line_lenght = len(Probability._fields)
+    genome = []
+    for i in range(360):
+        line_v = vector[i*line_lenght: i*line_lenght+line_lenght]
+        genome_line = Probability._make(line_v)
+        genome.append(genome_line)
+    return genome        
+
+
 def make_constants_nt(cs: dict) -> namedtuple:
     """Make constants namedtuple
     {

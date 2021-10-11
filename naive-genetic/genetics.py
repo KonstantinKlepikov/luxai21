@@ -4,53 +4,40 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import random
 from typing import List, Tuple
-from bots.utility import Probability, rnd
-from collections import namedtuple
+from bots.utility import Probability, rnd, convert_genome
 from kaggle_environments import evaluate
 import statistics
 import agent_train
 
-## Constants
 
+## Constants
 # problem constants:
 GENOME_LINE_LENGHT = len(Probability._fields)  # length of genome line
-GENOME_LENGHT = 360 # lenght of genome
+GENOME_LENGHT = 360*GENOME_LINE_LENGHT # lenght of genome
 
 # set the random seed:
 RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
 
+# game configuration
+CONFIGURATIONS = {'loglevel': 0, 'annotations': False}
+NUM_EPISODES =  20
 
 # sise of tournament
 TOURNAMENT_SIZE = 20
 
-# set the number of episodes for get evaluate scoring
-NUM_EPISODES =  20
-
 # Genetic Algorithm constants:
-POPULATION_SIZE = 20
+POPULATION_SIZE = 100
 P_CROSSOVER = 0.9  # probability for crossover
 P_MUTATION = 0.1   # probability for mutating an individual
 MAX_GENERATIONS = 50
-HALL_OF_FAME_SIZE = 10
-
-
-# set the random seed:
-RANDOM_SEED = 42
-random.seed(RANDOM_SEED)
+HALL_OF_FAME_SIZE = 20
 
 
 ## Space initialisation
-
 toolbox = base.Toolbox()
 
-# create an operator that randomly returns genome line
-def get_the_random_genome_line() -> List[namedtuple]:
-    genome_init = [rnd() for _ in range(GENOME_LINE_LENGHT)]
-    genome_line = Probability._make(genome_init)
-    return genome_line
-
-toolbox.register("RandLine", get_the_random_genome_line)
+toolbox.register('GetRnd10', rnd())
 
 # define a single objective, maximizing fitness strategy:
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
@@ -59,21 +46,20 @@ creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMax)
 
 # create the individual operator to fill up an Individual instance:
-toolbox.register("individualCreator", tools.initRepeat, creator.Individual, toolbox.RandLine, GENOME_LENGHT)
+toolbox.register("individualCreator", tools.initRepeat, creator.Individual, toolbox.GetRnd10, GENOME_LENGHT)
 
 # create the population operator to generate a list of individuals:
 toolbox.register("populationCreator", tools.initRepeat, list, toolbox.individualCreator)
 
 
-## Fitness calculation:
-# compute the number of '1's in the individual
-def GameScoreFitness(individual: Individual) -> Tuple[float]:
+## Fitness calculation
+def GameScoreFitness(individual: List[int]) -> Tuple[float]:
     
-    agent_train.genome = individual
+    agent_train.genome = convert_genome(individual)
     rewards = evaluate(
         'lux_ai_2021', 
         [agent_train.agent, 'simple_agent'], 
-        configuration={'loglevel': 0, 'annotations': False}, 
+        configuration=CONFIGURATIONS, 
         num_episodes=NUM_EPISODES,
         debug=False
         )    
@@ -86,8 +72,7 @@ def GameScoreFitness(individual: Individual) -> Tuple[float]:
 toolbox.register("evaluate", GameScoreFitness)
 
 
-## Genetic operators:mutFlipBit
-
+## Genetic operators
 # Tournament selection with tournament size
 toolbox.register("select", tools.selTournament, tournsize=TOURNAMENT_SIZE)
 
@@ -96,7 +81,7 @@ toolbox.register("mate", tools.cxOnePoint)
 
 # Flip-bit mutation:
 # indpb: Independent probability for each attribute to be flipped
-toolbox.register("mutate", tools.mutFlipBit, indpb=1.0/GENOME_LINE_LENGHT)
+toolbox.register("mutate", tools.mutUniformInt, low=0, up=10, indpb=1.0/GENOME_LENGHT)
 
 
 ## Genetic Algorithm flow:
@@ -114,8 +99,15 @@ def main():
     hof = tools.HallOfFame(HALL_OF_FAME_SIZE)
 
     # perform the Genetic Algorithm flow with hof feature added:
-    population, logbook = algorithms.eaSimple(population, toolbox, cxpb=P_CROSSOVER, mutpb=P_MUTATION,
-                                              ngen=MAX_GENERATIONS, stats=stats, halloffame=hof, verbose=True)
+    population, logbook = algorithms.eaSimple(
+        population, 
+        toolbox, 
+        cxpb=P_CROSSOVER, 
+        mutpb=P_MUTATION,
+        ngen=MAX_GENERATIONS, 
+        stats=stats, 
+        halloffame=hof, 
+        verbose=False)
 
     # print Hall of Fame info:
     print("Hall of Fame Individuals = ", *hof.items, sep="\n")
@@ -132,7 +124,7 @@ def main():
     plt.ylabel('Max / Average Fitness')
     plt.title('Max and Average Fitness over Generations')
 
-    plt.show()
+    plt.savefig("img/evolution.png")
 
 
 if __name__ == "__main__":
