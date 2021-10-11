@@ -93,54 +93,6 @@ class GenConstruct:
         return genome
 
 
-# def rnd() -> int:
-#     return random.randint(0, 10)
-
-# """Posible actions"""
-# Probability = namedtuple(
-#     'Probability', [
-#         'move_to_closest_resource',
-#         'move_to_closest_citytile',
-#         'move_random',
-#         'transfer',
-#         'mine',
-#         'pillage',
-#         'build',
-#         'u_pass',
-#         'research',
-#         'build_cart',
-#         'build_worker',
-#         'c_pass',
-#         ]
-#     )
-
-# def init_genome() -> List[namedtuple]:
-#     """Initialize probability timiline for start learning
-
-#     Returns:
-#         List[namedtuple]: lis of probability for each turn of game
-#     """
-#     genome_init = [rnd() for _ in range(len(Probability._fields))]
-#     prob = Probability._make(genome_init)
-#     genome = [prob for _ in range(360)]
-#     return genome
-
-
-# def get_genome_vector() -> List[int]:
-#     vector = [rnd() for _ in range(360*len(Probability._fields))]
-#     return vector
-
-
-# def convert_genome(vector: List[int]) -> List[namedtuple]:
-#     line_lenght = len(Probability._fields)
-#     genome = []
-#     for i in range(360):
-#         line_v = vector[i*line_lenght: i*line_lenght+line_lenght]
-#         genome_line = Probability._make(line_v)
-#         genome.append(genome_line)
-#     return genome        
-
-
 def make_constants_nt(cs: dict) -> namedtuple:
     """Make constants namedtuple
     {
