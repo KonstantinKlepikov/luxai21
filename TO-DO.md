@@ -1,7 +1,7 @@
 # TO-DO list
 
-- [ ] logger decorator
-- [ ] move inside classes defoult used methods, like here:
+- [x] logger decorator
+- [ ] move default used methods inside classes, like here:
 
 ```python
 class This:
@@ -16,9 +16,11 @@ class This:
 
 - [ ] **use multiprocessing for evaluate function** (test example of learning 13153.485339403152)
 - [ ] change and test crossower method (now it simple stohastic)
-
-![evolution](images/evolution.png)
-
+  - [ ] as idea - switch genome position only in one-day-line to one-day-line
+- [ ] change fitness function
+  - [ ] as idea - calculate function by period day + night. Then summarise all functions across all periods
 - [ ] more precision for board data
   - [ ] collision calculation for units
   - [ ] calculate resource coldown needed for cities and workers for nonstohastic resource storage
+
+![evolution](images/evolution.png)

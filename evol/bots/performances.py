@@ -1,13 +1,22 @@
 from lux.game_objects import Unit, CityTile
 from lux.game_map import Position
-from bots.utility import init_logger
 from bots.utility import CONSTANTS as cs
-from bots.statements import TileState, TilesCollection, StatesCollectionsCollection
+from bots.statements import (
+    TileState, TilesCollection, StatesCollectionsCollection
+)
 import math
 from typing import List
+import os, sys
 
 
-# logger = init_logger(log_file='errorlogs/run.log')
+if os.path.exists("/kaggle"):  # check if we're on a kaggle server
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.WARNING)
+    handler = logging.StreamHandler(sys.stdout)  # log to stdout on kaggle
+    logger.addHandler(handler)
+else:
+    from loguru import logger  # log to file locally
 
 
 class Geometric:
@@ -16,7 +25,6 @@ class Geometric:
     
     def __init__(self, pos: Position) -> None:
         self.pos = pos
-
 
     def get_distance(self, target_pos: Position) -> float:
         """Get distance betwin positions
@@ -28,7 +36,7 @@ class Geometric:
         """
         
         return self.pos.distance_to(target_pos)    
-    
+
     def get_direction(self, target_pos: Position) -> str:
         """Get directin to target position
         Returns the direction that would move you closest to target_pos from this Position 
@@ -46,9 +54,8 @@ class Geometric:
             e - east
             c - center
         """
-        
         return self.pos.direction_to(target_pos)
-    
+
     def get_position_by_direction(self, pos_dir: str, eq: int = 1) -> Position:
         """Get position by direction"""
                 
@@ -66,7 +73,7 @@ class Geometric:
                 ajacent_pos.append(self.pos.translate(i, 1))
             
         return ajacent_pos
-    
+
     def get_closest_pos(self, positions: list) -> Position:
         """Get closest position
 
@@ -90,7 +97,6 @@ class Geometric:
 class UnitPerformance:
     """Perform unit object with his posible actions
     """
-
     def __init__(
         self, 
         tiles_collection: TilesCollection, 
@@ -104,7 +110,7 @@ class UnitPerformance:
         self.__ajacent_tile_states = None
         self.actions = {'obj': unit}
         self.geometric = Geometric(unit.pos)
-        
+
     @property
     def _current_tile_state(self) -> TileState:
         """Current cell statement
@@ -134,7 +140,7 @@ class UnitPerformance:
                 except IndexError:
                     continue
             self.__ajacent_tile_states = states
-                
+ 
         return self.__ajacent_tile_states
 
     def _set_move(self) -> None:
@@ -145,7 +151,6 @@ class UnitPerformance:
         else:
             self.actions['move_to_closest_citytile'] = None
         self.actions['move_random'] = None
-
 
     def _set_transfer(self) -> None:
         """Set transfere action
@@ -175,7 +180,7 @@ class UnitPerformance:
                 elif self.tiles_collection.player.researched_uranium() and state.is_uranium:
                     self.actions['mine'] = None
                     break
-    
+
     def _set_pillage(self) -> None:
         """Set pillage action
         
@@ -205,14 +210,14 @@ class UnitPerformance:
                 self._set_mine()
                 self._set_pillage()
                 self._set_build_city()
-                
+
         return self.actions
 
 
 class CityPerformance:
     """Perform citytile object with his posible actions
     """
-    
+
     def __init__(
         self, 
         tiles_collection: TilesCollection, 
@@ -235,13 +240,12 @@ class CityPerformance:
                 )
             
         return self.__can_build    
-    
+
     def _set_research(self) -> None:
         """Set citytile can research
         """
         if not self.tiles_collection.player.researched_uranium():
             self.actions['research'] = None
-    
 
     def _set_build(self) -> None:
         """Set citytile can build carts or workers
@@ -251,7 +255,6 @@ class CityPerformance:
         if self._can_build:
             self.actions['build_worker'] = None
             self.actions['build_cart'] = None
-
 
     def get_actions(self) -> dict:
         """Set all possible actions
@@ -263,5 +266,5 @@ class CityPerformance:
         if self.citytile.can_act():
             self._set_research()
             self._set_build()
-                
+
         return self.actions

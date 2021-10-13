@@ -5,14 +5,23 @@ from bots.utility import CONSTANTS as cs
 from typing import List, Union, Dict
 from collections import namedtuple
 import random
-from logging import Logger
+import os, sys
+
+
+if os.path.exists("/kaggle"):  # check if we're on a kaggle server
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.WARNING)
+    handler = logging.StreamHandler(sys.stdout)  # log to stdout on kaggle
+    logger.addHandler(handler)
+else:
+    from loguru import logger  # log to file locally
 
 
 def select_actions(
     tiles_collection: TilesCollection,
-    performances: List[Union[UnitPerformance, CityPerformance]], 
-    genome: List[namedtuple], 
-    logger: Logger
+    performances: List[Union[UnitPerformance, CityPerformance]],
+    genome: List[namedtuple]
     ) -> List[Dict[Union[Unit, CityTile], str]]:
     """Select actions for every unit and citityle
 
@@ -26,7 +35,7 @@ def select_actions(
     Returns:
         List[Dict[Union[Unit, CityTile], str]]: objects and selected performance
     """
-    
+
     selected = []
     chrome = genome[tiles_collection.game_state.turn]._asdict()
     for per in performances:
@@ -53,14 +62,13 @@ def select_actions(
 
     logger.info(f'Current probability: {performances}')
     logger.info(f'Current selected: {selected}')
-    
+
     return selected
 
 
 def get_action(
     tiles_collection: TilesCollection, 
-    obj_for_act: Dict[Union[Unit, CityTile], str], 
-    logger: Logger
+    obj_for_act: Dict[Union[Unit, CityTile], str]
     ) -> str: #FIXME: refactoring
     """Get action for single object
 
@@ -80,7 +88,7 @@ def get_action(
             closest = geo.get_closest_pos(tiles_collection.resources)
             dir_to_closest = obj_for_act['obj'].pos.direction_to(closest)
             return obj_for_act['obj'].move(dir_to_closest)
-        
+
         if obj_for_act['action'] == 'move_to_closest_citytile':
             closest = geo.get_closest_pos(tiles_collection.citytiles)
             dir_to_closest = obj_for_act['obj'].pos.direction_to(closest)
@@ -89,7 +97,7 @@ def get_action(
         if obj_for_act['action'] == 'move_random':
             seq = cs.DIRECTIONS
             return obj_for_act['obj'].move(random.choice(seq=seq))
-        
+
         if obj_for_act['action'] == 'transfer': # TODO: ned to know resource for trasfere and dest
             return None
 

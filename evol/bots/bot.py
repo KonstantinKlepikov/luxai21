@@ -2,15 +2,24 @@ from bots.statements import TilesCollection, StatesCollectionsCollection
 from bots.performances import UnitPerformance, CityPerformance
 from bots.actions import select_actions, get_action
 from typing import List
-from logging import Logger
 from collections import namedtuple
+import os, sys
+
+
+if os.path.exists("/kaggle"):  # check if we're on a kaggle server
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.WARNING)
+    handler = logging.StreamHandler(sys.stdout)  # log to stdout on kaggle
+    logger.addHandler(handler)
+else:
+    from loguru import logger  # log to file locally
 
 
 def get_bot_actions(
     genome: List[namedtuple],
     tiles_collection: TilesCollection, 
     states_collection: StatesCollectionsCollection,
-    logger: Logger,
     ) -> List[str]:
     """Get bot actions
 
@@ -25,7 +34,7 @@ def get_bot_actions(
     """
 
     actions = []
-    
+
     # get possible performances list that contains two dicts - for units and citytiles seperately
     performances = []
 
@@ -53,14 +62,13 @@ def get_bot_actions(
     selected = select_actions(
         tiles_collection=tiles_collection,
         performances=performances,
-        genome=genome,
-        logger=logger
+        genome=genome
     )
 
     # get actions for each object
     for select in selected:
         
-        act = get_action(tiles_collection=tiles_collection, obj_for_act=select, logger=logger)
+        act = get_action(tiles_collection=tiles_collection, obj_for_act=select)
         if act:
             actions.append(act)
             logger.info(f'Act: {act}')

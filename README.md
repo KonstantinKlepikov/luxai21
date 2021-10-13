@@ -47,9 +47,10 @@ kaggle competitions submit -c lux-ai-2021 -f submissions/submission.tar.gz -m "s
 5. `bots.actions` - assignment of actions for every object
 6. `bots.bot` - bot logic
 7. `evol.py` is used for teach bot genome. Is learned on `agent_train.py`
-8. `agent_test_evol.py` is used for test trained genome
-9. `agent_test.py` is used in for bots with random generated genome
-10. `agent.py` is used for submission
+8. `agent_test.py` is used for test trained genome
+9. `agent_random.py` is used represent random generated genome
+10. `agent_train.py` is used for alghoritm learning
+11. `agent.py` is used for submission (dont use for development)
 
 Pipline of every turn:
 
@@ -67,3 +68,5 @@ Pipline of learning:
 - look fo result in `bots_dump` folder
 
 Project use [DEEP](https://deap.readthedocs.io/en/master/) framework for evolution learning
+
+[List of available packages](https://github.com/Lux-AI-Challenge/Lux-Design-2021/blob/master/kaggle_engine/pythonpackages.txt) on kaggle env

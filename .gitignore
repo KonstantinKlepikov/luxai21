@@ -143,7 +143,10 @@ kernels/*.pkl
 kernels/*.csv
 
 # Luxai Errorlogs
-errorlogs/
+*/errorlogs/
 
 # replays
 */replays/
+
+# vscode
+.vscode/
