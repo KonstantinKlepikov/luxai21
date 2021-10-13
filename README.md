@@ -1,7 +1,7 @@
 # Luxai21 pipline
 
-```bash
-cd <bot folder>
+```sh
+cd <folder>
 ```
 
 ## Example for `evol` folder
@@ -42,15 +42,15 @@ kaggle competitions submit -c lux-ai-2021 -f submissions/submission.tar.gz -m "s
 
 1. `bots` folder contains all scripts for build bot
 2. `bots.utility` - genome generathors and constants
-3. `bots.stements` - calculations of statements of tiles and map
+3. `bots.statements` - calculations of statements tiles and map
 4. `bots.performancies` - calculations of possible actions for every object in game
 5. `bots.actions` - assignment of actions for every object
 6. `bots.bot` - bot logic
-7. `evol.py` is used for teach bot genome. Is learned on `agent_train.py`
-8. `agent_test.py` is used for test trained genome
-9. `agent_random.py` is used represent random generated genome
-10. `agent_train.py` is used for alghoritm learning
-11. `agent.py` is used for submission (dont use for development)
+7. `evol.py` it is used for teach bot genome
+8. `agent_test.py` it is used for test trained genome
+9. `agent_random.py` represents random generated genome
+10. `agent_train.py` it is used for alghoritm learning
+11. `agent.py` ii is used for submission (dont use for development)
 
 Pipline of every turn:
 
@@ -67,6 +67,6 @@ Pipline of learning:
 - start learning by run `python evol.py`
 - look fo result in `bots_dump` folder
 
-Project use [DEEP](https://deap.readthedocs.io/en/master/) framework for evolution learning
+Project is used [DEEP](https://deap.readthedocs.io/en/master/) framework for evolution learning
 
 [List of available packages](https://github.com/Lux-AI-Challenge/Lux-Design-2021/blob/master/kaggle_engine/pythonpackages.txt) on kaggle env
