@@ -11,6 +11,7 @@ from loguru import logger
 import statistics
 import time
 import json
+import multiprocessing
 
 logger.remove()
 logger.add(open(
@@ -20,6 +21,8 @@ logger.add(open(
     )
 
 # Constants
+NUM_OF_PROCESS = multiprocessing.cpu_count()
+
 # game constants:
 gen_const = GenConstruct() # get genom construction object
 GENOME_LINE_LENGHT = gen_const.prob_len  # length of genome line
@@ -45,8 +48,8 @@ TOURNAMENT_SIZE = 2
 POPULATION_SIZE = 10
 P_CROSSOVER = 0.9  # probability for crossover
 P_MUTATION = 0.1  # probability for mutating an individual
-MAX_GENERATIONS = 200  # number of steps for evolution
-HALL_OF_FAME_SIZE = 5
+MAX_GENERATIONS = 5  # number of steps for evolution
+HALL_OF_FAME_SIZE = 5 # size of list of storaged winers
 
 # Space initialisation
 toolbox = base.Toolbox()
@@ -197,6 +200,9 @@ def eaSimpleWithElitism(
 def main():
 
     start = time.time()
+    
+    pool = multiprocessing.Pool(processes=NUM_OF_PROCESS)
+    toolbox.register("map", pool.map)
 
     # create initial population (generation 0):
     population = toolbox.populationCreator(n=POPULATION_SIZE)
@@ -220,6 +226,8 @@ def main():
         halloffame=hof,
         verbose=True
         )
+    
+    pool.close()
 
     # Hall of Fame info and best bot:
     # print("Hall of Fame Individuals = ", *hof.items, sep="\n")
