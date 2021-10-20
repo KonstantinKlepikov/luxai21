@@ -45,6 +45,11 @@ class GenConstruct:
         self.prob_len = len(self.Probability._fields)
 
     def rnd(self) -> int:
+        """Get random int value in range [0, 10]
+
+        Returns:
+            int: random int in range [0, 10]
+        """
         return random.randint(0, 10)
 
     def init_genome(self) -> List[namedtuple]:
@@ -59,10 +64,23 @@ class GenConstruct:
         return genome
 
     def get_genome_vector(self) -> List[int]:
+        """Create random genome vector
+
+        Returns:
+            List[int]: list of random int with range [0, 10]
+        """
         vector = [self.rnd() for _ in range(360*self.prob_len)]
         return vector
 
     def convert_genome(self, vector: List[int]) -> List[namedtuple]:
+        """Convert genome list to lost of named tuples
+
+        Args:
+            vector (List[int]): genom
+
+        Returns:
+            List[namedtuple]: list of named tuples representation
+        """
         genome = []
         for i in range(360):
             line_v = vector[i*self.prob_len: i*self.prob_len+self.prob_len]
