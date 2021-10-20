@@ -143,10 +143,16 @@ kernels/*.pkl
 kernels/*.csv
 
 # Luxai Errorlogs
-*/errorlogs/
+*/errorlogs/*
+!*/errorlogs/.gitkeep
 
 # replays
-*/replays/
+*/replays/*
+!*/replays/.gitkeep
+
+# img
+*/img/*
+!*/img/.gitkeep
 
 # vscode
 .vscode/
