@@ -24,7 +24,7 @@ logger.add(open(
 NUM_OF_PROCESS = multiprocessing.cpu_count()
 
 # game constants:
-gen_const = GenConstruct() # get genom construction object
+gen_const = GenConstruct() # get genome construction object
 GENOME_LINE_LENGHT = gen_const.prob_len  # length of genome line
 GENOME_LENGHT = 360*GENOME_LINE_LENGHT  # length of genome
 
