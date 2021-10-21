@@ -39,7 +39,7 @@ CONFIGURATIONS = {
     'loglevel': 0,
     'annotations': False
     }
-NUM_EPISODES = 10  # number of games for mean reaward calculating
+NUM_EPISODES = 10  # number of games for mean reward calculating
 
 # sise of tournament. For much robust tournament - choose small value
 TOURNAMENT_SIZE = 2
