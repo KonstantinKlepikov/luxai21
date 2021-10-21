@@ -26,7 +26,7 @@ NUM_OF_PROCESS = multiprocessing.cpu_count()
 # game constants:
 gen_const = GenConstruct() # get genom construction object
 GENOME_LINE_LENGHT = gen_const.prob_len  # length of genome line
-GENOME_LENGHT = 360*GENOME_LINE_LENGHT  # lenght of genome
+GENOME_LENGHT = 360*GENOME_LINE_LENGHT  # length of genome
 
 # set the random seed:
 RANDOM_SEED = 42
@@ -49,7 +49,7 @@ POPULATION_SIZE = 10
 P_CROSSOVER = 0.9  # probability for crossover
 P_MUTATION = 0.1  # probability for mutating an individual
 MAX_GENERATIONS = 5  # number of steps for evolution
-HALL_OF_FAME_SIZE = 5 # size of list of storaged winers
+HALL_OF_FAME_SIZE = 5 # size of list of storage winners
 
 # Space initialisation
 toolbox = base.Toolbox()
@@ -88,7 +88,7 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
         individual (List[int]): individual genome list
 
     Returns:
-        Tuple[float]: tuple, that contains only one value of mean rewards for firts player
+        Tuple[float]: tuple, that contains only one value of mean rewards for first player
     """
     # list genome to 
     agent_train.genome = gen_const.convert_genome(vector=individual)
