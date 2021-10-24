@@ -44,11 +44,11 @@ class GenConstruct:
         self.Probability = namedtuple(
             'Probability', [
                 'move_to_closest_resource',
-                'move_to_certain_resource',         # if research allows to mine coal or radium
+                # 'move_to_certain_resource',         # if research allows to mine coal or radium
                 'move_to_closest_citytile',
-                'move_to_build_place',              # if cargo full and not evening or night,
+                # 'move_to_build_place',              # if cargo full and not evening or night,
                                                     # without step on citytiles TODO priotity build of wood
-                'move_to_closest_cart',             # if cargo full and cart is close
+                # 'move_to_closest_cart',             # if cargo full and cart is close
                 'move_random',
                 'transfer',
                 'mine',

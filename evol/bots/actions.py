@@ -45,9 +45,9 @@ def select_actions(
                 # use genome section for each turn
                 per[key] = chrome[key]
 
-        # get list of posible performancies
+        # get list of possible performances
         p_per = [key for key in per.keys() if key != 'obj']
-        # get list of probabilities of performancies
+        # get list of probabilities of performances
         weights = [val[1] for val in per.items() if val[0] != 'obj']
         # get reduced probabilities
         s = sum(weights)
@@ -57,7 +57,7 @@ def select_actions(
             pass            
         # get random choice 
         c = random.choices(population=p_per, weights=weights)
-        # append choiced performance, associated with object of unit or city
+        # append chosen performance, associated with object of unit or city
         selected.append({'obj': per['obj'], 'action': c[0]})
 
     logger.info(f'Current probability: {performances}')
@@ -98,7 +98,7 @@ def get_action(
             seq = cs.DIRECTIONS
             return obj_for_act['obj'].move(random.choice(seq=seq))
 
-        if obj_for_act['action'] == 'transfer': # TODO: ned to know resource for trasfere and dest
+        if obj_for_act['action'] == 'transfer':     # TODO: need to know resource for transfer and destination
             return None
 
         if obj_for_act['action'] == 'mine':
