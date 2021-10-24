@@ -4,8 +4,7 @@ from lux.game_objects import Unit, City, CityTile
 from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
 import os, sys
-from typing import List
-
+from typing import List, Union
 
 if os.path.exists("/kaggle"):  # check if we're on a kaggle server
     import logging
@@ -148,7 +147,7 @@ class TilesCollection:
         Returns list of Player's carts.
 
         Args:
-        Returns:        # TODO to be checked
+        Returns:
             List[Unit]: game_object.Unit object. Every Unit contain information:
                 - cargo (Cargo): Cargo object | Wood (int): value, Coal (int): value, Uranium (int): value;
                 - cooldown (float): Cooldown time for worker;
@@ -226,7 +225,7 @@ class TilesCollection:
         return self.__player_citytiles_pos
 
     @property
-    def player_own(self) -> List[Unit, CityTile]:  # TODO check if this form is correct
+    def player_own(self) -> List[Union[Unit, CityTile]]:
         """
         Returns list of all objects owned by Player.
 
@@ -304,7 +303,7 @@ class TilesCollection:
         Returns list of Opponent's carts.
 
         Args:
-        Returns:        # TODO to be checked
+        Returns:
             List[Unit]: game_object.Unit object. Every Unit contain information:
                 - cargo (Cargo): Cargo object | Wood (int): value, Coal (int): value, Uranium (int): value;
                 - cooldown (float): Cooldown time for worker;
@@ -382,7 +381,7 @@ class TilesCollection:
         return self.__opponent_citytiles_pos
 
     @property
-    def opponent_own(self) -> List[Unit, CityTile]:  # TODO check if this form is correct
+    def opponent_own(self) -> List[Union[Unit, CityTile]]:
         """
         Returns list of all objects owned by Opponent.
 
@@ -410,7 +409,7 @@ class TilesCollection:
 
     # owns
     @property
-    def own(self) -> List[Unit, CityTile]:  # TODO check if this form is correct
+    def own(self) -> List[Union[Unit, CityTile]]:
         """
         Returns list of all objects owned by Player and Opponent.
 
@@ -509,7 +508,7 @@ class TilesCollection:
         Returns list of Player's and Opponent's carts.
 
         Args:
-        Returns:        # TODO to be checked
+        Returns:  # TODO type must be checked
             List[Unit]: game_object.Unit object. Every Unit contain information:
                 - cargo (Cargo): Cargo object | Wood (int): value, Coal (int): value, Uranium (int): value;
                 - cooldown (float): Cooldown time for worker;
