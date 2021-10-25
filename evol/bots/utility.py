@@ -31,9 +31,9 @@ def get_times_of_days() -> Dict[str, List[int]]:
 
 
 # day constants
-ALL_DAYS: int = [x + y for x in range(30) for y in range(0, 360, 40)]
-ALL_MORNINGS: int = [x for x in range(0, 360, 40) if x]
-ALL_NIGHTS: int = [x + y for x in range(30, 40) for y in range(0, 360, 40)]
+ALL_DAYS: List[int] = [x + y for x in range(30) for y in range(0, 360, 40)]
+ALL_MORNINGS: List[int] = [x for x in range(0, 360, 40) if x]
+ALL_NIGHTS: List[int] = [x + y for x in range(30, 40) for y in range(0, 360, 40)]
 
 
 class GenConstruct:

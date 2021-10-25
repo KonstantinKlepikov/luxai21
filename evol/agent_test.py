@@ -1,5 +1,5 @@
 from lux.game import Game
-from bots.utility import  GenConstruct
+from bots.utility import GenConstruct
 from bots.statements import TilesCollection, StatesCollectionsCollection
 from bots.bot import get_bot_actions
 from loguru import logger

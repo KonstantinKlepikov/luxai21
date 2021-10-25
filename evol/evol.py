@@ -14,11 +14,6 @@ import json
 import multiprocessing
 
 logger.remove()
-logger.add(open(
-    'errorlogs/run_train.log', 'w'),
-    level='WARNING',
-    format='{time:HH:mm:ss} | {level} | {message}'
-    )
 
 # Constants
 NUM_OF_PROCESS = multiprocessing.cpu_count()
@@ -48,7 +43,7 @@ TOURNAMENT_SIZE = 2
 
 # Genetic Algorithm constants:
 POPULATION_SIZE = 10 # number of individuals in population 
-MAX_GENERATIONS = 60  # number of steps for evolution
+MAX_GENERATIONS = 30  # number of steps for evolution
 P_CROSSOVER = 0.9  # probability for crossover
 INDPB_CROSSOVER = 10.0/GENOME_LENGHT
 P_MUTATION = 0.1  # probability for mutating an individual
@@ -94,8 +89,9 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
     Returns:
         Tuple[float]: tuple, that contains only one value of mean rewards for first player
     """
-    # list genome to 
     agent_train.genome = gen_const.convert_genome(vector=individual)
+    agent_train.intermediate = {}
+    agent_train.game_eval = -1
     rewards = evaluate(
         'lux_ai_2021',
         [agent_train.agent, 'simple_agent'],
@@ -103,10 +99,18 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
         num_episodes=NUM_EPISODES,
         debug=False
         )
-    # get mean rewards for first player
+    
+    # experimental get mean rewards with biased intermediate result for first player
+    in_rewards = list(agent_train.intermediate.values())
     rewards = [l[0] for l in rewards]
-    mean_r = statistics.mean(rewards)
-
+    zipped_rewards = zip(in_rewards, rewards)
+    sum_rewards = [x + y for (x, y) in zipped_rewards]
+    mean_r = statistics.mean(sum_rewards)
+    
+    # get mean rewards for first player
+    # rewards = [l[0] for l in rewards]
+    # mean_r = statistics.mean(rewards)
+    
     return mean_r,
 
 
