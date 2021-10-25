@@ -15,7 +15,7 @@ sudo lux-ai-2021 main.py main.py --python=python3 --out=replays/replay.json
 make game with python `python runner.py` or set full game options. You can use `agent_test.py` for test options
 
 ```bash
-DEBUG=True PLAYER=agent.py OPPONENT=simple_agent python runner.py
+DEBUG=True PLAYER=agent_test.py OPPONENT=agent_random.py python runner.py
 ```
 
 You can start game from `runner.ipynb`
@@ -37,6 +37,14 @@ make submit to kaggle (need `kaggle` library - use `requirements.txt` for instal
 ```bash
 kaggle competitions submit -c lux-ai-2021 -f submissions/submission.tar.gz -m "submission"
 ```
+
+To learn bot use `evol.py` file by command like:
+
+```bash
+python evol.py
+```
+
+Be carefull - you need define correct parameters inside.
 
 ## How it work
 

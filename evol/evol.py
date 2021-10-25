@@ -11,7 +11,7 @@ from loguru import logger
 import statistics
 import time
 import json
-
+import multiprocessing
 
 logger.remove()
 logger.add(open(
@@ -20,36 +20,40 @@ logger.add(open(
     format='{time:HH:mm:ss} | {level} | {message}'
     )
 
-
 # Constants
-# problem constants:
-gen_const = GenConstruct()
+NUM_OF_PROCESS = multiprocessing.cpu_count()
+
+# game constants:
+gen_const = GenConstruct() # get genom construction object
 GENOME_LINE_LENGHT = gen_const.prob_len  # length of genome line
 GENOME_LENGHT = 360*GENOME_LINE_LENGHT  # lenght of genome
 
+# dont forget remove seeds for real learning!!!
 # set the random seed:
 RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
 
 # game configuration
 CONFIGURATIONS = {
-    "rows": 12,
-    "columns": 12,
+    # 'seed': RANDOM_SEED,
+    'rows': 12,
+    'columns': 12,
     'loglevel': 0,
     'annotations': False
     }
-NUM_EPISODES = 10  # number of games for mean reaward  calculating
+NUM_EPISODES = 10  # number of games for mean reaward calculating
 
-# sise of tournament
-TOURNAMENT_SIZE = 5
+# sise of tournament. For much robust tournament - choose small value
+TOURNAMENT_SIZE = 2
 
 # Genetic Algorithm constants:
-POPULATION_SIZE = 10
+POPULATION_SIZE = 10 # number of individuals in population 
+MAX_GENERATIONS = 60  # number of steps for evolution
 P_CROSSOVER = 0.9  # probability for crossover
+INDPB_CROSSOVER = 10.0/GENOME_LENGHT
 P_MUTATION = 0.1  # probability for mutating an individual
-MAX_GENERATIONS = 50  # number of steps for evolution
-HALL_OF_FAME_SIZE = 5
-
+INDPB_MUTATION = 2.0/GENOME_LENGHT
+HALL_OF_FAME_SIZE = 5 # size of list of storaged winers
 
 # Space initialisation
 toolbox = base.Toolbox()
@@ -82,7 +86,15 @@ toolbox.register(
 
 # Fitness calculation
 def GameScoreFitness(individual: List[int]) -> Tuple[float]:
+    """Return game statistics for evaluation criterium
 
+    Args:
+        individual (List[int]): individual genome list
+
+    Returns:
+        Tuple[float]: tuple, that contains only one value of mean rewards for firts player
+    """
+    # list genome to 
     agent_train.genome = gen_const.convert_genome(vector=individual)
     rewards = evaluate(
         'lux_ai_2021',
@@ -91,22 +103,22 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
         num_episodes=NUM_EPISODES,
         debug=False
         )
-    # get first player rewards
+    # get mean rewards for first player
     rewards = [l[0] for l in rewards]
     mean_r = statistics.mean(rewards)
 
     return mean_r,
 
 
+# register evaluate function
 toolbox.register("evaluate", GameScoreFitness)
-
 
 # Genetic operators
 # Tournament selection with tournament size
 toolbox.register("select", tools.selTournament, tournsize=TOURNAMENT_SIZE)
 
 # Single-point crossover:
-toolbox.register("mate", tools.cxOnePoint)
+toolbox.register("mate", tools.cxUniform, indpb=INDPB_CROSSOVER)
 
 # Flip-bit mutation:
 # indpb: Independent probability for each attribute to be flipped
@@ -115,14 +127,86 @@ toolbox.register(
     tools.mutUniformInt,
     low=0,
     up=10,
-    indpb=1.0/GENOME_LENGHT
+    indpb=INDPB_MUTATION
     )
+
+
+# define Genetic Algorithm flow with elitism
+def eaSimpleWithElitism(
+    population, 
+    toolbox, 
+    cxpb, 
+    mutpb, 
+    ngen, 
+    stats=None,
+    halloffame=None, 
+    verbose=__debug__
+    ):
+    """This algorithm is similar to DEAP eaSimple() algorithm, with the modification that
+    halloffame is used to implement an elitism mechanism. The individuals contained in the
+    halloffame are directly injected into the next generation and are not subject to the
+    genetic operators of selection, crossover and mutation.
+    """
+    logbook = tools.Logbook()
+    logbook.header = ['gen', 'nevals'] + (stats.fields if stats else [])
+
+    # Evaluate the individuals with an invalid fitness
+    invalid_ind = [ind for ind in population if not ind.fitness.valid]
+    fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+    for ind, fit in zip(invalid_ind, fitnesses):
+        ind.fitness.values = fit
+
+    if halloffame is None:
+        raise ValueError("halloffame parameter must not be empty!")
+
+    halloffame.update(population)
+    hof_size = len(halloffame.items) if halloffame.items else 0
+
+    record = stats.compile(population) if stats else {}
+    logbook.record(gen=0, nevals=len(invalid_ind), **record)
+    if verbose:
+        print(logbook.stream)
+
+    # Begin the generational process
+    for gen in range(1, ngen + 1):
+
+        # Select the next generation individuals
+        offspring = toolbox.select(population, len(population) - hof_size)
+
+        # Vary the pool of individuals
+        offspring = algorithms.varAnd(offspring, toolbox, cxpb, mutpb)
+
+        # Evaluate the individuals with an invalid fitness
+        invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
+        fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+        for ind, fit in zip(invalid_ind, fitnesses):
+            ind.fitness.values = fit
+
+        # add the best back to population:
+        offspring.extend(halloffame.items)
+
+        # Update the hall of fame with the generated individuals
+        halloffame.update(offspring)
+
+        # Replace the current population by the offspring
+        population[:] = offspring
+
+        # Append the current generation statistics to the logbook
+        record = stats.compile(population) if stats else {}
+        logbook.record(gen=gen, nevals=len(invalid_ind), **record)
+        if verbose:
+            print(logbook.stream)
+
+    return population, logbook
 
 
 # Genetic Algorithm flow:
 def main():
 
     start = time.time()
+    
+    pool = multiprocessing.Pool(processes=NUM_OF_PROCESS)
+    toolbox.register("map", pool.map)
 
     # create initial population (generation 0):
     population = toolbox.populationCreator(n=POPULATION_SIZE)
@@ -136,7 +220,7 @@ def main():
     hof = tools.HallOfFame(HALL_OF_FAME_SIZE)
 
     # perform the Genetic Algorithm flow with hof feature added:
-    population, logbook = algorithms.eaSimple(
+    population, logbook = eaSimpleWithElitism(
         population,
         toolbox,
         cxpb=P_CROSSOVER,
@@ -146,6 +230,10 @@ def main():
         halloffame=hof,
         verbose=True
         )
+    
+    pool.close()
+    
+    timestamp = time.strftime("%m-%d_%H-%M", time.gmtime())
 
     # Hall of Fame info and best bot:
     # print("Hall of Fame Individuals = ", *hof.items, sep="\n")
@@ -159,18 +247,25 @@ def main():
     # extract statistics:
     maxFitnessValues, meanFitnessValues = logbook.select("max", "avg")
 
+    end = time.time()
+    cum = end - start
+    print(f'time on this step: {cum}')
+    
     # plot statistics:
     sns.set_style("whitegrid")
+    plt.figure(figsize=(8, 11), dpi=140)
     plt.plot(maxFitnessValues, color='red')
     plt.plot(meanFitnessValues, color='green')
     plt.xlabel('Generation')
     plt.ylabel('Max / Average Fitness')
-    plt.title('Max and Average Fitness over Generations')
+    plt.title(f'NUM_EPISODES: {NUM_EPISODES}, TOURNAMENT_SIZE: {TOURNAMENT_SIZE}\n\
+POPULATION_SIZE: {POPULATION_SIZE}, MAX_GENERATIONS: {MAX_GENERATIONS}\n\
+P_CROSSOVER: {P_CROSSOVER}, INDPB_CROSSOVER: {INDPB_CROSSOVER}\n\
+P_MUTATION: {P_MUTATION}, INDPB_MUTATION: {INDPB_MUTATION}\n\
+HALL_OF_FAME_SIZE: {HALL_OF_FAME_SIZE}, RANDOM_SEED: {RANDOM_SEED}\n\
+Time cumulative: {cum}')
 
-    plt.savefig("img/evolution.png")
-
-    end = time.time()
-    print('time on this step: {}'.format(end - start))
+    plt.savefig(f'img/evolution_{timestamp}.png')
 
 
 if __name__ == "__main__":

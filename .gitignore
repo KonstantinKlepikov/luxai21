@@ -142,11 +142,15 @@ input/
 kernels/*.pkl
 kernels/*.csv
 
-# Luxai Errorlogs
-*/errorlogs/
-
-# replays
-*/replays/
+# Luxai statik
+*/errorlogs/*
+!*/errorlogs/.gitkeep
+*/replays/*
+!*/replays/.gitkeep
+*/img/*
+!*/img/.gitkeep
+*/bots_dump/*
+!*/bots_dump/.gitkeep
 
 # vscode
 .vscode/
