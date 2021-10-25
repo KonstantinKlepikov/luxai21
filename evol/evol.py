@@ -24,9 +24,9 @@ logger.add(open(
 NUM_OF_PROCESS = multiprocessing.cpu_count()
 
 # game constants:
-gen_const = GenConstruct() # get genom construction object
+gen_const = GenConstruct()  # get genome construction object
 GENOME_LINE_LENGHT = gen_const.prob_len  # length of genome line
-GENOME_LENGHT = 360*GENOME_LINE_LENGHT  # lenght of genome
+GENOME_LENGHT = 360*GENOME_LINE_LENGHT  # length of genome
 
 # dont forget remove seeds for real learning!!!
 # set the random seed:
@@ -41,7 +41,7 @@ CONFIGURATIONS = {
     'loglevel': 0,
     'annotations': False
     }
-NUM_EPISODES = 10  # number of games for mean reaward calculating
+NUM_EPISODES = 10  # number of games for mean reward calculating
 
 # sise of tournament. For much robust tournament - choose small value
 TOURNAMENT_SIZE = 2
@@ -53,7 +53,7 @@ P_CROSSOVER = 0.9  # probability for crossover
 INDPB_CROSSOVER = 10.0/GENOME_LENGHT
 P_MUTATION = 0.1  # probability for mutating an individual
 INDPB_MUTATION = 2.0/GENOME_LENGHT
-HALL_OF_FAME_SIZE = 5 # size of list of storaged winers
+HALL_OF_FAME_SIZE = 5 # size of list of storage winners
 
 # Space initialisation
 toolbox = base.Toolbox()
@@ -92,7 +92,7 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
         individual (List[int]): individual genome list
 
     Returns:
-        Tuple[float]: tuple, that contains only one value of mean rewards for firts player
+        Tuple[float]: tuple, that contains only one value of mean rewards for first player
     """
     # list genome to 
     agent_train.genome = gen_const.convert_genome(vector=individual)

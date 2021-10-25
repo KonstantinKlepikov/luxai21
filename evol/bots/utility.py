@@ -3,6 +3,9 @@ from typing import List, Dict
 from collections import namedtuple
 import random
 
+NIGHT_SOON = 25
+NIGHT_START = 30
+NIGHT_END = 39
 
 def get_times_of_days() -> Dict[str, List[int]]:
     """Get information about days and nights in game statement
@@ -10,17 +13,29 @@ def get_times_of_days() -> Dict[str, List[int]]:
     Returns:
         Dict[List[int]]: dict of lists with index numbers
     """
-    days = list(range(0, 30))
-    nights = list(range(310, 360))
-    mult = [0, 80, 160, 240]
-    
-    for i in list(range(70, 110)):
-        days.extend([num + i for num in mult])
-            
-    for i in list(range(30, 70)):
-        nights.extend([num + i for num in mult])
+    # days = list(range(0, 30))
+    # nights = list(range(310, 360))
+    # mult = [0, 80, 160, 240]
+    #
+    # for i in list(range(70, 110)):
+    #     days.extend([num + i for num in mult])
+    #
+    # for i in list(range(30, 70)):
+    #     nights.extend([num + i for num in mult])
+    days = []
+    evenings = []
+    nights = []
 
-    return {'day_list': days, 'night_list': nights}
+    for day in range(361):
+        day_time = day % 40
+        if NIGHT_SOON <= day_time < NIGHT_START:
+            evenings.append(day)
+        elif NIGHT_START <= day_time <= NIGHT_END:
+            nights.append(day)
+        else:
+            days.append(day)
+    # return {'day_list': days, 'night_list': nights}
+    return {'day_list': days, 'evening_list': evenings, 'night_list': nights}
 
 
 class GenConstruct:
@@ -29,7 +44,11 @@ class GenConstruct:
         self.Probability = namedtuple(
             'Probability', [
                 'move_to_closest_resource',
+                # 'move_to_certain_resource',         # if research allows to mine coal or radium
                 'move_to_closest_citytile',
+                # 'move_to_build_place',              # if cargo full and not evening or night,
+                                                    # without step on citytiles TODO priotity build of wood
+                # 'move_to_closest_cart',             # if cargo full and cart is close
                 'move_random',
                 'transfer',
                 'mine',
