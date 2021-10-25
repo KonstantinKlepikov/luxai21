@@ -3,9 +3,6 @@ from typing import List, Dict
 from collections import namedtuple
 import random
 
-NIGHT_SOON = 25
-NIGHT_START = 30
-NIGHT_END = 39
 
 def get_times_of_days() -> Dict[str, List[int]]:
     """Get information about days and nights in game statement
@@ -13,15 +10,11 @@ def get_times_of_days() -> Dict[str, List[int]]:
     Returns:
         Dict[List[int]]: dict of lists with index numbers
     """
-    # days = list(range(0, 30))
-    # nights = list(range(310, 360))
-    # mult = [0, 80, 160, 240]
-    #
-    # for i in list(range(70, 110)):
-    #     days.extend([num + i for num in mult])
-    #
-    # for i in list(range(30, 70)):
-    #     nights.extend([num + i for num in mult])
+    
+    NIGHT_SOON = 25
+    NIGHT_START = 30
+    NIGHT_END = 39
+
     days = []
     evenings = []
     nights = []
@@ -34,8 +27,13 @@ def get_times_of_days() -> Dict[str, List[int]]:
             nights.append(day)
         else:
             days.append(day)
-    # return {'day_list': days, 'night_list': nights}
     return {'day_list': days, 'evening_list': evenings, 'night_list': nights}
+
+
+# day constants
+ALL_DAYS: List[int] = [x + y for x in range(30) for y in range(0, 360, 40)]
+ALL_MORNINGS: List[int] = [x for x in range(0, 360, 40) if x]
+ALL_NIGHTS: List[int] = [x + y for x in range(30, 40) for y in range(0, 360, 40)]
 
 
 class GenConstruct:
@@ -47,7 +45,7 @@ class GenConstruct:
                 # 'move_to_certain_resource',         # if research allows to mine coal or radium
                 'move_to_closest_citytile',
                 # 'move_to_build_place',              # if cargo full and not evening or night,
-                                                    # without step on citytiles TODO priotity build of wood
+                                                    # without step on citytiles TODO: priotity build of wood
                 # 'move_to_closest_cart',             # if cargo full and cart is close
                 'move_random',
                 'transfer',
