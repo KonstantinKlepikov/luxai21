@@ -1,9 +1,7 @@
 from lux.game_objects import Unit, CityTile
 from lux.game_map import Position
 from bots.utility import CONSTANTS as cs
-from bots.statements import (
-    TileState, TilesCollection, StatesCollectionsCollection
-)
+from bots.statements import TileState, TilesCollection, StatesCollectionsCollection
 import math
 from typing import List
 import os, sys
@@ -20,14 +18,14 @@ else:
 
 
 class Geometric:
-    """Get geometric calculation acros map
+    """Get geometric calculation across the map
     """
     
     def __init__(self, pos: Position) -> None:
         self.pos = pos
 
     def get_distance(self, target_pos: Position) -> float:
-        """Get distance betwin positions
+        """Get distance between positions
         Args:
             target_pos (Position): position object
 
@@ -38,7 +36,7 @@ class Geometric:
         return self.pos.distance_to(target_pos)    
 
     def get_direction(self, target_pos: Position) -> str:
-        """Get directin to target position
+        """Get direction to target position
         Returns the direction that would move you closest to target_pos from this Position 
         if you took a single step. In particular, will return DIRECTIONS.CENTER if this Position 
         is equal to the target_pos. Note that this does not check for potential collisions with 
@@ -49,7 +47,7 @@ class Geometric:
         Returns:
             str: DIRECTIONS prefix 
             s - south 
-            n - nord
+            n - north
             w - west
             e - east
             c - center
@@ -62,10 +60,10 @@ class Geometric:
         return self.pos.translate(pos_dir, eq)
     
     def get_ajacent_positions(self) -> List[Position]: # FIXME: out of range
-        """Get ajacent positions
+        """Get adjacent positions
 
         Returns:
-            list: List of ajacent objscts positions
+            list: List of adjacent objects positions
         """
         ajacent_pos = []
         for i in cs.DIRECTIONS:
@@ -95,7 +93,7 @@ class Geometric:
 
 
 class UnitPerformance:
-    """Perform unit object with his posible actions
+    """Perform unit object with his possible actions
     """
     def __init__(
         self, 
@@ -134,7 +132,7 @@ class UnitPerformance:
             ajacent = self.geometric.get_ajacent_positions() # TODO: move to tilestatements
             states = []
             for pos in ajacent:
-                try: # FIXME: list index out of range (it is timless solution)
+                try: # FIXME: list index out of range (it is temporal solution)
                     tile_state = self.states_collection.get_state(pos=pos)
                     states.append(tile_state)
                 except IndexError:
@@ -153,7 +151,7 @@ class UnitPerformance:
         self.actions['move_random'] = None
 
     def _set_transfer(self) -> None:
-        """Set transfere action
+        """Set transfer action
         """
         for state in self._ajacent_tile_states: # TODO: move to tolestatements
             if state.is_owned_by_player:
