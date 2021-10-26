@@ -835,7 +835,6 @@ class TilesCollection:
             self.__workers_id = [worker.id for worker in self.__workers]
         return self.__workers_id
 
-
     @property
     def player_carts_id(self) -> List[str]:
         """
