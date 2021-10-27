@@ -1,11 +1,12 @@
 from lux.game_objects import Unit, CityTile
+from lux.game_map import Position, Cell
 from bots.statements import TilesCollection
-from bots.performances import UnitPerformance, CityPerformance, Geometric
+from bots.performances import UnitPerformance, CityPerformance
 from bots.utility import CONSTANTS as cs
 from typing import List, Union, Dict
 from collections import namedtuple
 import random
-import os, sys
+import os, sys, math
 
 
 if os.path.exists("/kaggle"):  # check if we're on a kaggle server
@@ -16,6 +17,81 @@ if os.path.exists("/kaggle"):  # check if we're on a kaggle server
     logger.addHandler(handler)
 else:
     from loguru import logger  # log to file locally
+    
+
+class Geometric:
+    """Get geometric calculation across the map
+    """
+    
+    def __init__(self, pos: Position) -> None:
+        self.pos = pos
+
+    def get_distance(self, target_pos: Position) -> float:
+        """Get distance between positions
+        Args:
+            target_pos (Position): position object
+
+        Returns:
+            float: the Manhattan (rectilinear) distance 
+        """
+        
+        return self.pos.distance_to(target_pos)
+
+    def get_direction(self, target_pos: Position) -> str:
+        """Get direction to target position
+        Returns the direction that would move you closest to target_pos from this Position 
+        if you took a single step. In particular, will return DIRECTIONS.CENTER if this Position 
+        is equal to the target_pos. Note that this does not check for potential collisions with 
+        other units but serves as a basic pathfinding method
+        Args:
+            target_pos (Position): position object
+
+        Returns:
+            str: DIRECTIONS prefix 
+            s - south 
+            n - north
+            w - west
+            e - east
+            c - center
+        """
+        return self.pos.direction_to(target_pos)
+
+    def get_position_by_direction(self, pos_dir: str, eq: int = 1) -> Position:
+        """Get position by direction"""
+                
+        return self.pos.translate(pos_dir, eq)
+    
+    def get_ajacent_positions(self) -> List[Position]: # TODO: remove, use from TileState
+        """Get adjacent positions
+
+        Returns:
+            list: List of adjacent objects positions
+        """
+        ajacent_pos = []
+        for i in cs.DIRECTIONS:
+            if i != 'c':
+                ajacent_pos.append(self.pos.translate(i, 1))
+            
+        return ajacent_pos
+
+    def get_closest_pos(self, positions: List[Union[Cell, CityTile, Unit]]) -> Position:
+        """Get closest position
+
+        Args:
+            positions (list): list of objects
+
+        Returns:
+            Position: closest Position object
+        """
+        closest_dist = math.inf
+        closest_pos = None
+        for position in positions:
+            dist = self.pos.distance_to(position.pos)
+            if dist < closest_dist:
+                closest_dist = dist
+                closest_pos = position
+                
+        return closest_pos.pos
 
 
 def select_actions(
