@@ -59,7 +59,7 @@ class Geometric:
                 
         return self.pos.translate(pos_dir, eq)
     
-    def get_ajacent_positions(self) -> List[Position]: # FIXME: out of range
+    def get_ajacent_positions(self) -> List[Position]: # TODO: remove, use from TileState
         """Get adjacent positions
 
         Returns:
@@ -129,7 +129,7 @@ class UnitPerformance:
             list: list of statements
         """
         if self.__ajacent_tile_states is None:
-            ajacent = self.geometric.get_ajacent_positions() # TODO: move to tilestatements
+            ajacent = self.geometric.get_ajacent_positions() # TODO: use from TileState
             states = []
             for pos in ajacent:
                 try: # FIXME: list index out of range (it is temporal solution)

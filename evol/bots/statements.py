@@ -753,6 +753,7 @@ class TileState:
     """
     def __init__(self, tiles_collection: TilesCollection, pos: Position) -> None:
         self.tiles_collection = tiles_collection
+        self.pos = pos
         self.cell = tiles_collection.game_state.map.get_cell(pos.x, pos.y)
         self.__is_owned_by_player = None
         self.__is_owned_by_opponent = None
@@ -771,6 +772,8 @@ class TileState:
         self.__is_cart = None
 
         self.__is_empty = None
+        self.__ajacent = None
+        self.__is_controversial_by = None
 
 
     @property
@@ -880,7 +883,7 @@ class TileState:
     
     @property
     def is_cart(self) -> bool:
-        """Is tile worker
+        """Is tile cart
         """
         if self.__is_cart is None:
             self.__is_cart = bool(self.cell in self.tiles_collection.carts)
@@ -896,6 +899,40 @@ class TileState:
             else:
                 self.__is_empty = False
         return self.__is_empty
+    
+    @property
+    def ajacent(self) -> List[Position]: # TODO: check the border FIXME: out of range
+        """Claculate list of position of ajacent tiles
+
+        Returns:
+            List[Position]: list of positions
+        """
+        if self.__ajacent is None:
+            self.__ajacent = []
+            for i in cs.DIRECTIONS:
+                if i != 'c':
+                    self.__ajacent.append(self.pos.translate(i, 1))
+        return self.__ajacent
+    
+    @property
+    def is_controversial_by(self, unit: Unit) -> List[Unit]:
+        """Is controversal by units
+
+        Args:
+            unit (Unit): unit, that placed on ajacent tile
+
+        Returns:
+            List[Unit]: list of units
+        """
+        if self.__is_controversial_by is None:
+            self.__is_controversial_by = []
+            self.__is_controversial_by.append(unit)
+        elif unit not in self.__is_controversial_by:
+            self.__is_controversial_by.append(unit)
+        if len(self.__is_controversial_by) > 1:
+            return self.__is_controversial_by
+        else: 
+            return []
 
 
 class StatesCollectionsCollection:
