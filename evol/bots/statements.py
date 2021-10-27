@@ -936,11 +936,21 @@ class TileState:
 
 
 class StatesCollectionsCollection:
+    """Get statement matrix across all tiles
+    """
     def __init__(self, game_state: Game, tiles_collection: TilesCollection) -> None:
         self.states_map = [[None for _ in range(game_state.map.width)] for _ in range(game_state.map.height)]
         self.tiles_collection = tiles_collection
         
-    def get_state(self, pos: Position):
+    def get_state(self, pos: Position) -> TileState:
+        """Get TileState of any tile by position
+
+        Args:
+            pos (Position): position object
+
+        Returns:
+            [type]: TileState object for given position
+        """
         if self.states_map[pos.x][pos.y] is None:
             self.states_map[pos.x][pos.y] = TileState(tiles_collection=self.tiles_collection, pos=pos)
         return self.states_map[pos.x][pos.y]

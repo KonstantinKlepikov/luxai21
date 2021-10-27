@@ -92,6 +92,95 @@ class Geometric:
         return closest_pos.pos
 
 
+class Performance:
+    
+    def __init__(
+        self, 
+        tiles_collection: TilesCollection, 
+        states_collection: StatesCollectionsCollection, 
+        unit: Unit
+        ) -> None:
+        self.unit = unit
+        self.tiles_collection = tiles_collection
+        self.states_collection = states_collection
+        self.__current_tile_state = None
+        self.__ajacent_tile_states = None
+        self.actions = {'obj': unit}
+        self.geometric = Geometric(unit.pos)
+        self.posible_actions = list(set([method for method in dir(Performance) if method.startswith('perform_')]))
+        
+    @property
+    def _current_tile_state(self) -> TileState:
+        """Current cell statement
+
+        Returns:
+            TileState: statements
+        """
+        if self.__current_tile_state is None:
+            self.__current_tile_state = self.states_collection.get_state(pos=self.unit.pos)
+
+        return self.__current_tile_state
+    
+    @property 
+    def _ajacent_tile_states(self) -> List[TileState]:
+        """Get list of statements of ajacent tiles
+
+        Returns:
+            list: list of statements
+        """
+        if self.__ajacent_tile_states is None:
+            tile_state = self.states_collection.get_state(pos=self.unit.pos)
+            ajacent = tile_state.ajacent
+            states = []
+            for pos in ajacent:
+                try: # FIXME: list index out of range (it is temporal solution)
+                    tile_state = self.states_collection.get_state(pos=pos)
+                    states.append(tile_state)
+                except IndexError:
+                    continue
+            self.__ajacent_tile_states = states
+ 
+        return self.__ajacent_tile_states
+    
+    @property
+    def perform_move_to_city(self) -> None:
+        """Perform move to closest city
+        """
+        if not self.unit.get_cargo_space_left():
+            self.actions[self.perform_move_to_city.__name__] = None
+
+    @property
+    def perform_transfer(self) -> None:
+        """Perform transfer action
+        """
+        for state in self._ajacent_tile_states:
+            if state.is_owned_by_player:
+                if (state.is_worker and (cs.RESOURCE_CAPACITY.WORKER - self.unit.get_cargo_space_left())) or \
+                    (state.is_cart and (cs.RESOURCE_CAPACITY.CART - self.unit.get_cargo_space_left())):
+                    self.actions[self.perform_transfer.__name__] = None
+                    break
+ 
+
+class WorkerPerformance(Performance):
+    
+    @property
+    def perform_move_to_resource(self) -> None:
+        """Perform move to closest resource
+        """
+        if self.unit.get_cargo_space_left():
+            self.actions[self.perform_move_to_resource.__name__] = None
+
+
+class CartPerformance(Performance):
+    
+    @property
+    def perform_move_to_worker(self) -> None:
+        """Perform move to closest resource
+        """
+        if self.unit.get_cargo_space_left():
+            self.actions[self.perform_move_to_worker.__name__] = None
+
+
 class UnitPerformance:
     """Perform unit object with his possible actions
     """
