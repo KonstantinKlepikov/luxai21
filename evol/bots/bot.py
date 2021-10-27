@@ -1,5 +1,5 @@
 from bots.statements import TilesCollection, StatesCollectionsCollection
-from bots.performances import UnitPerformance, CityPerformance
+from bots.performances import PerformAndGetActions
 from bots.actions import select_actions, get_action
 from typing import List
 from collections import namedtuple
@@ -37,40 +37,22 @@ def get_bot_actions(
 
     # get possible performances list that contains two dicts - for units and citytiles seperately
     performances = []
-
-    for unit in tiles_collection.player_units:
-        act = UnitPerformance(
+    
+    for obj_ in tiles_collection.player_units + tiles_collection.player_citytiles:
+        act = PerformAndGetActions(
             tiles_collection=tiles_collection,
             states_collection=states_collection,
-            unit=unit
-            )
-        performances.append(act.get_actions())
-
-    for citytile in tiles_collection.player_citytiles:
-        act = CityPerformance(
-            tiles_collection=tiles_collection,
-            states_collection=states_collection,
-            citytile=citytile
-            )
-        performances.append(act.get_actions())
-
-
+            obj_=obj_
+        )
+    performances.append(act.get_actions())
     logger.info(f'Current performancies: {performances}')
 
 
     # get probabilities of units and cttytiles performancies and get reduced probability
-    selected = select_actions(
+    actions = select_actions(
         tiles_collection=tiles_collection,
         performances=performances,
         genome=genome
     )
 
-    # get actions for each object
-    for select in selected:
-        
-        act = get_action(tiles_collection=tiles_collection, obj_for_act=select)
-        if act:
-            actions.append(act)
-            logger.info(f'Act: {act}')
-            
     return actions
