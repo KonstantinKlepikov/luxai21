@@ -14,6 +14,11 @@ class GenConstruct:
     
     @property
     def Probability(self) -> namedtuple:
+        """Construct the genome base from list of possible performances of objects
+
+        Returns:
+            namedtuple: empty genome object
+        """
         if self.__Probability is None:
             workers_per = [method for method in dir(WorkerPerformance) if method.startswith('perform_')]
             carts_per = [method for method in dir(CartPerformance) if method.startswith('perform_')]

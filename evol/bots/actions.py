@@ -25,13 +25,12 @@ def select_actions(
 
     Args:
         tiles_collection (TilesCollection): collection of game tales
-        performances (List[Union[UnitPerformance, CityPerformance]]): list of possible 
+        performances  List[Dict[str, Union[Unit, CityTile, str]]]: list of possible 
             performancies for every city and unit
-        genome (List[float]): action genome
-        logger(Logger): logger object
+        genome List[namedtuple]: action genome
 
     Returns:
-        List[str]: actions for each object in game
+        List[str]: actions for each object in a game
     """
 
     selected = []

@@ -19,6 +19,5 @@ tar -czvf submissions/submission.tar.gz \
 --exclude="npstatements.py" \
 --exclude="tournament.py" \
 --exclude="evol.py" \
---exclude="bots/genutil.py" \
 --exclude="bots_dump/hall_of_fame.json" \
 *

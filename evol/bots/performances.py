@@ -16,14 +16,22 @@ else:
     from loguru import logger  # log to file locally
 
 
-class Geometric:
-    """Get geometric calculation across the map
+class Performance:
+    """Base class, provides constructhor and methods
+    for some calculations with object, that can act
     """
-    
-    def __init__(self, pos: Position) -> None:
-        self.pos = pos
-
-    def get_distance(self, target_pos: Position) -> float:
+   
+    def __init__(
+        self, 
+        tiles_collection: TilesCollection, 
+        states_collection: StatesCollectionsCollection,
+        obj_: Union[Unit, CityTile]
+        ) -> None:
+        self.tiles_collection = tiles_collection
+        self.states_collection = states_collection
+        self.obj = obj_
+        
+    def _get_distance(self, target_pos: Position) -> float:
         """Get distance between positions
         Args:
             target_pos (Position): position object
@@ -32,9 +40,9 @@ class Geometric:
             float: the Manhattan (rectilinear) distance 
         """
         
-        return self.pos.distance_to(target_pos)
-
-    def get_direction(self, target_pos: Position) -> str:
+        return self.obj.pos.distance_to(target_pos)
+    
+    def _get_direction(self, target_pos: Position) -> str:
         """Get direction to target position
         Returns the direction that would move you closest to target_pos from this Position 
         if you took a single step. In particular, will return DIRECTIONS.CENTER if this Position 
@@ -51,14 +59,14 @@ class Geometric:
             e - east
             c - center
         """
-        return self.pos.direction_to(target_pos)
-
-    def get_position_by_direction(self, pos_dir: str, eq: int = 1) -> Position:
+        return self.obj.pos.direction_to(target_pos)
+    
+    def _get_position_by_direction(self, pos_dir: str, eq: int = 1) -> Position:
         """Get position by direction"""
                 
-        return self.pos.translate(pos_dir, eq)
-
-    def get_closest_pos(self, positions: List[Union[Cell, CityTile, Unit]]) -> Position:
+        return self.obj.pos.translate(pos_dir, eq)
+    
+    def _get_closest_pos(self, positions: List[Union[Cell, CityTile, Unit]]) -> Position:
         """Get closest position
 
         Args:
@@ -70,29 +78,17 @@ class Geometric:
         closest_dist = math.inf
         closest_pos = None
         for position in positions:
-            dist = self.pos.distance_to(position.pos)
+            dist = self.obj.pos.distance_to(position.pos)
             if dist < closest_dist:
                 closest_dist = dist
                 closest_pos = position
         if closest_pos:     
             return closest_pos.pos
-
-
-class Performance:
-   
-    def __init__(
-        self, 
-        tiles_collection: TilesCollection, 
-        states_collection: StatesCollectionsCollection,
-        obj_: Union[Unit, CityTile]
-        ) -> None:
-        self.tiles_collection = tiles_collection
-        self.states_collection = states_collection
-        self.obj = obj_
-        self.geo = Geometric(obj_.pos)
  
  
 class UnitPerformance(Performance):
+    """Performances for units of any type
+    """
 
     def __init__(
         self,
@@ -142,7 +138,7 @@ class UnitPerformance(Performance):
         """Perform move to closest city
         """
         if not self.obj.get_cargo_space_left():
-            closest = self.geo.get_closest_pos(self.tiles_collection.citytiles)
+            closest = self._get_closest_pos(self.tiles_collection.citytiles)
             if closest:
                 dir_to_closest = self.obj.pos.direction_to(closest)
                 self.actions[self.perform_move_to_city.__name__] = self.obj.move(dir_to_closest)
@@ -166,7 +162,7 @@ class WorkerPerformance(UnitPerformance):
         """Perform move to closest resource
         """
         if self.obj.get_cargo_space_left():
-            closest = self.geo.get_closest_pos(self.tiles_collection.resources)
+            closest = self._get_closest_pos(self.tiles_collection.resources)
             if closest:
                 dir_to_closest = self.obj.pos.direction_to(closest)
                 self.actions[self.perform_move_to_resource.__name__] = self.obj.move(dir_to_closest)
@@ -194,7 +190,7 @@ class WorkerPerformance(UnitPerformance):
                     self.actions[self.perform_mine.__name__] = None
                     break
 
-    def perform_build_city(self) -> None:
+    def perform_build_city(self) -> None: # TODO: perform to closest empty space and build
         """Perform build city action
         """
         if self.obj.can_build(self.tiles_collection.game_state.map):
@@ -209,7 +205,7 @@ class CartPerformance(UnitPerformance):
         """Perform move to closest resource
         """
         if self.obj.get_cargo_space_left():
-            closest = self.geo.get_closest_pos(self.tiles_collection.player_workers)
+            closest = self._get_closest_pos(self.tiles_collection.player_workers)
             if closest:
                 dir_to_closest = self.obj.pos.direction_to(closest)
                 self.actions[self.perform_move_to_worker.__name__] = self.obj.move(dir_to_closest)
@@ -263,6 +259,9 @@ class CityPerformance(Performance):
 
 
 class PerformAndGetActions(Performance):
+    """This class construct all possible performancies and actions for all objects
+    that can act
+    """
     
     def __init__(
         self,
@@ -271,10 +270,12 @@ class PerformAndGetActions(Performance):
         obj_: Union[Unit, CityTile]
         ) -> None:
         super().__init__(tiles_collection, states_collection, obj_)
-        self.geo = Geometric(obj_.pos)
 
     def get_actions(self) -> Dict[str, Union[Unit, CityTile, str]]:
         """Set all possible actions
+        
+        In this realisation we need use all methods of corresponded performance classes
+        because on that is based genom
 
         Returns:
             dict: performed actions of object and actions

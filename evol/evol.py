@@ -42,8 +42,8 @@ NUM_EPISODES = 10  # number of games for mean reward calculating
 TOURNAMENT_SIZE = 2
 
 # Genetic Algorithm constants:
-POPULATION_SIZE = 10 # number of individuals in population 
-MAX_GENERATIONS = 2  # number of steps for evolution
+POPULATION_SIZE = 20 # number of individuals in population 
+MAX_GENERATIONS = 50  # number of steps for evolution
 P_CROSSOVER = 0.9  # probability for crossover
 INDPB_CROSSOVER = 10.0/GENOME_LENGHT
 P_MUTATION = 0.1  # probability for mutating an individual
@@ -100,6 +100,7 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
         debug=False
         )
     
+    # TODO: move to function or class all scoring function operations
     # experimental get mean rewards with biased intermediate result for first player
     in_rewards = list(agent_train.intermediate.values())
     rewards = [l[0] * 9 for l in rewards]
