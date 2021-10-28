@@ -1,9 +1,8 @@
 from lux.game import Game
-from bots.utility import GenConstruct
+from bots.genutil import GenConstruct
 from bots.statements import TilesCollection, StatesCollectionsCollection
 from bots.bot import get_bot_actions
-import json
-import os, sys
+import os, sys, json
 
 
 if os.path.exists("/kaggle"):  # check if we're on a kaggle server
@@ -15,14 +14,12 @@ if os.path.exists("/kaggle"):  # check if we're on a kaggle server
 else:
     from loguru import logger  # log to file locally
 
-
 dir_path = os.path.dirname(__file__)
 bot_genome_path = os.path.abspath(os.path.join(dir_path, "bots_dump/best_bot.json"))
 with open(bot_genome_path, "r") as f:
     genome_list = json.load(f)
 gen_const = GenConstruct()
 genome = gen_const.convert_genome(vector=genome_list)
-
 
 game_state = None
 

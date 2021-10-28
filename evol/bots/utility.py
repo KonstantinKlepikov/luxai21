@@ -1,7 +1,6 @@
 from lux.game_constants import GAME_CONSTANTS as cs
 from typing import List, Dict
 from collections import namedtuple
-import random
 
 
 def get_times_of_days() -> Dict[str, List[int]]:
@@ -34,76 +33,6 @@ def get_times_of_days() -> Dict[str, List[int]]:
 ALL_DAYS: List[int] = [x + y for x in range(30) for y in range(0, 360, 40)]
 ALL_MORNINGS: List[int] = [x for x in range(0, 360, 40) if x]
 ALL_NIGHTS: List[int] = [x + y for x in range(30, 40) for y in range(0, 360, 40)]
-
-
-class GenConstruct:
-
-    def __init__(self) -> None:
-        self.Probability = namedtuple(
-            'Probability', [
-                'move_to_closest_resource',
-                # 'move_to_certain_resource',         # if research allows to mine coal or radium
-                'move_to_closest_citytile',
-                # 'move_to_build_place',              # if cargo full and not evening or night,
-                                                    # without step on citytiles TODO: priotity build of wood
-                # 'move_to_closest_cart',             # if cargo full and cart is close
-                'move_random',
-                'transfer',
-                'mine',
-                'pillage',
-                'build',
-                'u_pass',
-                'research',
-                'build_cart',
-                'build_worker',
-                'c_pass',
-            ]
-        )
-        self.prob_len = len(self.Probability._fields)
-
-    def rnd(self) -> int:
-        """Get random int value in range [0, 10]
-
-        Returns:
-            int: random int in range [0, 10]
-        """
-        return random.randint(0, 10)
-
-    def init_genome(self) -> List[namedtuple]:
-        """Initialize probability timiline for start learning
-
-        Returns:
-            List[namedtuple]: lis of probability for each turn of game
-        """
-        genome_init = [self.rnd() for _ in range(self.prob_len)]
-        prob = self.Probability._make(genome_init)
-        genome = [prob for _ in range(360)]
-        return genome
-
-    def get_genome_vector(self) -> List[int]:
-        """Create random genome vector
-
-        Returns:
-            List[int]: list of random int with range [0, 10]
-        """
-        vector = [self.rnd() for _ in range(360*self.prob_len)]
-        return vector
-
-    def convert_genome(self, vector: List[int]) -> List[namedtuple]:
-        """Convert genome list to lost of named tuples
-
-        Args:
-            vector (List[int]): genom
-
-        Returns:
-            List[namedtuple]: list of named tuples representation
-        """
-        genome = []
-        for i in range(360):
-            line_v = vector[i*self.prob_len: i*self.prob_len+self.prob_len]
-            genome_line = self.Probability._make(line_v)
-            genome.append(genome_line)
-        return genome
 
 
 def make_constants_nt(cs: dict) -> namedtuple:

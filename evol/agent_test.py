@@ -1,10 +1,9 @@
 from lux.game import Game
-from bots.utility import GenConstruct
+from bots.genutil import GenConstruct
 from bots.statements import TilesCollection, StatesCollectionsCollection
 from bots.bot import get_bot_actions
 from loguru import logger
-import json
-import time
+import json, time
 
 
 logger.info('Start Logging agent_test.py...')
