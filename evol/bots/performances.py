@@ -1,4 +1,3 @@
-from collections import namedtuple
 from lux.game_objects import Unit, CityTile
 from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
@@ -75,8 +74,8 @@ class Geometric:
             if dist < closest_dist:
                 closest_dist = dist
                 closest_pos = position
-                
-        return closest_pos.pos
+        if closest_pos:     
+            return closest_pos.pos
 
 
 class Performance:
@@ -144,8 +143,9 @@ class UnitPerformance(Performance):
         """
         if not self.obj.get_cargo_space_left():
             closest = self.geo.get_closest_pos(self.tiles_collection.citytiles)
-            dir_to_closest = self.obj.pos.direction_to(closest)
-            self.actions[self.perform_move_to_city.__name__] = self.obj.move(dir_to_closest)
+            if closest:
+                dir_to_closest = self.obj.pos.direction_to(closest)
+                self.actions[self.perform_move_to_city.__name__] = self.obj.move(dir_to_closest)
 
     def perform_transfer(self) -> None: # TODO: need to know resource for transfer and destination
         """Perform transfer action
@@ -167,8 +167,9 @@ class WorkerPerformance(UnitPerformance):
         """
         if self.obj.get_cargo_space_left():
             closest = self.geo.get_closest_pos(self.tiles_collection.resources)
-            dir_to_closest = self.obj.pos.direction_to(closest)
-            self.actions[self.perform_move_to_resource.__name__] = self.obj.move(dir_to_closest)
+            if closest:
+                dir_to_closest = self.obj.pos.direction_to(closest)
+                self.actions[self.perform_move_to_resource.__name__] = self.obj.move(dir_to_closest)
 
     def perform_pillage(self) -> None:
         """Perform pillage for worker
@@ -209,8 +210,9 @@ class CartPerformance(UnitPerformance):
         """
         if self.obj.get_cargo_space_left():
             closest = self.geo.get_closest_pos(self.tiles_collection.player_workers)
-            dir_to_closest = self.obj.pos.direction_to(closest)
-            self.actions[self.perform_move_to_worker.__name__] = self.obj.move(dir_to_closest)
+            if closest:
+                dir_to_closest = self.obj.pos.direction_to(closest)
+                self.actions[self.perform_move_to_worker.__name__] = self.obj.move(dir_to_closest)
 
 
 class CityPerformance(Performance):
@@ -275,12 +277,13 @@ class PerformAndGetActions(Performance):
         """Set all possible actions
 
         Returns:
-            dict: object and his posible actions
+            dict: performed actions of object and actions
         """
-        perform = {'obj': self.obj}
         if self.obj.can_act():
             if isinstance(self.obj, Unit):
+                logger.info('Im a unit')
                 if self.obj.is_worker():
+                    logger.info('Im a worker')
                     perform = WorkerPerformance(
                         tiles_collection=self.tiles_collection,
                         states_collection=self.states_collection,
@@ -292,7 +295,9 @@ class PerformAndGetActions(Performance):
                     perform.perform_mine()
                     perform.perform_transfer()
                     perform.perform_pillage()
+                    return perform.actions
                 if self.obj.is_cart():
+                    logger.info('Im a cart')
                     perform = CartPerformance(
                         tiles_collection=self.tiles_collection,
                         states_collection=self.states_collection,
@@ -301,14 +306,17 @@ class PerformAndGetActions(Performance):
                     perform.perform_move_to_city()
                     perform.perform_move_to_worker()
                     perform.perform_transfer()
+                    return perform.actions
             if isinstance(self.obj, CityTile):
-                    perform = CityPerformance(
-                        tiles_collection=self.tiles_collection,
-                        states_collection=self.states_collection,
-                        obj_=self.obj
-                        )
-                    perform.perform_research()
-                    perform.perform_build_cart()
-                    perform.perform_build_worker()
-                    
-        return perform.actions
+                logger.info('Im a city')
+                perform = CityPerformance(
+                    tiles_collection=self.tiles_collection,
+                    states_collection=self.states_collection,
+                    obj_=self.obj
+                    )
+                perform.perform_research()
+                perform.perform_build_cart()
+                perform.perform_build_worker()
+                return perform.actions
+            logger.info('Im a nothing')
+        logger.info('Im cant act')

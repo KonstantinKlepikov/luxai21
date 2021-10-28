@@ -7,7 +7,6 @@ from bots.utility import ALL_MORNINGS
 
 logger.info('Start Logging agent_train.py...')
 
-
 game_state = None
 genome = None
 game_eval = -1
@@ -31,8 +30,6 @@ def agent(observation, configuration):
         game_state._update(observation["updates"])
 
     # Bot code #
-    actions = []
-
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
 

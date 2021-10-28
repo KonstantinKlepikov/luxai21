@@ -1,17 +1,13 @@
 from lux.game import Game
-from bots.utility import GenConstruct
+from bots.genutil import GenConstruct
 from bots.statements import TilesCollection, StatesCollectionsCollection
 from bots.bot import get_bot_actions
 from loguru import logger
-import json
 import time
 
 
 logger.info('Start Logging agent_random.py...')
 
-
-with open("bots_dump/best_bot.json", "r") as f:
-    genome_list = json.load(f)
 gen_const = GenConstruct()
 genome = gen_const.init_genome()
 

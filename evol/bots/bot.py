@@ -37,22 +37,27 @@ def get_bot_actions(
 
     # get possible performances list that contains two dicts - for units and citytiles seperately
     performances = []
-    
+
     for obj_ in tiles_collection.player_units + tiles_collection.player_citytiles:
+        logger.info(f'Obj: {obj_}')
         act = PerformAndGetActions(
             tiles_collection=tiles_collection,
             states_collection=states_collection,
             obj_=obj_
         )
-    performances.append(act.get_actions())
+        per = act.get_actions()
+        logger.info(f'Per: {per}')
+        if per:
+            performances.append(per)
     logger.info(f'Current performancies: {performances}')
 
-
     # get probabilities of units and cttytiles performancies and get reduced probability
-    actions = select_actions(
-        tiles_collection=tiles_collection,
-        performances=performances,
-        genome=genome
-    )
+    if performances:
+        actions = select_actions(
+            tiles_collection=tiles_collection,
+            performances=performances,
+            genome=genome
+        )
+    logger.info(f'Actions: {actions}')
 
     return actions

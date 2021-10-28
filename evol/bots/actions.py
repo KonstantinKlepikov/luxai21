@@ -58,7 +58,9 @@ def select_actions(
             # get random choice 
             c = random.choices(population=p_per, weights=weights)
             # append chosen performance, associated with object of unit or city
-            selected.append(per[c[0]])
+            # If nothing to do (for example for mine) - it is skiped
+            if per[c[0]]:
+                selected.append(per[c[0]])
 
     logger.info(f'Current selected: {selected}')
 
