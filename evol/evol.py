@@ -1,6 +1,6 @@
 from deap import base, creator, tools, algorithms
 from kaggle_environments import evaluate
-from bots.utility import GenConstruct
+from bots.genutil import GenConstruct
 import agent_train
 import numpy as np
 import matplotlib.pyplot as plt
@@ -36,14 +36,14 @@ CONFIGURATIONS = {
     'loglevel': 0,
     'annotations': False
     }
-NUM_EPISODES = 20  # number of games for mean reward calculating
+NUM_EPISODES = 10  # number of games for mean reward calculating
 
 # sise of tournament. For much robust tournament - choose small value
 TOURNAMENT_SIZE = 2
 
 # Genetic Algorithm constants:
-POPULATION_SIZE = 20 # number of individuals in population 
-MAX_GENERATIONS = 10  # number of steps for evolution
+POPULATION_SIZE = 10 # number of individuals in population 
+MAX_GENERATIONS = 2  # number of steps for evolution
 P_CROSSOVER = 0.9  # probability for crossover
 INDPB_CROSSOVER = 10.0/GENOME_LENGHT
 P_MUTATION = 0.1  # probability for mutating an individual

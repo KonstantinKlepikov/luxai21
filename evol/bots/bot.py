@@ -1,6 +1,6 @@
 from bots.statements import TilesCollection, StatesCollectionsCollection
 from bots.performances import PerformAndGetActions
-from bots.actions import select_actions, get_action
+from bots.actions import select_actions
 from typing import List
 from collections import namedtuple
 import os, sys

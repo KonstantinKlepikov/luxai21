@@ -1,3 +1,4 @@
+from collections import namedtuple
 from lux.game_objects import Unit, CityTile
 from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
@@ -79,7 +80,7 @@ class Geometric:
 
 
 class Performance:
-    
+   
     def __init__(
         self, 
         tiles_collection: TilesCollection, 
@@ -89,12 +90,11 @@ class Performance:
         self.tiles_collection = tiles_collection
         self.states_collection = states_collection
         self.obj = obj_
-        self.posible_actions = list(set([method for method in dir(Performance) if method.startswith('perform_')]))
         self.geo = Geometric(obj_.pos)
  
  
 class UnitPerformance(Performance):
-    
+
     def __init__(
         self,
         tiles_collection: TilesCollection,
@@ -270,7 +270,7 @@ class PerformAndGetActions(Performance):
         ) -> None:
         super().__init__(tiles_collection, states_collection, obj_)
         self.geo = Geometric(obj_.pos)
-        
+
     def get_actions(self) -> Dict[str, Union[Unit, CityTile, str]]:
         """Set all possible actions
 
