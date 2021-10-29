@@ -76,15 +76,15 @@ class TilesCollection:
         self.__uraniums = None
         self.__uraniums_pos = None
 
-        self.__cities_id = None
         self.__player_cities_id = None
         self.__opponent_cities_id = None
-        self.__workers_id = None
+        self.__cities_id = None
         self.__player_workers_id = None
         self.__opponent_workers_id = None
-        self.__carts_id = None
+        self.__workers_id = None
         self.__player_carts_id = None
         self.__opponent_carts_id = None
+        self.__carts_id = None
 
     @property
     def map_cells(self) -> List[Cell]:
@@ -386,7 +386,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinate of the CityTile (x: int, y: int).
         """
         if self.__opponent_citytiles_pos is None:
-            self.__opponent_citytiles_pos = [city.pos for city in self.__opponent_citytiles]  # FIXME fixed, need check
+            self.__opponent_citytiles_pos = [city.pos for city in self.opponent_citytiles]
         return self.__opponent_citytiles_pos
 
     @property
@@ -767,7 +767,7 @@ class TilesCollection:
             List[str]: city identifier in form 'c_1'
         """
         if self.__player_cities_id is None:
-            self.__player_cities_id = [city.cityid for city in self.__player_cities]
+            self.__player_cities_id = [city.cityid for city in self.player_cities]
         return self.__player_cities_id
 
     @property
@@ -780,7 +780,7 @@ class TilesCollection:
             List[str]: city identifier in form 'c_1'
         """
         if self.__opponent_cities_id is None:
-            self.__opponent_cities_id = [city.cityid for city in self.__opponent_cities]
+            self.__opponent_cities_id = [city.cityid for city in self.opponent_cities]
         return self.__opponent_cities_id
 
     @property
@@ -793,7 +793,7 @@ class TilesCollection:
             List[str]: city identifier in form 'c_1'
         """
         if self.__cities_id is None:
-            self.__cities_id = [city.cityid for city in self.__cities]
+            self.__cities_id = self.player_cities_id + self.opponent_cities_id
         return self.__cities_id
 
     @property
@@ -806,7 +806,7 @@ class TilesCollection:
             List[str]: city identifier in form 'u_1'
         """
         if self.__player_workers_id is None:
-            self.__player_workers_id = [worker.id for worker in self.__player_workers]
+            self.__player_workers_id = [worker.id for worker in self.player_workers]
         return self.__player_workers_id
 
     @property
@@ -819,7 +819,7 @@ class TilesCollection:
             List[str]: city identifier in form 'u_1'
         """
         if self.__opponent_workers_id is None:
-            self.__opponent_workers_id = [worker.id for worker in self.__opponent_workers]
+            self.__opponent_workers_id = [worker.id for worker in self.opponent_workers]
         return self.__opponent_workers_id
 
     @property
@@ -832,7 +832,7 @@ class TilesCollection:
             List[str]: city identifier in form 'u_1'
         """
         if self.__workers_id is None:
-            self.__workers_id = [worker.id for worker in self.__workers]
+            self.__workers_id = self.player_workers_id + self.opponent_workers_id
         return self.__workers_id
 
     @property
@@ -845,7 +845,7 @@ class TilesCollection:
             List[str]: cart identifier in form 'u_1'
         """
         if self.__player_carts_id is None:
-            self.__player_carts_id = [cart.id for cart in self.__player_carts]
+            self.__player_carts_id = [cart.id for cart in self.player_carts]
         return self.__player_carts_id
 
     @property
@@ -858,7 +858,7 @@ class TilesCollection:
             List[str]: cart identifier in form 'u_1'
         """
         if self.__opponent_carts_id is None:
-            self.__opponent_carts_id = [cart.id for cart in self.__opponent_carts]
+            self.__opponent_carts_id = [cart.id for cart in self.opponent_carts]
         return self.__opponent_carts_id
 
     @property
@@ -871,7 +871,7 @@ class TilesCollection:
             List[str]: cart identifier in form 'u_1'
         """
         if self.__carts_id is None:
-            self.__carts_id = [cart.id for cart in self.__carts]
+            self.__carts_id = self.player_carts_id + self.opponent_carts_id
         return self.__carts_id
 
 
