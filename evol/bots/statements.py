@@ -30,11 +30,14 @@ class TilesCollection:
         self.__player_units_pos = None
         self.__player_workers = None
         self.__player_workers_pos = None
+        self.__player_workers_id = None
         self.__player_carts = None
         self.__player_carts_pos = None
+        self.__player_carts_id = None
         self.__player_cities = None
         self.__player_citytiles = None
         self.__player_citytiles_pos = None
+        self.__player_cities_id = None
         self.__player_own = None
         self.__player_own_pos = None
 
@@ -42,11 +45,14 @@ class TilesCollection:
         self.__opponent_units_pos = None
         self.__opponent_workers = None
         self.__opponent_workers_pos = None
+        self.__opponent_workers_id = None
         self.__opponent_carts = None
         self.__opponent_carts_pos = None
+        self.__opponent_carts_id = None
         self.__opponent_cities = None
         self.__opponent_citytiles = None
         self.__opponent_citytiles_pos = None
+        self.__opponent_cities_id = None
         self.__opponent_own = None
         self.__opponent_own_pos = None
 
@@ -57,12 +63,15 @@ class TilesCollection:
 
         self.__workers = None
         self.__workers_pos = None
+        self.__workers_id = None
         self.__carts = None
         self.__carts_pos = None
+        self.__carts_id = None
 
         self.__cities = None
         self.__citytiles = None
         self.__citytiles_pos = None
+        self.__cities_id = None
 
         self.__roads = None
         self.__roads_pos = None
@@ -75,16 +84,6 @@ class TilesCollection:
         self.__coals_pos = None
         self.__uraniums = None
         self.__uraniums_pos = None
-
-        self.__player_cities_id = None
-        self.__opponent_cities_id = None
-        self.__cities_id = None
-        self.__player_workers_id = None
-        self.__opponent_workers_id = None
-        self.__workers_id = None
-        self.__player_carts_id = None
-        self.__opponent_carts_id = None
-        self.__carts_id = None
 
     @property
     def map_cells(self) -> List[Cell]:
