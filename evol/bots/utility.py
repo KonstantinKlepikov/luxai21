@@ -1,7 +1,5 @@
 from lux.game_constants import GAME_CONSTANTS as cs
-from typing import List, Dict
-from typing import NamedTuple
-from collections import namedtuple
+from typing import List, Dict, Union, NamedTuple
 
 
 def get_times_of_days() -> Dict[str, List[int]]:
@@ -30,55 +28,61 @@ def get_times_of_days() -> Dict[str, List[int]]:
     return {'day_list': days, 'evening_list': evenings, 'night_list': nights}
 
 
-class NtConstants(NamedTuple):
-    pass
-
-ntconstants = NtConstants()
-
-
-def make_constants_nt(const: dict = cs, name: str = 'ntconstants') -> ntconstants:
-    """Make constants namedtuple
-    {
-        'UNIT_TYPES': {'WORKER': 0, 'CART': 1},
-        'RESOURCE_TYPES': {'WOOD': 'wood', 'COAL': 'coal', 'URANIUM': 'uranium'},
-        'DIRECTIONS': {'NORTH': 'n', 'WEST': 'w', 'EAST': 'e', 'SOUTH': 's', 'CENTER': 'c'},
-        'PARAMETERS': {
-            'DAY_LENGTH': 30,
-            'NIGHT_LENGTH': 10,
-            'MAX_DAYS': 360,
-            'LIGHT_UPKEEP': {'CITY': 23, 'WORKER': 4, 'CART': 10},
-            'WOOD_GROWTH_RATE': 1.025,
-            'MAX_WOOD_AMOUNT': 500,
-            'CITY_BUILD_COST': 100,
-            'CITY_ADJACENCY_BONUS': 5,
-            'RESOURCE_CAPACITY': {'WORKER': 100, 'CART': 2000},
-            'WORKER_COLLECTION_RATE': {'WOOD': 20, 'COAL': 5, 'URANIUM': 2},
-            'RESOURCE_TO_FUEL_RATE': {'WOOD': 1, 'COAL': 10, 'URANIUM': 40},
-            'RESEARCH_REQUIREMENTS': {'COAL': 50, 'URANIUM': 200},
-            'CITY_ACTION_COOLDOWN': 10,
-            'UNIT_ACTION_COOLDOWN': {'CART': 3, 'WORKER': 2},
-            'MAX_ROAD': 6,
-            'MIN_ROAD': 0,
-            'CART_ROAD_DEVELOPMENT_RATE': 0.75,
-            'PILLAGE_RATE': 0.5}
-    }
-    """
-    fields = []
-    data = {}
+def make_constants_nt(const: dict = cs) -> Union(NamedTuple, list):
+    
+    def make_inside(nested: dict, name: str):
+        """Make constants namedtuple
+        {
+            'UNIT_TYPES': {'WORKER': 0, 'CART': 1},
+            'RESOURCE_TYPES': {'WOOD': 'wood', 'COAL': 'coal', 'URANIUM': 'uranium'},
+            'DIRECTIONS': {'NORTH': 'n', 'WEST': 'w', 'EAST': 'e', 'SOUTH': 's', 'CENTER': 'c'},
+            'PARAMETERS': {
+                'DAY_LENGTH': 30,
+                'NIGHT_LENGTH': 10,
+                'MAX_DAYS': 360,
+                'LIGHT_UPKEEP': {'CITY': 23, 'WORKER': 4, 'CART': 10},
+                'WOOD_GROWTH_RATE': 1.025,
+                'MAX_WOOD_AMOUNT': 500,
+                'CITY_BUILD_COST': 100,
+                'CITY_ADJACENCY_BONUS': 5,
+                'RESOURCE_CAPACITY': {'WORKER': 100, 'CART': 2000},
+                'WORKER_COLLECTION_RATE': {'WOOD': 20, 'COAL': 5, 'URANIUM': 2},
+                'RESOURCE_TO_FUEL_RATE': {'WOOD': 1, 'COAL': 10, 'URANIUM': 40},
+                'RESEARCH_REQUIREMENTS': {'COAL': 50, 'URANIUM': 200},
+                'CITY_ACTION_COOLDOWN': 10,
+                'UNIT_ACTION_COOLDOWN': {'CART': 3, 'WORKER': 2},
+                'MAX_ROAD': 6,
+                'MIN_ROAD': 0,
+                'CART_ROAD_DEVELOPMENT_RATE': 0.75,
+                'PILLAGE_RATE': 0.5}
+        }
+        """
+        fields = []
+        data = {}
+        for key, val in nested.items():
+            if isinstance(val, dict):
+                fields.append((key, key))
+                data[key] = make_inside(nested=val, name=key)
+            else:
+                fields.append((key, type(val)))
+                data[key] = val
+        Nt = NamedTuple(name, fields)
+        nt = Nt(**data)
+                
+        return nt
+    
+    const_fields = []
+    const_data = {}
     for key, val in const.items():
-        if isinstance(val, dict):
-            fields.append((key, key))
-            data[key] = make_constants_nt(const=val, name=key)
-        else:
-            fields.append((key, type(val)))
-            data[key] = val
-    Nt = NamedTuple(name, fields)
-    nt = Nt(**data)
-            
-    return nt
+        d = make_inside(nested=val, name=key)
+        const_fields.append((key, type(d)))
+        const_data[key] = d
 
+    return NamedTuple('CONSTANTS', const_fields), const_data
+        
+obj_, const_data = make_constants_nt()
+CONSTANTS = obj_(**const_data)
 
-CONSTANTS = make_constants_nt(const=cs)
 
 
 # day constants
