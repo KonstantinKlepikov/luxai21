@@ -17,7 +17,7 @@ else:
 
 
 class TilesCollection:
-    """Get massives of tiles"""
+    """Get massive of tiles"""
 
     def __init__(self, game_state: Game, player: Player, opponent: Player) -> None:
         self.game_state = game_state
@@ -32,7 +32,7 @@ class TilesCollection:
         self.__player_workers_pos = None
         self.__player_carts = None
         self.__player_carts_pos = None
-        self.__player_cities= None
+        self.__player_cities = None
         self.__player_citytiles = None
         self.__player_citytiles_pos = None
         self.__player_own = None
@@ -76,6 +76,15 @@ class TilesCollection:
         self.__uraniums = None
         self.__uraniums_pos = None
 
+        self.__player_cities_id = None
+        self.__opponent_cities_id = None
+        self.__cities_id = None
+        self.__player_workers_id = None
+        self.__opponent_workers_id = None
+        self.__workers_id = None
+        self.__player_carts_id = None
+        self.__opponent_carts_id = None
+        self.__carts_id = None
 
     @property
     def map_cells(self) -> List[Cell]:
@@ -99,7 +108,7 @@ class TilesCollection:
     @property
     def player_units_pos(self) -> List[Position]:
         """
-        Return positions of all Player's units.
+        Returns positions of all Player's units.
 
         Args:
         Returns:
@@ -131,7 +140,7 @@ class TilesCollection:
     @property
     def player_workers_pos(self) -> List[Position]:
         """
-        Return list of Player's workers positions.
+        Returns list of Player's workers positions.
 
         Args:
         Returns:
@@ -163,7 +172,7 @@ class TilesCollection:
     @property
     def player_carts_pos(self) -> List[Position]:
         """
-        Return list of Player's carts positions.
+        Returns list of Player's carts positions.
 
         Args:
         Returns:
@@ -176,7 +185,7 @@ class TilesCollection:
     @property
     def player_cities(self) -> List[City]:
         """
-        Return list of Player's Cities.
+        Returns list of Player's Cities.
 
         Args:
         Returns:
@@ -194,7 +203,7 @@ class TilesCollection:
     @property
     def player_citytiles(self) -> List[CityTile]:
         """
-        Return list of Player's CityTiles.
+        Returns list of Player's CityTiles.
 
         Args:
         Returns:
@@ -214,7 +223,7 @@ class TilesCollection:
     @property
     def player_citytiles_pos(self) -> List[Position]:
         """
-        Return list of Player's CityTiles positions.
+        Returns list of Player's CityTiles positions.
 
         Args:
         Returns:
@@ -255,7 +264,7 @@ class TilesCollection:
     @property
     def opponent_units_pos(self) -> List[Position]:
         """
-        Return positions of all Opponent's units.
+        Returns positions of all Opponent's units.
 
         Args:
         Returns:
@@ -287,7 +296,7 @@ class TilesCollection:
     @property
     def opponent_workers_pos(self) -> List[Position]:
         """
-        Return list of Opponent's workers positions.
+        Returns list of Opponent's workers positions.
 
         Args:
         Returns:
@@ -319,7 +328,7 @@ class TilesCollection:
     @property
     def opponent_carts_pos(self) -> List[Position]:
         """
-        Return list of Opponent's carts positions.
+        Returns list of Opponent's carts positions.
 
         Args:
         Returns:
@@ -332,7 +341,7 @@ class TilesCollection:
     @property
     def opponent_cities(self) -> List[City]:
         """
-        Return list of Opponent's Cities.
+        Returns list of Opponent's Cities.
 
         Args:
         Returns:
@@ -350,7 +359,7 @@ class TilesCollection:
     @property
     def opponent_citytiles(self) -> List[CityTile]:
         """
-        Return list of Opponent's CityTiles.
+        Returns list of Opponent's CityTiles.
 
         Args:
         Returns:
@@ -370,14 +379,14 @@ class TilesCollection:
     @property
     def opponent_citytiles_pos(self) -> List[Position]:
         """
-        Return list of Opponent's CityTiles positions.
+        Returns list of Opponent's CityTiles positions.
 
         Args:
         Returns:
             List[Position]: game_map.Position object for coordinate of the CityTile (x: int, y: int).
         """
         if self.__opponent_citytiles_pos is None:
-            self.__opponent_citytiles_pos = [city.pos for city in self.__opponent_citytiles]  # FIXME fixed, need check
+            self.__opponent_citytiles_pos = [city.pos for city in self.opponent_citytiles]
         return self.__opponent_citytiles_pos
 
     @property
@@ -492,7 +501,7 @@ class TilesCollection:
     @property
     def workers_pos(self) -> List[Position]:
         """
-        Return list of Player's and Opponent's workers positions.
+        Returns list of Player's and Opponent's workers positions.
 
         Args:
         Returns:
@@ -508,7 +517,7 @@ class TilesCollection:
         Returns list of Player's and Opponent's carts.
 
         Args:
-        Returns:  # TODO type must be checked
+        Returns:
             List[Unit]: game_object.Unit object. Every Unit contain information:
                 - cargo (Cargo): Cargo object | Wood (int): value, Coal (int): value, Uranium (int): value;
                 - cooldown (float): Cooldown time for worker;
@@ -525,7 +534,7 @@ class TilesCollection:
     @property
     def carts_pos(self) -> List[Position]:
         """
-        Return list of Player's and Opponent's carts positions.
+        Returns list of Player's and Opponent's carts positions.
 
         Args:
         Returns:
@@ -540,7 +549,7 @@ class TilesCollection:
     @property
     def cities(self) -> List[City]:
         """
-        Return list of Player's and Opponent's Cities.
+        Returns list of Player's and Opponent's Cities.
 
         Args:
         Returns:
@@ -558,7 +567,7 @@ class TilesCollection:
     @property
     def citytiles(self) -> List[CityTile]:
         """
-        Return list of Player's and Opponent's CityTiles.
+        Returns list of Player's and Opponent's CityTiles.
 
         Args:
         Returns:
@@ -575,7 +584,7 @@ class TilesCollection:
     @property
     def citytiles_pos(self) -> List[Position]:
         """
-        Return list of Player's and Opponent's CityTiles positions.
+        Returns list of Player's and Opponent's CityTiles positions.
 
         Args:
         Returns:
@@ -590,7 +599,7 @@ class TilesCollection:
     @property
     def roads(self) -> List[Cell]:
         """
-        Return list of Cells with road on game map.
+        Returns list of Cells with road on game map.
 
         Args:
         Returns:
@@ -607,7 +616,7 @@ class TilesCollection:
     @property
     def roads_pos(self) -> List[Position]:
         """
-        Return list of positions of tiles with road.
+        Returns list of positions of tiles with road.
 
         Args:
         Returns:
@@ -622,7 +631,7 @@ class TilesCollection:
     @property
     def resources(self) -> List[Cell]:
         """
-        Return list of Cells with resource of any type on game map.
+        Returns list of Cells with resource of any type on game map.
 
         Args:
         Returns:
@@ -641,7 +650,7 @@ class TilesCollection:
     @property
     def resources_pos(self) -> List[Position]:
         """
-        Return list of positions of all resources on game map.
+        Returns list of positions of all resources on game map.
 
         Args:
         Returns:
@@ -654,7 +663,7 @@ class TilesCollection:
     @property
     def woods(self) -> List[Cell]:
         """
-        Return list of Cells with wood resource on game map.
+        Returns list of Cells with wood resource on game map.
 
         Args:
         Returns:
@@ -673,7 +682,7 @@ class TilesCollection:
     @property
     def woods_pos(self) -> List[Position]:
         """
-        Return list of positions of wood resources on game map.
+        Returns list of positions of wood resources on game map.
 
         Args:
         Returns:
@@ -686,7 +695,7 @@ class TilesCollection:
     @property
     def coals(self) -> List[Cell]:
         """
-        Return list of Cells with coal resource on game map.
+        Returns list of Cells with coal resource on game map.
 
         Args:
         Returns:
@@ -705,7 +714,7 @@ class TilesCollection:
     @property
     def coals_pos(self) -> List[Position]:
         """
-        Return list of positions of coal resources on game map.
+        Returns list of positions of coal resources on game map.
 
         Args:
         Returns:
@@ -718,7 +727,7 @@ class TilesCollection:
     @property
     def uraniums(self) -> List[Cell]:
         """
-        Return list of Cells with uranium resource on game map.
+        Returns list of Cells with uranium resource on game map.
 
         Args:
         Returns:
@@ -737,7 +746,7 @@ class TilesCollection:
     @property
     def uraniums_pos(self) -> List[Position]:
         """
-        Return list of positions of uranium resources on game map.
+        Returns list of positions of uranium resources on game map.
 
         Args:
         Returns:
@@ -746,6 +755,124 @@ class TilesCollection:
         if self.__uraniums_pos is None:
             self.__uraniums_pos = [cell.pos for cell in self.uraniums]
         return self.__uraniums_pos
+
+    # identifiers
+    @property
+    def player_cities_id(self) -> List[str]:
+        """
+        Returns list of unique identifiers of Player's cities at a game map.
+
+        Args:
+        Returns:
+            List[str]: city identifier in form 'c_1'
+        """
+        if self.__player_cities_id is None:
+            self.__player_cities_id = [city.cityid for city in self.player_cities]
+        return self.__player_cities_id
+
+    @property
+    def opponent_cities_id(self) -> List[str]:
+        """
+        Returns list of unique identifiers of Opponent's cities at a game map.
+
+        Args:
+        Returns:
+            List[str]: city identifier in form 'c_1'
+        """
+        if self.__opponent_cities_id is None:
+            self.__opponent_cities_id = [city.cityid for city in self.opponent_cities]
+        return self.__opponent_cities_id
+
+    @property
+    def cities_id(self) -> List[str]:
+        """
+        Returns list of unique identifiers of all cities at a game map.
+
+        Args:
+        Returns:
+            List[str]: city identifier in form 'c_1'
+        """
+        if self.__cities_id is None:
+            self.__cities_id = self.player_cities_id + self.opponent_cities_id
+        return self.__cities_id
+
+    @property
+    def player_workers_id(self) -> List[str]:
+        """
+        Returns list of unique identifiers of Player's workers at a game map.
+
+        Args:
+        Returns:
+            List[str]: city identifier in form 'u_1'
+        """
+        if self.__player_workers_id is None:
+            self.__player_workers_id = [worker.id for worker in self.player_workers]
+        return self.__player_workers_id
+
+    @property
+    def opponent_workers_id(self) -> List[str]:
+        """
+        Returns list of unique identifiers of Opponent's workers at a game map.
+
+        Args:
+        Returns:
+            List[str]: city identifier in form 'u_1'
+        """
+        if self.__opponent_workers_id is None:
+            self.__opponent_workers_id = [worker.id for worker in self.opponent_workers]
+        return self.__opponent_workers_id
+
+    @property
+    def workers_id(self) -> List[str]:
+        """
+        Returns list of unique identifiers of all workers at a game map.
+
+        Args:
+        Returns:
+            List[str]: city identifier in form 'u_1'
+        """
+        if self.__workers_id is None:
+            self.__workers_id = self.player_workers_id + self.opponent_workers_id
+        return self.__workers_id
+
+    @property
+    def player_carts_id(self) -> List[str]:
+        """
+        Returns list of unique identifiers of Player's carts at a game map.
+
+        Args:
+        Returns:
+            List[str]: cart identifier in form 'u_1'
+        """
+        if self.__player_carts_id is None:
+            self.__player_carts_id = [cart.id for cart in self.player_carts]
+        return self.__player_carts_id
+
+    @property
+    def opponent_carts_id(self) -> List[str]:
+        """
+        Returns list of unique identifiers of Opponent's carts at a game map.
+
+        Args:
+        Returns:
+            List[str]: cart identifier in form 'u_1'
+        """
+        if self.__opponent_carts_id is None:
+            self.__opponent_carts_id = [cart.id for cart in self.opponent_carts]
+        return self.__opponent_carts_id
+
+    @property
+    def carts_id(self) -> List[str]:
+        """
+        Returns list of unique identifiers of all carts at a game map.
+
+        Args:
+        Returns:
+            List[str]: cart identifier in form 'u_1'
+        """
+        if self.__carts_id is None:
+            self.__carts_id = self.player_carts_id + self.opponent_carts_id
+        return self.__carts_id
 
 
 class TileState:
