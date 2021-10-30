@@ -1,6 +1,7 @@
 from lux.game_constants import GAME_CONSTANTS as cs
 from typing import List, Dict
 from typing import NamedTuple
+from collections import namedtuple
 
 
 def get_times_of_days() -> Dict[str, List[int]]:
@@ -29,7 +30,13 @@ def get_times_of_days() -> Dict[str, List[int]]:
     return {'day_list': days, 'evening_list': evenings, 'night_list': nights}
 
 
-def make_constants_nt(const: dict = cs, name: str = 'CONSTANTS') -> NamedTuple:
+class NtConstants(NamedTuple):
+    pass
+
+ntconstants = NtConstants()
+
+
+def make_constants_nt(const: dict = cs, name: str = 'ntconstants') -> ntconstants:
     """Make constants namedtuple
     {
         'UNIT_TYPES': {'WORKER': 0, 'CART': 1},
@@ -60,7 +67,7 @@ def make_constants_nt(const: dict = cs, name: str = 'CONSTANTS') -> NamedTuple:
     data = {}
     for key, val in const.items():
         if isinstance(val, dict):
-            fields.append((key, NamedTuple))
+            fields.append((key, key))
             data[key] = make_constants_nt(const=val, name=key)
         else:
             fields.append((key, type(val)))
@@ -72,6 +79,7 @@ def make_constants_nt(const: dict = cs, name: str = 'CONSTANTS') -> NamedTuple:
 
 
 CONSTANTS = make_constants_nt(const=cs)
+
 
 # day constants
 ALL_DAYS: List[int] = [x + y for x in range(30) for y in range(0, 360, 40)]
