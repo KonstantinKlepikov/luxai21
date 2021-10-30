@@ -1,6 +1,6 @@
 from lux.game_constants import GAME_CONSTANTS as cs
 from typing import List, Dict
-from collections import namedtuple
+from typing import NamedTuple
 
 
 def get_times_of_days() -> Dict[str, List[int]]:
@@ -29,13 +29,7 @@ def get_times_of_days() -> Dict[str, List[int]]:
     return {'day_list': days, 'evening_list': evenings, 'night_list': nights}
 
 
-# day constants
-ALL_DAYS: List[int] = [x + y for x in range(30) for y in range(0, 360, 40)]
-ALL_MORNINGS: List[int] = [x for x in range(0, 360, 40) if x]
-ALL_NIGHTS: List[int] = [x + y for x in range(30, 40) for y in range(0, 360, 40)]
-
-
-def make_constants_nt(cs: dict) -> namedtuple:
+def make_constants_nt(const: dict = cs, name: str = 'CONSTANTS') -> NamedTuple:
     """Make constants namedtuple
     {
         'UNIT_TYPES': {'WORKER': 0, 'CART': 1},
@@ -62,23 +56,24 @@ def make_constants_nt(cs: dict) -> namedtuple:
             'PILLAGE_RATE': 0.5}
     }
     """
-    Nt = namedtuple('CONSTANTS', list(cs.keys()))
-
-    def make(const: dict, nested: namedtuple):
-        values = []
-        for key, val in const.items():
-            if isinstance(val, dict):
-                Nt = namedtuple(key, list(val.keys()))
-                values.append(make(const=val, nested=Nt))
-            else:
-                values.append(val)
-    
-        inst = nested._make(values)
-
-        return inst
-
-    nt = make(const=cs, nested=Nt)
-
+    fields = []
+    data = {}
+    for key, val in const.items():
+        if isinstance(val, dict):
+            fields.append((key, NamedTuple))
+            data[key] = make_constants_nt(const=val, name=key)
+        else:
+            fields.append((key, type(val)))
+            data[key] = val
+    Nt = NamedTuple(name, fields)
+    nt = Nt(**data)
+            
     return nt
 
-CONSTANTS = make_constants_nt(cs)
+
+CONSTANTS = make_constants_nt(const=cs)
+
+# day constants
+ALL_DAYS: List[int] = [x + y for x in range(30) for y in range(0, 360, 40)]
+ALL_MORNINGS: List[int] = [x for x in range(0, 360, 40) if x]
+ALL_NIGHTS: List[int] = [x + y for x in range(30, 40) for y in range(0, 360, 40)]
