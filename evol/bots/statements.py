@@ -178,7 +178,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinates of the cart (x: int, y: int).
         """
         if self.__player_carts_pos is None:
-            self.__player_carts_pos= [unit.pos for unit in self.player_carts]
+            self.__player_carts_pos = [unit.pos for unit in self.player_carts]
         return self.__player_carts_pos
 
     @property
@@ -270,8 +270,8 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinate of the Unit (x: int, y: int).
         """
         if self.__opponent_units_pos is None:
-             self.__opponent_units_pos = [unit.pos for unit in self.opponent_units]
-        return  self.__opponent_units_pos
+            self.__opponent_units_pos = [unit.pos for unit in self.opponent_units]
+        return self.__opponent_units_pos
 
     @property
     def opponent_workers(self) -> List[Unit]:
@@ -903,7 +903,6 @@ class TileState:
         self.__adjacent = None
         self.__is_controversial_by = None
 
-
     @property
     def is_owned_by_player(self) -> bool:
         """Is owned by player
@@ -936,7 +935,6 @@ class TileState:
         if self.__is_owned is None:
             self.__is_owned = bool(self.cell in self.tiles_collection.own)        
         return self.__is_owned
-
 
     @property
     def is_resource(self) -> bool:
@@ -1046,7 +1044,7 @@ class TileState:
     
     @property
     def is_controversial_by(self, unit: Unit) -> List[Unit]:
-        """Is controversal by units
+        """Is controversial by units
 
         Args:
             unit (Unit): unit, that placed on adjacent tile
