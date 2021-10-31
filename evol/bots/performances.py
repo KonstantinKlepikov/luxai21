@@ -97,7 +97,7 @@ class UnitPerformance(Performance):
         obj_: Union[Unit, CityTile]
         ) -> None:
         super().__init__(tiles_collection, states_collection, obj_)
-        self.actions:  Dict[str, Union[Unit, CityTile, str]]= {'obj': obj_}
+        self.actions:  Dict[str, Union[Unit, CityTile, str]] = {'obj': obj_}
         self.__current_tile_state = None
         self.__ajacent_tile_states = None
 
@@ -115,7 +115,7 @@ class UnitPerformance(Performance):
     
     @property 
     def _ajacent_tile_states(self) -> List[TileState]:
-        """Get list of statements of ajacent tiles
+        """Get list of statements of adjacent tiles
 
         Returns:
             list: list of statements
@@ -125,11 +125,8 @@ class UnitPerformance(Performance):
             ajacent = tile_state.ajacent
             states = []
             for pos in ajacent:
-                try: # FIXME: list index out of range (it is temporal solution)
-                    tile_state = self.states_collection.get_state(pos=pos)
-                    states.append(tile_state)
-                except IndexError:
-                    continue
+                tile_state = self.states_collection.get_state(pos=pos)
+                states.append(tile_state)
             self.__ajacent_tile_states = states
  
         return self.__ajacent_tile_states
@@ -143,19 +140,19 @@ class UnitPerformance(Performance):
                 dir_to_closest = self.obj.pos.direction_to(closest)
                 self.actions[self.perform_move_to_city.__name__] = self.obj.move(dir_to_closest)
 
-    def perform_transfer(self) -> None: # TODO: need to know resource for transfer and destination
+    def perform_transfer(self) -> None:  # TODO: need to know resource for transfer and destination
         """Perform transfer action
         """
         for state in self._ajacent_tile_states:
             if state.is_owned_by_player:
                 if (state.is_worker and (cs.RESOURCE_CAPACITY.WORKER - self.obj.get_cargo_space_left())) or \
-                    (state.is_cart and (cs.RESOURCE_CAPACITY.CART - self.obj.get_cargo_space_left())):
+                   (state.is_cart and (cs.RESOURCE_CAPACITY.CART - self.obj.get_cargo_space_left())):
                     self.actions[self.perform_transfer.__name__] = None
                     break
 
 
 class WorkerPerformance(UnitPerformance):
-    """Perform worker object with his posible actions
+    """Perform worker object with his possible actions
     """
 
     def perform_move_to_resource(self) -> None:
@@ -174,9 +171,9 @@ class WorkerPerformance(UnitPerformance):
             self.actions[self.perform_pillage.__name__] = self.obj.pillage()
 
     def perform_mine(self) -> None:
-        """Performmine action
+        """Perform mine action
         
-        Units cant mine from the cityes
+        Units cant mine from the cities
         """
         if self.obj.get_cargo_space_left() and not self._current_tile_state.is_city:
             for state in self._ajacent_tile_states:
@@ -198,7 +195,7 @@ class WorkerPerformance(UnitPerformance):
 
 
 class CartPerformance(UnitPerformance):
-    """Perform cart object with his posible actions
+    """Perform cart object with his possible actions
     """
 
     def perform_move_to_worker(self) -> None:
@@ -212,7 +209,7 @@ class CartPerformance(UnitPerformance):
 
 
 class CityPerformance(Performance):
-    """Perform citytile object with his posible actions
+    """Perform citytile object with his possible actions
     """
 
     def __init__(
@@ -259,7 +256,7 @@ class CityPerformance(Performance):
 
 
 class PerformAndGetActions(Performance):
-    """This class construct all possible performancies and actions for all objects
+    """This class construct all possible performances and actions for all objects
     that can act
     """
     
@@ -275,7 +272,7 @@ class PerformAndGetActions(Performance):
         """Set all possible actions
         
         In this realisation we need use all methods of corresponded performance classes
-        because on that is based genom
+        because on that is based genome
 
         Returns:
             dict: performed actions of object and actions

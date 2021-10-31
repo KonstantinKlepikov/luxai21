@@ -178,7 +178,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinates of the cart (x: int, y: int).
         """
         if self.__player_carts_pos is None:
-            self.__player_carts_pos= [unit.pos for unit in self.player_carts]
+            self.__player_carts_pos = [unit.pos for unit in self.player_carts]
         return self.__player_carts_pos
 
     @property
@@ -270,8 +270,8 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinate of the Unit (x: int, y: int).
         """
         if self.__opponent_units_pos is None:
-             self.__opponent_units_pos = [unit.pos for unit in self.opponent_units]
-        return  self.__opponent_units_pos
+            self.__opponent_units_pos = [unit.pos for unit in self.opponent_units]
+        return self.__opponent_units_pos
 
     @property
     def opponent_workers(self) -> List[Unit]:
@@ -880,6 +880,8 @@ class TileState:
     def __init__(self, tiles_collection: TilesCollection, pos: Position) -> None:
         self.tiles_collection = tiles_collection
         self.pos = pos
+        self.map_width = tiles_collection.game_state.map_width
+        self.map_height = tiles_collection.game_state.map_height
         self.cell = tiles_collection.game_state.map.get_cell(pos.x, pos.y)
         self.__is_owned_by_player = None
         self.__is_owned_by_opponent = None
@@ -900,7 +902,6 @@ class TileState:
         self.__is_empty = None
         self.__ajacent = None
         self.__is_controversial_by = None
-
 
     @property
     def is_owned_by_player(self) -> bool:
@@ -934,7 +935,6 @@ class TileState:
         if self.__is_owned is None:
             self.__is_owned = bool(self.cell in self.tiles_collection.own)        
         return self.__is_owned
-
 
     @property
     def is_resource(self) -> bool:
@@ -1027,8 +1027,8 @@ class TileState:
         return self.__is_empty
     
     @property
-    def ajacent(self) -> List[Position]: # TODO: check the border FIXME: out of range
-        """Claculate list of position of ajacent tiles
+    def ajacent(self) -> List[Position]:
+        """Calculates list of position of adjacent tiles
 
         Returns:
             List[Position]: list of positions
@@ -1037,15 +1037,17 @@ class TileState:
             self.__ajacent = []
             for i in cs.DIRECTIONS:
                 if i != 'c':
-                    self.__ajacent.append(self.pos.translate(i, 1))
+                    adjacent_cell = self.pos.translate(i, 1)
+                    if 0 <= adjacent_cell.x < self.map_width and 0 <= adjacent_cell.y < self.map_height:
+                        self.__ajacent.append(adjacent_cell)
         return self.__ajacent
     
     @property
     def is_controversial_by(self, unit: Unit) -> List[Unit]:
-        """Is controversal by units
+        """Is controversial by units
 
         Args:
-            unit (Unit): unit, that placed on ajacent tile
+            unit (Unit): unit, that placed on adjacent tile
 
         Returns:
             List[Unit]: list of units
