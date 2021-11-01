@@ -5,50 +5,46 @@ import agent_train
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import random
 from typing import List, Tuple
 from loguru import logger
 import statistics
-import time
-import json
-import multiprocessing
+import os, time, json, random, statistics, multiprocessing
+from dotenv import load_dotenv
+
 
 logger.remove()
 
-# Constants
-NUM_OF_PROCESS = multiprocessing.cpu_count()
-
-# game constants:
-gen_const = GenConstruct()  # get genome construction object
-GENOME_LINE_LENGHT = gen_const.prob_len  # length of genome line
-GENOME_LENGHT = 360*GENOME_LINE_LENGHT  # length of genome
+load_dotenv(dotenv_path='shared.env')
 
 # dont forget remove seeds for real learning!!!
 # set the random seed:
-RANDOM_SEED = 42
+RANDOM_SEED = int(os.environ.get('RANDOM_SEED'))
 random.seed(RANDOM_SEED)
 
 # game configuration
 CONFIGURATIONS = {
     # 'seed': RANDOM_SEED,
-    # 'rows': 12,
-    # 'columns': 12,
-    'loglevel': 0,
-    'annotations': False
+    # 'rows': int(os.environ.get('ROWS')),
+    # 'columns': int(os.environ.get('COLUMNS')),
+    'loglevel': int(os.environ.get('LOGLEVEL')),
+    'annotations': bool(os.environ.get('ANNOTAYIONS'))
     }
-NUM_EPISODES = 10  # number of games for mean reward calculating
+NUM_EPISODES = int(os.environ.get('NUM_EPISODES'))
 
-# sise of tournament. For much robust tournament - choose small value
-TOURNAMENT_SIZE = 2
-
-# Genetic Algorithm constants:
-POPULATION_SIZE = 20 # number of individuals in population 
-MAX_GENERATIONS = 50  # number of steps for evolution
-P_CROSSOVER = 0.9  # probability for crossover
-INDPB_CROSSOVER = 10.0/GENOME_LENGHT
-P_MUTATION = 0.1  # probability for mutating an individual
-INDPB_MUTATION = 2.0/GENOME_LENGHT
-HALL_OF_FAME_SIZE = 5 # size of list of storage winners
+# Constants
+NUM_OF_PROCESS = multiprocessing.cpu_count()
+# Genetic Algorithm constants
+gen_const = GenConstruct()  # get genome construction object
+GENOME_LINE_LENGHT = gen_const.prob_len  # length of genome line
+GENOME_LENGHT = 360*GENOME_LINE_LENGHT  # length of genome
+TOURNAMENT_SIZE = int(os.environ.get('TOURNAMENT_SIZE'))
+POPULATION_SIZE = int(os.environ.get('POPULATION_SIZE'))
+MAX_GENERATIONS = int(os.environ.get('MAX_GENERATIONS'))
+P_CROSSOVER = float(os.environ.get('P_CROSSOVER'))
+INDPB_CROSSOVER = float(os.environ.get('INDPB_C'))/GENOME_LENGHT
+P_MUTATION = float(os.environ.get('P_MUTATION'))
+INDPB_MUTATION = float(os.environ.get('INDPB_M'))/GENOME_LENGHT
+HALL_OF_FAME_SIZE = int(os.environ.get('HALL_OF_FAME_SIZE'))
 
 # Space initialisation
 toolbox = base.Toolbox()

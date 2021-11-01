@@ -1,13 +1,14 @@
+from logging import DEBUG
 from kaggle_environments import make
 from loguru import logger
-import os, sys
-import json
+import os, json
+from dotenv import load_dotenv
 
 
-PLAYER = 'agent.py'
-OPPONENT = 'simple_agent'
-DEBUG = False
-
+load_dotenv(dotenv_path='shared.env')
+PLAYER = os.environ['PLAYER']
+OPPONENT = os.environ['OPPONENT']
+DEBUG = bool(os.environ['DEBUG'])
 
 logger.remove()
 logger.add(open(
@@ -15,17 +16,6 @@ logger.add(open(
     format='{time:HH:mm:ss} | {level} | {message}'
     )
 logger.info('Start Logging...')
-
-
-if 'PLAYER' in os.environ:
-    PLAYER = os.environ['PLAYER']
-
-if 'OPPONENT' in os.environ:
-    OPPONENT = os.environ['OPPONENT']
-
-if 'DEBUG' in os.environ and os.environ['DEBUG'] == 'True':
-    DEBUG = True
-
 logger.info(f'Is logged player: {PLAYER}, opponent: {OPPONENT} with debug: {DEBUG}')
 
 env = make(
