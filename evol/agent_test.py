@@ -16,6 +16,7 @@ genome = gen_const.convert_genome(vector=genome_list)
 
 
 game_state = None
+missions_state = {}
 
 
 def agent(observation, configuration):
@@ -23,6 +24,7 @@ def agent(observation, configuration):
 
     global game_state
     global genome
+    global missions_state
 
     # Do not edit #
     if observation["step"] == 0:
