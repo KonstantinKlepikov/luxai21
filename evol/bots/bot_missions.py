@@ -1,7 +1,9 @@
+from lux.game import Game
+from lux.game_objects import Player
 from bots.statements import TilesCollection, StatesCollectionsCollection
-from bots.missions import PerformAndGetActions
+from bots.missions import PerformMissionsAndActions
 from bots.actions import select_actions
-from typing import List
+from typing import List, Dict, Tuple
 from collections import namedtuple
 import os, sys
 
@@ -18,10 +20,11 @@ else:
 
 def get_bot_actions(
     genome: List[namedtuple],
-    tiles_collection: TilesCollection, 
-    states_collection: StatesCollectionsCollection,
-    missions_state: dict
-    ) -> List[str]:
+    game_state: Game,
+    player: Player,
+    opponent: Player,
+    missions_state: Dict[str, str]
+    ) -> Tuple[List[str], Dict[str, str]]:
     """Get bot actions
 
     Args:
@@ -33,26 +36,41 @@ def get_bot_actions(
     Returns:
         List[str]: list of game action for each players object on board
     """
+    
+    tiles_collection = TilesCollection(
+        game_state=game_state,
+        player=player,
+        opponent=opponent
+    )
+
+    states_collection = StatesCollectionsCollection(
+        game_state=game_state,
+        tiles_collection=tiles_collection
+        )
 
     actions = []
+    missions = []
 
-    for obj_ in tiles_collection.player_units + tiles_collection.player_citytiles:
+    for obj_ in tiles_collection.player_own:
         logger.info(f'Obj: {obj_}')
-        if obj_.id in missions_state.keys():
-            PerformAndGetActions(
-                tiles_collection=tiles_collection,
-                states_collection=states_collection,
-                obj_=obj_,
-                mission=missions_state[obj_.id]
-            )
-
-    # get actions forgame
-    if missions_state:
-        actions = select_actions_for_missions(
+        act = PerformMissionsAndActions(
             tiles_collection=tiles_collection,
-            missions_state=missions_state,
-            genome=genome
+            states_collection=states_collection,
+            obj_=obj_,
+            mission=missions_state[obj_.id],
+            obj_=obj_
         )
+        mission, missions_state = act.perform_missions_and_actions()
+        logger.info(f'Missions: {missions}')
+        if mission:
+            missions.append(mission)
+
+    # get actions for game
+    actions = select_actions(
+        tiles_collection=tiles_collection,
+        missions=missions,
+        genome=genome
+    )
     logger.info(f'Actions: {actions}')
 
-    return actions
+    return actions, missions_state

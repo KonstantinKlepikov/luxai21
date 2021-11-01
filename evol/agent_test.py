@@ -1,7 +1,7 @@
 from lux.game import Game
 from bots.genutil import GenConstruct
 from bots.statements import TilesCollection, StatesCollectionsCollection
-from bots.bot import get_bot_actions
+from bots import bot_missions
 from loguru import logger
 import json, time
 
@@ -43,21 +43,12 @@ def agent(observation, configuration):
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
 
-    tiles_collection = TilesCollection(
+    actions, missions_state = bot_missions.get_bot_actions(
+        genome=genome,
         game_state=game_state,
         player=player,
-        opponent=opponent
-    )
-
-    states_collection = StatesCollectionsCollection(
-        game_state=game_state,
-        tiles_collection=tiles_collection
-        )
-
-    actions = get_bot_actions(
-        genome=genome,
-        tiles_collection=tiles_collection,
-        states_collection=states_collection
+        opponent=opponent,
+        missions_state=missions_state
         )
 
     end = time.time()

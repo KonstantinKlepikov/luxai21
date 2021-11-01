@@ -2,7 +2,7 @@ from lux.game_objects import Unit, CityTile
 from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
 from bots.statements import TileState, TilesCollection, StatesCollectionsCollection
-from typing import List, Dict, Union
+from typing import List, Dict, Tuple, Union
 import os, sys, math
 
 
@@ -16,7 +16,7 @@ else:
     from loguru import logger  # log to file locally
 
 
-class Performance:
+class Mission:
     """Base class, provides constructhor and methods
     for some calculations with object, that can act
     """
@@ -25,10 +25,13 @@ class Performance:
         self, 
         tiles_collection: TilesCollection, 
         states_collection: StatesCollectionsCollection,
+        missions_state: Dict[str, str],
         obj_: Union[Unit, CityTile]
         ) -> None:
         self.tiles_collection = tiles_collection
         self.states_collection = states_collection
+        self.missions_state: Dict[str, str] = missions_state
+        self.actions:  Dict[str, Union[Unit, CityTile, str]]= {'obj': obj_}
         self.obj = obj_
         
     def _get_distance(self, target_pos: Position) -> float:
@@ -86,7 +89,7 @@ class Performance:
             return closest_pos.pos
  
  
-class UnitPerformance(Performance):
+class UnitMission(Mission):
     """Performances for units of any type
     """
 
@@ -94,10 +97,10 @@ class UnitPerformance(Performance):
         self,
         tiles_collection: TilesCollection,
         states_collection: StatesCollectionsCollection,
+        missions_state: Dict[str, str],
         obj_: Union[Unit, CityTile]
         ) -> None:
-        super().__init__(tiles_collection, states_collection, obj_)
-        self.actions:  Dict[str, Union[Unit, CityTile, str]]= {'obj': obj_}
+        super().__init__(tiles_collection, states_collection, missions_state, obj_)
         self.__current_tile_state = None
         self.__ajacent_tile_states = None
 
@@ -134,94 +137,63 @@ class UnitPerformance(Performance):
  
         return self.__ajacent_tile_states
 
-    def perform_move_to_city(self) -> None:
-        """Perform move to closest city
+    def mission_move_to_city(self) -> None:
+        """Move to closest city mission
         """
         if not self.obj.get_cargo_space_left():
             closest = self._get_closest_pos(self.tiles_collection.citytiles)
             if closest:
                 dir_to_closest = self.obj.pos.direction_to(closest)
-                self.actions[self.perform_move_to_city.__name__] = self.obj.move(dir_to_closest)
-
-    def perform_transfer(self) -> None: # TODO: need to know resource for transfer and destination
-        """Perform transfer action
-        """
-        for state in self._ajacent_tile_states:
-            if state.is_owned_by_player:
-                if (state.is_worker and (cs.RESOURCE_CAPACITY.WORKER - self.obj.get_cargo_space_left())) or \
-                    (state.is_cart and (cs.RESOURCE_CAPACITY.CART - self.obj.get_cargo_space_left())):
-                    self.actions[self.perform_transfer.__name__] = None
-                    break
+                self.actions[self.mission_move_to_city.__name__] = self.obj.move(dir_to_closest)
+        if False: # TODO: when mission is complete
+            self.missions_state.pop(self.obj.id, None)
 
 
-class WorkerPerformance(UnitPerformance):
-    """Perform worker object with his posible actions
+class WorkerMission(UnitMission):
+    """Worker object missions with his posible actions
     """
 
-    def perform_move_to_resource(self) -> None:
+    def mission_move_to_resource(self) -> None:
         """Perform move to closest resource
         """
         if self.obj.get_cargo_space_left():
             closest = self._get_closest_pos(self.tiles_collection.resources)
             if closest:
                 dir_to_closest = self.obj.pos.direction_to(closest)
-                self.actions[self.perform_move_to_resource.__name__] = self.obj.move(dir_to_closest)
+                self.actions[self.mission_move_to_resource.__name__] = self.obj.move(dir_to_closest)
+        if False: # TODO: when mission is complete
+            self.missions_state.pop(self.obj.id, None)
 
-    def perform_pillage(self) -> None:
-        """Perform pillage for worker
-        """
-        if self._current_tile_state.is_road:
-            self.actions[self.perform_pillage.__name__] = self.obj.pillage()
-
-    def perform_mine(self) -> None:
-        """Performmine action
-        
-        Units cant mine from the cityes
-        """
-        if self.obj.get_cargo_space_left() and not self._current_tile_state.is_city:
-            for state in self._ajacent_tile_states:
-                if state.is_wood:
-                    self.actions[self.perform_mine.__name__] = None
-                    break
-                elif self.tiles_collection.player.researched_coal() and state.is_coal:
-                    self.actions[self.perform_mine.__name__] = None
-                    break
-                elif self.tiles_collection.player.researched_uranium() and state.is_uranium:
-                    self.actions[self.perform_mine.__name__] = None
-                    break
-
-    def perform_build_city(self) -> None: # TODO: perform to closest empty space and build
-        """Perform build city action
-        """
-        if self.obj.can_build(self.tiles_collection.game_state.map):
-            self.actions[self.perform_build_city.__name__] = self.obj.build_city()
-
-
-class CartPerformance(UnitPerformance):
-    """Perform cart object with his posible actions
+class CartMission(UnitMission):
+    """Cart object missions with his posible actions
     """
 
-    def perform_move_to_worker(self) -> None:
+    def mission_move_to_worker(self) -> None:
         """Perform move to closest resource
         """
         if self.obj.get_cargo_space_left():
             closest = self._get_closest_pos(self.tiles_collection.player_workers)
             if closest:
                 dir_to_closest = self.obj.pos.direction_to(closest)
-                self.actions[self.perform_move_to_worker.__name__] = self.obj.move(dir_to_closest)
+                self.actions[self.mission_move_to_worker.__name__] = self.obj.move(dir_to_closest)
+        if False: # TODO: when mission is complete
+            self.missions_state.pop(self.obj.id, None)
 
 
-class CityPerformance(Performance):
-    """Perform citytile object with his posible actions
+class CityMission(Mission):
+    """Citytile object moissions with his posible actions
+    
+    Citytile dont know his missions from previous turns
     """
 
     def __init__(
         self,
         tiles_collection: TilesCollection,
         states_collection: StatesCollectionsCollection,
+        missions_state: Dict[str, str],
         obj_: Union[Unit, CityTile]
         ) -> None:
-        super().__init__(tiles_collection, states_collection, obj_)
+        super().__init__(tiles_collection, states_collection, missions_state, obj_)
         self.__can_build = None
         self.actions = {'obj': obj_}
 
@@ -235,31 +207,31 @@ class CityPerformance(Performance):
                 )
         return self.__can_build
 
-    def perform_research(self) -> None:
-        """Perform citytile research
+    def mission_research(self) -> None:
+        """Citytile research mission
         """
         if not self.tiles_collection.player.researched_uranium():
-            self.actions[self.perform_research.__name__] = self.obj.research()
+            self.actions[self.mission_research.__name__] = self.obj.research()
 
-    def perform_build_worker(self) -> None:
-        """Perform citytile build worker
+    def mission_build_worker(self) -> None:
+        """Citytile build worker mission
         
         City cant build units if citytiles == units, owned by player
         """
         if self._can_build:
-            self.actions[self.perform_build_worker.__name__] = self.obj.build_worker()
+            self.actions[self.mission_build_worker.__name__] = self.obj.build_worker()
 
-    def perform_build_cart(self) -> None:
-        """Perform citytile build cart
+    def mission_build_cart(self) -> None:
+        """Citytile build cart mission
         
         City cant build units if citytiles == units, owned by player
         """
         if self._can_build:
-            self.actions[self.perform_build_cart.__name__] = self.obj.build_cart()
+            self.actions[self.mission_build_cart.__name__] = self.obj.build_cart()
 
 
-class PerformAndGetActions(Performance):
-    """This class construct all possible performancies and actions for all objects
+class PerformMissionsAndActions(Mission):
+    """This class construct all possible missions and actions for all objects
     that can act
     """
     
@@ -267,11 +239,46 @@ class PerformAndGetActions(Performance):
         self,
         tiles_collection: TilesCollection,
         states_collection: StatesCollectionsCollection,
+        missions_state: Dict[str, str],
         obj_: Union[Unit, CityTile]
         ) -> None:
-        super().__init__(tiles_collection, states_collection, obj_)
+        super().__init__(tiles_collection, states_collection, missions_state, obj_)
+        
+    def _iterate_mission(
+        self, 
+        cls: Union[WorkerMission, CartMission, CityMission]
+        ) -> Dict[str, Union[Unit, CityTile, str]]:
+        perform = cls(
+            tiles_collection=self.tiles_collection,
+            states_collection=self.states_collection,
+            missions_state=self.missions_state,
+            obj_=self.obj
+            )
+        per = [method for method in dir(cls) if method.startswith('mission_')]
+        for met in per:
+            class_method = getattr(cls, met)
+            class_method(perform)
+            return perform.actions
 
-    def get_actions(self) -> Dict[str, Union[Unit, CityTile, str]]:
+    def _make_mission(
+        self, 
+        cls: Union[WorkerMission, CartMission, CityMission],
+        mission: str
+        ) -> Dict[str, Union[Unit, CityTile, str]]:
+        perform = cls(
+            tiles_collection=self.tiles_collection,
+            states_collection=self.states_collection,
+            missions_state=self.missions_state,
+            obj_=self.obj
+            )
+        class_method = getattr(cls, mission)
+        class_method(perform)
+        return perform.actions
+
+    def perform_missions_and_actions(self) -> Tuple[
+        Dict[str, Union[Unit, CityTile, str]], 
+        Dict[str, str]
+        ]:
         """Set all possible actions
         
         In this realisation we need use all methods of corresponded performance classes
@@ -282,42 +289,16 @@ class PerformAndGetActions(Performance):
         """
         if self.obj.can_act():
             if isinstance(self.obj, Unit):
-                logger.info('Im a unit')
                 if self.obj.is_worker():
-                    logger.info('Im a worker')
-                    perform = WorkerPerformance(
-                        tiles_collection=self.tiles_collection,
-                        states_collection=self.states_collection,
-                        obj_=self.obj
-                        )
-                    perform.perform_move_to_city()
-                    perform.perform_move_to_resource()
-                    perform.perform_build_city()
-                    perform.perform_mine()
-                    perform.perform_transfer()
-                    perform.perform_pillage()
-                    return perform.actions
+                    cls = WorkerMission
                 if self.obj.is_cart():
-                    logger.info('Im a cart')
-                    perform = CartPerformance(
-                        tiles_collection=self.tiles_collection,
-                        states_collection=self.states_collection,
-                        obj_=self.obj
-                        )
-                    perform.perform_move_to_city()
-                    perform.perform_move_to_worker()
-                    perform.perform_transfer()
-                    return perform.actions
+                    cls = CartMission
             if isinstance(self.obj, CityTile):
-                logger.info('Im a city')
-                perform = CityPerformance(
-                    tiles_collection=self.tiles_collection,
-                    states_collection=self.states_collection,
-                    obj_=self.obj
-                    )
-                perform.perform_research()
-                perform.perform_build_cart()
-                perform.perform_build_worker()
-                return perform.actions
-            logger.info('Im a nothing')
-        logger.info('Im cant act')
+                cls = CityMission
+            if self.obj.id in self.missions_state.keys():
+                logger.info('I have mission')
+                return self._make_mission(cls=cls,
+                    mission=self.missions_state[self.obj.id]), self.missions_state
+            else:
+                logger.info('No mission')
+                return self._iterate_mission(cls=cls), self.missions_state
