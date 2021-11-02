@@ -94,7 +94,7 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
         [agent_train.agent, 'simple_agent'],
         configuration=CONFIGURATIONS,
         num_episodes=NUM_EPISODES,
-        debug=False
+        debug=True
         )
     
     # TODO: move to function or class all scoring function operations

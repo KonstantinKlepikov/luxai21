@@ -996,7 +996,7 @@ class TileState:
         """Is tile city
         """
         if self.__is_city is None:
-            self.__is_city = bool(self.cell in self.tiles_collection.citytiles)
+            self.__is_city = bool(self.cell.pos in self.tiles_collection.citytiles_pos)
         return self.__is_city
 
     @property
@@ -1004,7 +1004,7 @@ class TileState:
         """Is tile worker
         """
         if self.__is_worker is None:
-            self.__is_worker = bool(self.cell in self.tiles_collection.workers)
+            self.__is_worker = bool(self.cell.pos in self.tiles_collection.workers_pos)
         return self.__is_worker
     
     @property
@@ -1012,7 +1012,7 @@ class TileState:
         """Is tile cart
         """
         if self.__is_cart is None:
-            self.__is_cart = bool(self.cell in self.tiles_collection.carts)
+            self.__is_cart = bool(self.cell.pos in self.tiles_collection.carts_pos)
         return self.__is_cart
 
     @property

@@ -1,5 +1,5 @@
 from lux.game import Game
-from bots.statements import TilesCollection, StatesCollectionsCollection
+from bots.statements import TilesCollection
 from bots import bot
 from loguru import logger
 from bots.utility import ALL_MORNINGS
@@ -34,18 +34,18 @@ def agent(observation, configuration):
     # Bot code #
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
-
+   
+    # experimental intermediate scoring for fitness function
+    # each morning we are scored count of player citytiles * 1000 + palyer units
+    # then that numper is multipliced by serial number of the morning
+    # for example, for 3 citytiles and 1 unit in turn 120 we have:
+    # (3 * 10000 + 1) * 120/40 = 93000
     tiles_collection = TilesCollection(
         game_state=game_state,
         player=player,
         opponent=opponent
     )
     
-    # experimental intermediate scoring for fitness function
-    # each morning we are scored count of player citytiles * 1000 + palyer units
-    # then that numper is multipliced by serial number of the morning
-    # for example, for 3 citytiles and 1 unit in turn 120 we have:
-    # (3 * 10000 + 1) * 120/40 = 93000
     if game_state.turn == 0:
         game_eval += 1
         intermediate[game_eval] = 0
@@ -55,7 +55,7 @@ def agent(observation, configuration):
             len(tiles_collection.player_units)) \
             * game_state.turn / 40
         intermediate[game_eval] =+ score
-    # end scoring #
+    # end scoring
 
     actions, missions_state = bot.get_bot_actions(
         genome=genome,

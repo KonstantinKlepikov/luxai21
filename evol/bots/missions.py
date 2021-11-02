@@ -37,7 +37,6 @@ class Mission(MissionInit):
     """Base class, provides constructhor and methods
     for some calculations with object, that can act
     
-        
     We add mission as key to self.action dict. As value we add
     action string or None if no any action needed in this mission on this turn
     
@@ -57,7 +56,6 @@ class Mission(MissionInit):
         super().__init__(tiles_collection, states_collection, missions_state, obj_)
         self.actions:  Dict[str, Union[Unit, CityTile, str]] = {'obj': obj_}
         self.check_again: Union[Unit, CityTile, str] = None
-        self.tile_state: TileState = states_collection.get_state(obj_.pos)
 
     def _get_distance(self, target_pos: Position) -> float:
         """Get distance between positions
@@ -199,7 +197,7 @@ class UnitMission(Mission):
             list: list of statements of adjacent tiles
         """
         if self.__adjacent_tile_states is None:
-            adjacent = self.tile_state.adjacent
+            adjacent = self._current_tile_state.adjacent
             states = []
             for pos in adjacent:
                 tile_state = self.states_collection.get_state(pos=pos)
@@ -220,22 +218,27 @@ class UnitMission(Mission):
             self.actions[name] = self.obj.move(dir_to_closest)
 
     def _end_mission(self) -> None:
-        """End mission, if it is in mission_state and 
-        add object to check_again
+        """End mission and add object to check_again
         """
-        self.missions_state.pop(self.obj.id, None)
-        self.check_again = self.obj
+        if self.obj.id in self.missions_state.keys():
+            logger.info('_end_mission: im end mission')
+            self.missions_state.pop(self.obj.id, None)
+            self.check_again = self.obj
 
     def mission_drop_the_resources(self) -> None:
         """Move to closest city mission
         """
         name = self.mission_drop_the_resources.__name__
         if not self.obj.get_cargo_space_left():
-            if self.tile_state.is_city:
+            logger.info('mission_drop_the_resources: im fool')
+            if self._current_tile_state.is_city:
+                logger.info('mission_drop_the_resources: im in city')
                 self._end_mission()
             else:
+                logger.info('mission_drop_the_resources: im not in city')
                 closest = self._get_closest_pos(self.tiles_collection.citytiles)
                 if closest:
+                    logger.info('mission_drop_the_resources: i go to closest city')
                     self._move_to_closest(
                         name=name, 
                         tiles=self.tiles_collection.player_citytiles
@@ -250,8 +253,13 @@ class WorkerMission(UnitMission):
         """Worker mission for mining resources
         """
         name = self.mission_main_resource.__name__
-        if self.obj.get_cargo_space_left():
-            if self.tile_state.is_city:
+        if not self.obj.get_cargo_space_left():
+            logger.info('mission_main_resource: im fool')
+            self._end_mission()
+        else:
+            logger.info('mission_main_resource: im empty')
+            if self._current_tile_state.is_city:
+                logger.info('mission_main_resource: im in city and go mine')
                 self._move_to_closest(
                     name=name, 
                     tiles=self.tiles_collection.resources
@@ -261,33 +269,39 @@ class WorkerMission(UnitMission):
                 for state in adjacence:
                     if state.is_wood:
                         self.actions[name] = None
+                        logger.info('mission_main_resource: i mine wood')
                         break
                     elif self.tiles_collection.player.researched_coal() and state.is_coal:
                         self.actions[name] = None
+                        logger.info('mission_main_resource: i mine coal')
                         break
                     elif self.tiles_collection.player.researched_uranium() and state.is_uranium:
                         self.actions[name] = None
+                        logger.info('mission_main_resource: i mine uranium')
                         break
                 if self.actions.get(name, False) is False:
+                    logger.info('mission_main_resource: im not in city and go mine')
                     self._move_to_closest(
                         name=name, 
                         tiles=self.tiles_collection.resources
                         )
-        else:
-            self._end_mission()
 
     def mission_buld_the_city(self) -> None:
         """Worker mission to build a city
         """
         name = self.mission_buld_the_city.__name__
-        if not self.obj.get_cargo_space_left():
+        if self.obj.get_cargo_space_left():
+            logger.info('mission_buld_the_city: im empty')
+            self._end_mission()
+        else:
+            logger.info('mission_buld_the_city: im fool')
             if self.obj.can_build:
+                logger.info('mission_buld_the_city: i build the city')
                 self.actions[name] = self.obj.build_city()
             else:
+                logger.info('mission_buld_the_city: i move random')
                 seq = list(cs.DIRECTIONS)
                 self.actions[name] = self.obj.move(random.choice(seq=seq))
-        else:
-            self._end_mission()
 
 
 class CartMission(UnitMission):
@@ -298,13 +312,13 @@ class CartMission(UnitMission):
         """Perform move to closest resource
         """
         name = self.mission_cart_harvest.__name__
-        if self.obj.get_cargo_space_left():
+        if not self.obj.get_cargo_space_left():
+            self._end_mission()
+        else:
             self._move_to_closest(
                 name=name, 
                 tiles=self.tiles_collection.player_workers
                 )
-        else:
-            self._end_mission()
 
 
 class PerformMissionsAndActions(MissionInit):
@@ -369,11 +383,10 @@ class PerformMissionsAndActions(MissionInit):
                     cls = WorkerMission
                 if self.obj.is_cart():
                     cls = CartMission
+                if self.obj.id in self.missions_state.keys():
+                    logger.info('perform_missions_and_actions: i have mission from previous turn')
+                    return self._iterate_missions(cls=cls, mission=self.missions_state[self.obj.id])
             if isinstance(self.obj, CityTile):
                 cls = CityMission
-            if self.obj.id in self.missions_state.keys():
-                logger.info('I have mission')
-                return self._iterate_missions(cls=cls, mission=self.missions_state[self.obj.id])
-            else:
-                logger.info('No missions')
-                return self._iterate_missions(cls=cls, mission=None)
+            logger.info('perform_missions_and_actions: no mission from previous turn')
+            return self._iterate_missions(cls=cls, mission=None)

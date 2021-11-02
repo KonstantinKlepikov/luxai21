@@ -50,53 +50,70 @@ def get_bot_actions(
     actions: List[str] = []
     missions_per_object: List[Dict[str, Union[Unit, CityTile, str]]] = []
     player_own: List[Union[Unit, CityTile]] = tiles_collection.player_own
+    logger.info(f'player_own: {player_own}')
 
+    logger.info('======get mission_actions, missions_state, check_again======')
     for obj_ in player_own:
-        logger.info(f'Obj: {obj_}')
+        logger.info(f'>>>>>>Obj: {obj_}<<<<<<')
         act = PerformMissionsAndActions(
             tiles_collection=tiles_collection,
             states_collection=states_collection,
-            obj_=obj_,
             missions_state=missions_state,
             obj_=obj_
         )
-        mission_actions, missions_state, check_again = act.perform_missions_and_actions()
-        logger.info(f'mission_actions: {mission_actions}')
-        logger.info(f'Missions_state: {missions_state}')
-        logger.info(f'Check again: {check_again}')
-        missions_per_object.append(mission_actions)
-        if check_again:
-            player_own.append(check_again)
+        try:
+            mission_actions, missions_state, check_again = act.perform_missions_and_actions()
+            logger.info(f'mission_actions: {mission_actions}')
+            logger.info(f'Missions_state: {missions_state}')
+            logger.info(f'Check again: {check_again}')
+            missions_per_object.append(mission_actions)
+            if check_again:
+                player_own.append(check_again)
+                logger.info(f'player_own: {player_own}')
+        except TypeError:
+            logger.info(f'No can act')
 
-    chrome = genome[tiles_collection.game_state.turn]._asdict()
+    logger.info(f'Missions_per_object: {missions_per_object}')
+    logger.info('======get actions======')
 
-    for miss in missions_per_object:
-    
-        posible_missions = {}
-        for key in miss.keys():
-            if key != 'obj':
-                # use genome section for each turn
-                posible_missions[key] = chrome[key]
+    if missions_per_object:
+        chrome = genome[tiles_collection.game_state.turn]._asdict()
 
-        if posible_missions:
-            # get list of possible missions
-            p_miss = [key for key in posible_missions.keys()]
-            # get list of probabilities of performances
-            weights = [val[1] for val in posible_missions.items()]
-            # get reduced probabilities
-            s = sum(weights)
-            try:
-                weights = [w / s for w in weights]
-            except ZeroDivisionError:
-                pass
-            # get random choice 
-            c = random.choices(population=p_miss, weights=weights)
-            # append chosen mission, associated with object of unit or city
-            # If nothing to do (for example for mine) - it is skiped
-            if miss[c[0]]:
-                actions.append(miss[c[0]])
-                missions_state[miss['obj'].id] = c[0]
+        for miss in missions_per_object:
+            logger.info('choice action for single object')
+        
+            posible_missions = {}
+            for key in miss.keys():
+                if key != 'obj':
+                    # use genome section for each turn
+                    posible_missions[key] = chrome[key]
+                    logger.info(f'posible_missions: {posible_missions}')
+
+            if posible_missions:
+                # get list of possible missions
+                p_miss = [key for key in posible_missions.keys()]
+                # get list of probabilities of performances
+                weights = [val[1] for val in posible_missions.items()]
+                # get reduced probabilities
+                s = sum(weights)
+                try:
+                    weights = [w / s for w in weights]
+                except ZeroDivisionError:
+                    pass
+                # get random choice 
+                c = random.choices(population=p_miss, weights=weights)
+                # append chosen mission, associated with object of unit or city
+                # If nothing to do (for example for mine) - it is skiped
+                if miss[c[0]]:
+                    actions.append(miss[c[0]])
+                    logger.info(f'action append miss[c[0]]: {miss[c[0]]}')
+                    # add mission_state of unit to transfer statement
+                    # in next turn of game
+                    if isinstance(miss['obj'], Unit):
+                        missions_state[miss['obj'].id] = c[0]
+                        logger.info(f'missions_state[miss["obj"].id]: {c[0]}')
 
     logger.info(f'Actions: {actions}')
+    logger.info(f'missions_state: {missions_state}')
 
     return actions, missions_state
