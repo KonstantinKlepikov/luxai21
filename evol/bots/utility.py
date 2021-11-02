@@ -73,7 +73,6 @@ def make_constants_nt(const: dict = cs, name: str = 'CONSTANTS') -> namedtuple:
 
 CONSTANTS = make_constants_nt(const=cs)
 
-
 # day constants
 ALL_DAYS: List[int] = [x + y for x in range(30) for y in range(0, 360, 40)]
 ALL_MORNINGS: List[int] = [x for x in range(0, 360, 40) if x]

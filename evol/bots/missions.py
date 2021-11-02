@@ -225,14 +225,6 @@ class UnitMission(Mission):
         """
         self.missions_state.pop(self.obj.id, None)
         self.check_again = self.obj
-        
-    def _continue_mission(self, name: str) -> None:
-        """Continue mission
-
-        Args:
-            name (str): name of mission method
-        """
-        self.missions_state[self.obj.id] = name
 
     def mission_drop_the_resources(self) -> None:
         """Move to closest city mission
@@ -248,7 +240,7 @@ class UnitMission(Mission):
                         name=name, 
                         tiles=self.tiles_collection.player_citytiles
                         )
-                    self._continue_mission(name)
+
 
 class WorkerMission(UnitMission):
     """Worker missions with his posible actions
@@ -281,7 +273,6 @@ class WorkerMission(UnitMission):
                         name=name, 
                         tiles=self.tiles_collection.resources
                         )
-            self._continue_mission(name)
         else:
             self._end_mission()
 
@@ -295,7 +286,6 @@ class WorkerMission(UnitMission):
             else:
                 seq = list(cs.DIRECTIONS)
                 self.actions[name] = self.obj.move(random.choice(seq=seq))
-            self._continue_mission(name)
         else:
             self._end_mission()
 
@@ -313,7 +303,6 @@ class CartMission(UnitMission):
                 name=name, 
                 tiles=self.tiles_collection.player_workers
                 )
-            self._continue_mission(name)
         else:
             self._end_mission()
 
@@ -334,13 +323,15 @@ class PerformMissionsAndActions(MissionInit):
 
     def _iterate_missions(
         self, 
-        cls: Union[WorkerMission, CartMission, CityMission]
+        cls: Union[WorkerMission, CartMission, CityMission],
+        mission: str = None
         ) -> Tuple[Dict[str, Union[Unit, CityTile, str]], Dict[str, str], Unit]:
         """Iterate missions for get all actions for object
 
         Args:
             cls (Union[WorkerMission, CartMission, CityMission]): mission class
             of object
+            mission (str): mission of object, default None
 
         Returns:
             Tuple[Dict[str, Union[Unit, CityTile, str]], Dict[str, str], Unit]:
@@ -352,36 +343,14 @@ class PerformMissionsAndActions(MissionInit):
             missions_state=self.missions_state,
             obj_=self.obj
             )
-        per = [method for method in dir(cls) if method.startswith('mission_')]
-        for met in per:
-            class_method = getattr(cls, met)
+        if mission:
+            class_method = getattr(cls, mission)
             class_method(perform)
-        return perform.actions, perform.missions_state, perform.check_again
-
-    def _use_mission(
-        self, 
-        cls: Union[WorkerMission, CartMission, CityMission],
-        mission: str
-        ) -> Tuple[Dict[str, Union[Unit, CityTile, str]], Dict[str, str], Unit]:
-        """Use mission for get all actions for object
-
-        Args:
-            cls (Union[WorkerMission, CartMission, CityMission]): mission class 
-            of object
-            mission (str): mission of object
-
-        Returns:
-            Tuple[Dict[str, Union[Unit, CityTile, str]], Dict[str, str], Unit]: 
-            actions. mission_state and check_again
-        """
-        perform = cls(
-            tiles_collection=self.tiles_collection,
-            states_collection=self.states_collection,
-            missions_state=self.missions_state,
-            obj_=self.obj
-            )
-        class_method = getattr(cls, mission)
-        class_method(perform)
+        else:
+            per = [method for method in dir(cls) if method.startswith('mission_')]
+            for met in per:
+                class_method = getattr(cls, met)
+                class_method(perform)
         return perform.actions, perform.missions_state, perform.check_again
 
     def perform_missions_and_actions(self) -> Tuple[
@@ -404,7 +373,7 @@ class PerformMissionsAndActions(MissionInit):
                 cls = CityMission
             if self.obj.id in self.missions_state.keys():
                 logger.info('I have mission')
-                return self._use_mission(cls=cls, mission=self.missions_state[self.obj.id])
+                return self._iterate_missions(cls=cls, mission=self.missions_state[self.obj.id])
             else:
-                logger.info('No mission')
-                return self._iterate_missions(cls=cls)
+                logger.info('No missions')
+                return self._iterate_missions(cls=cls, mission=None)
