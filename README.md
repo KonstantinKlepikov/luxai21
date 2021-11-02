@@ -44,21 +44,22 @@ To learn bot use `evol.py` file by command like:
 python evol.py
 ```
 
-Be carefull - you need define correct parameters inside.
+Be carefull - you need define correct parameters.
 
 ## How it work
 
 1. `bots` folder contains all scripts for build bot
 2. `bots.utility` - genome generathors and constants
 3. `bots.statements` - calculations of statements tiles and map
-4. `bots.performancies` - calculations of possible actions for every object in game
+4. `bots.missions` - calculations of possible actions for every object in game
 5. `bots.actions` - assignment of actions for every object
 6. `bots.bot` - bot logic
-7. `evol.py` it is used for teach bot genome
-8. `agent_test.py` it is used for test trained genome
-9. `agent_random.py` represents random generated genome
-10. `agent_train.py` it is used for alghoritm learning
-11. `agent.py` ii is used for submission (dont use for development)
+7. `bot.genutil.py` - genom constructor
+8. `evol.py` it is used for teach bot genome
+9. `agent_test.py` it is used for test trained genome
+10. `agent_random.py` represents random generated genome
+11. `agent_train.py` it is used for alghoritm learning
+12. `agent.py` ii is used for submission (dont use for development)
 
 Pipline of every turn:
 
@@ -70,7 +71,7 @@ Pipline of every turn:
 
 Pipline of learning:
 
-- define evolution learning constants in `evol.py`
+- define evolution learning constants in `shared.env`
 - use defined alghoritms and methods or define owned
 - start learning by run `python evol.py`
 - look fo result in `bots_dump` folder
