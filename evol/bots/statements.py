@@ -898,7 +898,7 @@ class TileState:
         self.__is_cart = None
 
         self.__is_empty = None
-        self.__ajacent = None
+        self.__adjacent = None
         self.__is_controversial_by = None
 
 
@@ -1027,25 +1027,25 @@ class TileState:
         return self.__is_empty
     
     @property
-    def ajacent(self) -> List[Position]: # TODO: check the border FIXME: out of range
-        """Claculate list of position of ajacent tiles
+    def adjacent(self) -> List[Position]: # TODO: check the border FIXME: out of range
+        """Claculate list of position of adjacent tiles
 
         Returns:
             List[Position]: list of positions
         """
-        if self.__ajacent is None:
-            self.__ajacent = []
+        if self.__adjacent is None:
+            self.__adjacent = []
             for i in cs.DIRECTIONS:
                 if i != 'c':
-                    self.__ajacent.append(self.pos.translate(i, 1))
-        return self.__ajacent
+                    self.__adjacent.append(self.pos.translate(i, 1))
+        return self.__adjacent
     
     @property
     def is_controversial_by(self, unit: Unit) -> List[Unit]:
         """Is controversal by units
 
         Args:
-            unit (Unit): unit, that placed on ajacent tile
+            unit (Unit): unit, that placed on adjacent tile
 
         Returns:
             List[Unit]: list of units
