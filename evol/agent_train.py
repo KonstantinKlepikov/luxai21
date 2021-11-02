@@ -1,6 +1,6 @@
 from lux.game import Game
 from bots.statements import TilesCollection, StatesCollectionsCollection
-from bots.bot import get_bot_actions
+from bots import bot
 from loguru import logger
 from bots.utility import ALL_MORNINGS
 
@@ -11,6 +11,7 @@ game_state = None
 genome = None
 game_eval = -1
 intermediate = {}
+missions_state = {}
 
 
 def agent(observation, configuration):
@@ -19,6 +20,7 @@ def agent(observation, configuration):
     global genome
     global intermediate
     global game_eval
+    global missions_state
 
     # Do not edit #
     if observation["step"] == 0:
@@ -55,15 +57,12 @@ def agent(observation, configuration):
         intermediate[game_eval] =+ score
     # end scoring #
 
-    states_collection = StatesCollectionsCollection(
-        game_state=game_state,
-        tiles_collection=tiles_collection
-        )
-
-    actions = get_bot_actions(
+    actions, missions_state = bot.get_bot_actions(
         genome=genome,
-        tiles_collection=tiles_collection,
-        states_collection=states_collection
+        game_state=game_state,
+        player=player,
+        opponent=opponent,
+        missions_state=missions_state
         )
 
     return actions

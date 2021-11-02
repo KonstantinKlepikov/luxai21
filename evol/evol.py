@@ -88,6 +88,7 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
     agent_train.genome = gen_const.convert_genome(vector=individual)
     agent_train.intermediate = {}
     agent_train.game_eval = -1
+    agent_train.missions_state = {}
     rewards = evaluate(
         'lux_ai_2021',
         [agent_train.agent, 'simple_agent'],

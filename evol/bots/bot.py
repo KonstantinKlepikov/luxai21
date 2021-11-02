@@ -50,8 +50,9 @@ def get_bot_actions(
 
     actions = []
     missions = []
+    player_own = tiles_collection.player_own
 
-    for obj_ in tiles_collection.player_own:
+    for obj_ in player_own:
         logger.info(f'Obj: {obj_}')
         act = PerformMissionsAndActions(
             tiles_collection=tiles_collection,
@@ -60,10 +61,14 @@ def get_bot_actions(
             mission=missions_state[obj_.id],
             obj_=obj_
         )
-        mission, missions_state = act.perform_missions_and_actions()
+        mission, missions_state, check_again = act.perform_missions_and_actions()
         logger.info(f'Missions: {missions}')
+        logger.info(f'Missions_state: {missions_state}')
+        logger.info(f'Check again: {check_again}')
         if mission:
             missions.append(mission)
+        if check_again:
+            player_own.append(check_again)
 
     # get actions for game
     actions = select_actions(

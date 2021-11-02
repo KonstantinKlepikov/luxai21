@@ -6,24 +6,19 @@ from typing import List, Dict, Tuple, Union
 import os, sys, math, random
 
 
-if os.path.exists("/kaggle"):  # check if we're on a kaggle server
+if os.path.exists("/kaggle"): # check if we're on a kaggle server
     import logging
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.WARNING)
     handler = logging.StreamHandler(sys.stdout)  # log to stdout on kaggle
     logger.addHandler(handler)
 else:
-    from loguru import logger  # log to file locally
+    from loguru import logger # log to file locally
 
 
-class Mission:
-    """Base class, provides constructhor and methods
-    for some calculations with object, that can act
-    
-        
-    We add mission as key to action dict. As value we add
-    action string or none if no any action needed in this mission on this turn
-    """
+class MissionInit:
+    """Init some shared parameters
+    """ 
    
     def __init__(
         self, 
@@ -35,7 +30,31 @@ class Mission:
         self.tiles_collection = tiles_collection
         self.states_collection = states_collection
         self.missions_state = missions_state
-        self.obj  = obj_
+        self.obj  = obj_ 
+
+
+class Mission(MissionInit):
+    """Base class, provides constructhor and methods
+    for some calculations with object, that can act
+    
+        
+    We add mission as key to self.action dict. As value we add
+    action string or None if no any action needed in this mission on this turn
+    
+    We add new object id and his mission string to self.missions_state or remove
+    ended mission
+    
+    self.check_again is used for check unit for new mission, when old is removed
+    """
+   
+    def __init__(
+        self, 
+        tiles_collection: TilesCollection, 
+        states_collection: StatesCollectionsCollection,
+        missions_state: Dict[str, str],
+        obj_: Union[Unit, CityTile]
+        ) -> None:
+        super().__init__(tiles_collection, states_collection, missions_state, obj_)
         self.actions:  Dict[str, Union[Unit, CityTile, str]] = {'obj': obj_}
         self.check_again: Union[Unit, CityTile, str] = None
         self.tile_state: TileState = states_collection.get_state(obj_.pos)
@@ -93,8 +112,59 @@ class Mission:
                 closest_pos = position
         if closest_pos:     
             return closest_pos.pos
- 
- 
+
+
+class CityMission(Mission):
+    """Citytile object missions with his posible actions
+    
+    Citytile can't add his missions to mission_state, because
+    its missions is continue no longer than one turn
+    """
+
+    def __init__(
+        self,
+        tiles_collection: TilesCollection,
+        states_collection: StatesCollectionsCollection,
+        missions_state: Dict[str, str],
+        obj_: Union[Unit, CityTile]
+        ) -> None:
+        super().__init__(tiles_collection, states_collection, missions_state, obj_)
+        self.__can_build = None
+
+    @property
+    def _can_build(self) -> bool:
+        """Set citytile can build
+        
+        City cant build units if citytiles == units, owned by player
+        """
+        if self.__can_build is None:
+            self.__can_build = bool(
+                len(self.tiles_collection.player_units) - len(self.tiles_collection.player_cities)
+                )
+        return self.__can_build
+
+    def mission_research(self) -> None:
+        """Citytile research mission
+        """
+        name = self.mission_research.__name__
+        if not self.tiles_collection.player.researched_uranium():
+            self.actions[name] = self.obj.research()
+
+    def mission_build_worker(self) -> None:
+        """Citytile build worker mission
+        """
+        name = self.mission_build_worker.__name__
+        if self._can_build:
+            self.actions[name] = self.obj.build_worker()
+
+    def mission_build_cart(self) -> None:
+        """Citytile build cart mission
+        """
+        name = self.mission_build_cart.__name__
+        if self._can_build:
+            self.actions[name] = self.obj.build_cart()
+
+
 class UnitMission(Mission):
     """Missions for units of any type
     """
@@ -115,11 +185,10 @@ class UnitMission(Mission):
         """Current cell statement
 
         Returns:
-            TileState: statements
+            TileState: current tile statement
         """
         if self.__current_tile_state is None:
             self.__current_tile_state = self.states_collection.get_state(pos=self.obj.pos)
-
         return self.__current_tile_state
     
     @property 
@@ -127,35 +196,43 @@ class UnitMission(Mission):
         """Get list of statements of adjacent tiles
 
         Returns:
-            list: list of statements
+            list: list of statements of adjacent tiles
         """
         if self.__adjacent_tile_states is None:
             adjacent = self.tile_state.adjacent
             states = []
             for pos in adjacent:
-                try: # FIXME: list index out of range (it is temporal solution)
-                    tile_state = self.states_collection.get_state(pos=pos)
-                    states.append(tile_state)
-                except IndexError:
-                    continue
+                tile_state = self.states_collection.get_state(pos=pos)
+                states.append(tile_state)
             self.__adjacent_tile_states = states
- 
         return self.__adjacent_tile_states
     
     def _move_to_closest(self, name: str, tiles: List[Cell]) -> None:
+        """Get move to closest tile of given type action
+
+        Args:
+            name (str): name of mission method
+            tiles (List[Cell]): list of tiles for closest calculation
+        """
         closest = self._get_closest_pos(tiles)
         if closest:
             dir_to_closest = self.obj.pos.direction_to(closest)
             self.actions[name] = self.obj.move(dir_to_closest)
 
-    def _end_mission(self, name: str) -> None:
-        if name in self.missions_state.values():
-            self.missions_state.pop(self.obj.id, None)
-            self.check_again = self.obj
+    def _end_mission(self) -> None:
+        """End mission, if it is in mission_state and 
+        add object to check_again
+        """
+        self.missions_state.pop(self.obj.id, None)
+        self.check_again = self.obj
         
-    def _start_or_continue_mission(self, name: str) -> None:
-        if name not in self.missions_state.values():
-            self.missions_state[self.obj.id] = name
+    def _continue_mission(self, name: str) -> None:
+        """Continue mission
+
+        Args:
+            name (str): name of mission method
+        """
+        self.missions_state[self.obj.id] = name
 
     def mission_drop_the_resources(self) -> None:
         """Move to closest city mission
@@ -163,7 +240,7 @@ class UnitMission(Mission):
         name = self.mission_drop_the_resources.__name__
         if not self.obj.get_cargo_space_left():
             if self.tile_state.is_city:
-                self._end_mission(name)
+                self._end_mission()
             else:
                 closest = self._get_closest_pos(self.tiles_collection.citytiles)
                 if closest:
@@ -171,10 +248,10 @@ class UnitMission(Mission):
                         name=name, 
                         tiles=self.tiles_collection.player_citytiles
                         )
-                    self._start_or_continue_mission(name)
+                    self._continue_mission(name)
 
 class WorkerMission(UnitMission):
-    """Worker object missions with his posible actions
+    """Worker missions with his posible actions
     """
 
     def mission_main_resource(self) -> None:
@@ -187,7 +264,6 @@ class WorkerMission(UnitMission):
                     name=name, 
                     tiles=self.tiles_collection.resources
                     )
-                # TODO: conclude collisions
             else:
                 adjacence = self._adjacent_tile_states
                 for state in adjacence:
@@ -205,10 +281,9 @@ class WorkerMission(UnitMission):
                         name=name, 
                         tiles=self.tiles_collection.resources
                         )
-                    # TODO: conclude collisions
-            self._start_or_continue_mission(name)
+            self._continue_mission(name)
         else:
-            self._end_mission(name)
+            self._end_mission()
 
     def mission_buld_the_city(self) -> None:
         """Worker mission to build a city
@@ -220,77 +295,30 @@ class WorkerMission(UnitMission):
             else:
                 seq = list(cs.DIRECTIONS)
                 self.actions[name] = self.obj.move(random.choice(seq=seq))
-            self._start_or_continue_mission(name)
+            self._continue_mission(name)
         else:
-            self._end_mission(name)
+            self._end_mission()
 
 
 class CartMission(UnitMission):
     """Cart object missions with his posible actions
     """
 
-    def mission_move_to_worker(self) -> None:
+    def mission_cart_harvest(self) -> None:
         """Perform move to closest resource
         """
+        name = self.mission_cart_harvest.__name__
         if self.obj.get_cargo_space_left():
-            closest = self._get_closest_pos(self.tiles_collection.player_workers)
-            if closest:
-                dir_to_closest = self.obj.pos.direction_to(closest)
-                self.actions[self.mission_move_to_worker.__name__] = self.obj.move(dir_to_closest)
-        if False: # TODO: when mission is complete
-            self.missions_state.pop(self.obj.id, None)
-
-
-class CityMission(Mission):
-    """Citytile object moissions with his posible actions
-    
-    Citytile dont know his missions from previous turns
-    """
-
-    def __init__(
-        self,
-        tiles_collection: TilesCollection,
-        states_collection: StatesCollectionsCollection,
-        missions_state: Dict[str, str],
-        obj_: Union[Unit, CityTile]
-        ) -> None:
-        super().__init__(tiles_collection, states_collection, missions_state, obj_)
-        self.__can_build = None
-
-    @property
-    def _can_build(self) -> bool:
-        """Set citytile can build
-        """
-        if self.__can_build is None:
-            self.__can_build = bool(
-                len(self.tiles_collection.player_units) - len(self.tiles_collection.player_cities)
+            self._move_to_closest(
+                name=name, 
+                tiles=self.tiles_collection.player_workers
                 )
-        return self.__can_build
-
-    def mission_research(self) -> None:
-        """Citytile research mission
-        """
-        if not self.tiles_collection.player.researched_uranium():
-            self.actions[self.mission_research.__name__] = self.obj.research()
-
-    def mission_build_worker(self) -> None:
-        """Citytile build worker mission
-        
-        City cant build units if citytiles == units, owned by player
-        """
-        if self._can_build:
-            self.actions[self.mission_build_worker.__name__] = self.obj.build_worker()
-
-    def mission_build_cart(self) -> None:
-        """Citytile build cart mission
-        
-        City cant build units if citytiles == units, owned by player
-        """
-        if self._can_build:
-            self.actions[self.mission_build_cart.__name__] = self.obj.build_cart()
+            self._continue_mission(name)
+        else:
+            self._end_mission()
 
 
-class PerformMissionsAndActions(Mission):
+class PerformMissionsAndActions(MissionInit):
     """This class construct all possible missions and actions for all objects
     that can act
     """
@@ -304,10 +332,20 @@ class PerformMissionsAndActions(Mission):
         ) -> None:
         super().__init__(tiles_collection, states_collection, missions_state, obj_)
 
-    def _iterate_mission(
+    def _iterate_missions(
         self, 
         cls: Union[WorkerMission, CartMission, CityMission]
-        ) -> Dict[str, Union[Unit, CityTile, str]]:
+        ) -> Tuple[Dict[str, Union[Unit, CityTile, str]], Dict[str, str], Unit]:
+        """Iterate missions for get all actions for object
+
+        Args:
+            cls (Union[WorkerMission, CartMission, CityMission]): mission class
+            of object
+
+        Returns:
+            Tuple[Dict[str, Union[Unit, CityTile, str]], Dict[str, str], Unit]:
+            actions. mission_state and check_again
+        """
         perform = cls(
             tiles_collection=self.tiles_collection,
             states_collection=self.states_collection,
@@ -318,13 +356,24 @@ class PerformMissionsAndActions(Mission):
         for met in per:
             class_method = getattr(cls, met)
             class_method(perform)
-            return perform.actions
+        return perform.actions, perform.missions_state, perform.check_again
 
-    def _make_mission(
+    def _use_mission(
         self, 
         cls: Union[WorkerMission, CartMission, CityMission],
         mission: str
-        ) -> Dict[str, Union[Unit, CityTile, str]]:
+        ) -> Tuple[Dict[str, Union[Unit, CityTile, str]], Dict[str, str], Unit]:
+        """Use mission for get all actions for object
+
+        Args:
+            cls (Union[WorkerMission, CartMission, CityMission]): mission class 
+            of object
+            mission (str): mission of object
+
+        Returns:
+            Tuple[Dict[str, Union[Unit, CityTile, str]], Dict[str, str], Unit]: 
+            actions. mission_state and check_again
+        """
         perform = cls(
             tiles_collection=self.tiles_collection,
             states_collection=self.states_collection,
@@ -333,16 +382,14 @@ class PerformMissionsAndActions(Mission):
             )
         class_method = getattr(cls, mission)
         class_method(perform)
-        return perform.actions
+        return perform.actions, perform.missions_state, perform.check_again
 
     def perform_missions_and_actions(self) -> Tuple[
         Dict[str, Union[Unit, CityTile, str]], 
-        Dict[str, str]
+        Dict[str, str],
+        Unit
         ]:
-        """Set all possible actions
-        
-        In this realisation we need use all methods of corresponded performance classes
-        because on that is based genom
+        """Chack all missions, set actions and mission_statement
 
         Returns:
             dict: performed actions of object and actions
@@ -357,8 +404,7 @@ class PerformMissionsAndActions(Mission):
                 cls = CityMission
             if self.obj.id in self.missions_state.keys():
                 logger.info('I have mission')
-                return self._make_mission(cls=cls,
-                    mission=self.missions_state[self.obj.id]), self.missions_state
+                return self._use_mission(cls=cls, mission=self.missions_state[self.obj.id])
             else:
                 logger.info('No mission')
-                return self._iterate_mission(cls=cls), self.missions_state
+                return self._iterate_missions(cls=cls)
