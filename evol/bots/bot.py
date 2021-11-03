@@ -73,8 +73,8 @@ def get_bot_actions(
         except TypeError:
             logger.info(f'No can act')
 
-    logger.info(f'Missions_per_object: {missions_per_object}')
     logger.info('======get actions======')
+    logger.info(f'Missions_per_object: {missions_per_object}')
 
     if missions_per_object:
         chrome = genome[tiles_collection.game_state.turn]._asdict()
