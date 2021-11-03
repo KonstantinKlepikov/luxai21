@@ -18,15 +18,13 @@ make game with python `python runner.py` or set full game options. You can use `
 DEBUG=True PLAYER=agent_test.py OPPONENT=agent_random.py python runner.py
 ```
 
-You can start game from `runner.ipynb`
-
 run visualisation
 
 ```bash
 serve vis
 ```
 
-make submission file (or `!sh make_sub.sh` for jupyter notebook)
+make submission file
 
 ```bash
 sh make_sub.sh
