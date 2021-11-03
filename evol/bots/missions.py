@@ -243,6 +243,7 @@ class UnitMission(Mission):
                         name=name, 
                         tiles=self.tiles_collection.player_citytiles
                         )
+        logger.info('mission_drop_the_resources: im not fool')
 
 
 class WorkerMission(UnitMission):
@@ -295,7 +296,7 @@ class WorkerMission(UnitMission):
             self._end_mission()
         else:
             logger.info('mission_buld_the_city: im fool')
-            if self.obj.can_build:
+            if self.obj.can_build(self.tiles_collection.game_state.map):
                 logger.info('mission_buld_the_city: i build the city')
                 self.actions[name] = self.obj.build_city()
             else:
@@ -358,8 +359,9 @@ class PerformMissionsAndActions(MissionInit):
             obj_=self.obj
             )
         if mission:
-            logger.info(f'_iterate_missionss: {mission}')
+            logger.info(f'_iterate_missionss mission: {mission}')
             class_method = getattr(cls, mission)
+            logger.info(f'_iterate_missionss class_method: {class_method}')
             class_method(perform)
         else:
             per = [method for method in dir(cls) if method.startswith('mission_')]

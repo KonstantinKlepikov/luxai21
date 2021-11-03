@@ -213,10 +213,10 @@ class TilesCollection:
             - team (int): team = 0 for Player.
         """
         if self.__player_citytiles is None:
-            _citytiles = []
+            citytiles = []
             for city in self.player_cities:
-                _citytiles = _citytiles + city.citytiles
-            self.__player_citytiles = _citytiles
+                citytiles = citytiles + city.citytiles
+            self.__player_citytiles = citytiles
         return self.__player_citytiles
 
     @property
@@ -369,10 +369,10 @@ class TilesCollection:
             - team (int): team = 1 for Opponent.
         """
         if self.__opponent_citytiles is None:
-            _citytiles = []
+            citytiles = []
             for city in self.opponent_cities:
-                _citytiles = _citytiles + city.citytiles
-            self.__opponent_citytiles = _citytiles
+                citytiles = citytiles + city.citytiles
+            self.__opponent_citytiles = citytiles
         return self.__opponent_citytiles
 
     @property
@@ -578,7 +578,7 @@ class TilesCollection:
         """
         if self.__citytiles is None:
             self.__citytiles = self.player_citytiles + self.opponent_citytiles
-        return self.__citytiles  
+        return self.__citytiles
 
     @property
     def citytiles_pos(self) -> List[Position]:
@@ -996,7 +996,9 @@ class TileState:
         """Is tile city
         """
         if self.__is_city is None:
-            self.__is_city = bool(self.cell.pos in self.tiles_collection.citytiles_pos)
+            self.__is_city = bool(self.cell.citytile in self.tiles_collection.citytiles)
+            logger.info(f'self.cell.citytile: {self.cell.citytile}')
+            logger.info(f'self.tiles_collection.citytiles: {self.tiles_collection.citytiles}')
         return self.__is_city
 
     @property
@@ -1004,7 +1006,7 @@ class TileState:
         """Is tile worker
         """
         if self.__is_worker is None:
-            self.__is_worker = bool(self.cell.pos in self.tiles_collection.workers_pos)
+            self.__is_worker = bool(self.cell.pos in self.tiles_collection.workers_pos) # FIXME: cell.pos is tuple, but in collection Position obj
         return self.__is_worker
     
     @property
@@ -1012,7 +1014,7 @@ class TileState:
         """Is tile cart
         """
         if self.__is_cart is None:
-            self.__is_cart = bool(self.cell.pos in self.tiles_collection.carts_pos)
+            self.__is_cart = bool(self.cell.pos in self.tiles_collection.carts_pos) # FIXME: cell.pos is tuple, but in collection Position obj
         return self.__is_cart
 
     @property
