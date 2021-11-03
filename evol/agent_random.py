@@ -20,7 +20,7 @@ def agent(observation, configuration):
     global genome
     global missions_state
 
-    # Do not edit #
+    # Do not edit
     if observation["step"] == 0:
         game_state = Game()
         game_state._initialize(observation["updates"])
@@ -29,7 +29,7 @@ def agent(observation, configuration):
     else:
         game_state._update(observation["updates"])
 
-    # Bot code #
+    # Bot code
     if game_state.turn == 0:
         logger.info('Agent is running!')
 
