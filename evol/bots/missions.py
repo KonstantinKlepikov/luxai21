@@ -16,24 +16,7 @@ else:
     from loguru import logger # log to file locally
 
 
-class MissionInit:
-    """Init some shared parameters
-    """ 
-   
-    def __init__(
-        self, 
-        tiles_collection: TilesCollection, 
-        states_collection: StatesCollectionsCollection,
-        missions_state: Dict[str, str],
-        obj_: Union[Unit, CityTile]
-        ) -> None:
-        self.tiles_collection = tiles_collection
-        self.states_collection = states_collection
-        self.missions_state = missions_state
-        self.obj  = obj_ 
-
-
-class Mission(MissionInit):
+class Mission:
     """Base class, provides constructhor and methods
     for some calculations with object, that can act
     
@@ -53,7 +36,10 @@ class Mission(MissionInit):
         missions_state: Dict[str, str],
         obj_: Union[Unit, CityTile]
         ) -> None:
-        super().__init__(tiles_collection, states_collection, missions_state, obj_)
+        self.tiles_collection = tiles_collection
+        self.states_collection = states_collection
+        self.missions_state = missions_state
+        self.obj  = obj_ 
         self.actions:  Dict[str, Union[Unit, CityTile, str]] = {'obj': obj_}
         self.check_again: Union[Unit, CityTile, str] = None
 
@@ -331,23 +317,26 @@ class CartMission(UnitMission):
                 )
 
 
-class PerformMissionsAndActions(MissionInit):
+class PerformMissionsAndActions:
     """This class construct all possible missions and actions for all objects
     that can act
     """
-
+   
     def __init__(
-        self,
-        tiles_collection: TilesCollection,
+        self, 
+        tiles_collection: TilesCollection, 
         states_collection: StatesCollectionsCollection,
         missions_state: Dict[str, str],
         obj_: Union[Unit, CityTile]
         ) -> None:
-        super().__init__(tiles_collection, states_collection, missions_state, obj_)
+        self.tiles_collection = tiles_collection
+        self.states_collection = states_collection
+        self.missions_state = missions_state
+        self.obj  = obj_ 
 
     def _iterate_missions(
         self, 
-        cls: Union[WorkerMission, CartMission, CityMission],
+        cls_: Union[WorkerMission, CartMission, CityMission],
         mission: str = None
         ) -> Tuple[Dict[str, Union[Unit, CityTile, str]], Dict[str, str], Unit]:
         """Iterate missions for get all actions for object
@@ -361,7 +350,7 @@ class PerformMissionsAndActions(MissionInit):
             Tuple[Dict[str, Union[Unit, CityTile, str]], Dict[str, str], Unit]:
             actions. mission_state and check_again
         """
-        perform = cls(
+        perform = cls_(
             tiles_collection=self.tiles_collection,
             states_collection=self.states_collection,
             missions_state=self.missions_state,
@@ -369,13 +358,13 @@ class PerformMissionsAndActions(MissionInit):
             )
         if mission:
             logger.info(f'> _iterate_missionss mission: {mission}')
-            class_method = getattr(cls, mission)
+            class_method = getattr(cls_, mission)
             logger.info(f'> _iterate_missionss class_method: {class_method}')
             class_method(perform)
         else:
-            per = [method for method in dir(cls) if method.startswith('mission_')]
+            per = [method for method in dir(cls_) if method.startswith('mission_')]
             for met in per:
-                class_method = getattr(cls, met)
+                class_method = getattr(cls_, met)
                 class_method(perform)
         return perform.actions, perform.missions_state, perform.check_again
 
@@ -393,17 +382,36 @@ class PerformMissionsAndActions(MissionInit):
             if isinstance(self.obj, Unit):
                 logger.info('> perform_missions_and_actions: im unit')
                 if self.obj.is_worker():
+                    print('worker')
+                    print(self.obj)
+                    print(self.obj.id)
+                    print(self.obj.type)
                     logger.info('> perform_missions_and_actions: im worker')
                     cls_ = WorkerMission
+                    print(cls_)
+                    print('------')
                 if self.obj.is_cart():
+                    print('cart')
+                    print(self.obj)
+                    print(self.obj.id)
+                    print(self.obj.type)
                     logger.info('> perform_missions_and_actions: im cart')
                     cls_ = CartMission
+                    print(cls_)
+                    print('------')
                 if self.obj.id in self.missions_state.keys():
-                    logger.info('> perform_missions_and_actions: i have mission from previous turn: ' +
+                    print('to iterate')
+                    print(self.obj)
+                    print(self.obj.id)
+                    print(self.obj.type)
+                    print(self.missions_state)
+                    print(cls_)
+                    print('------')
+                    logger.info('> perform_missions_and_actions: i have mission from previous turn - ' +
                         f'{self.missions_state[self.obj.id]}')
-                    return self._iterate_missions(cls=cls_, mission=self.missions_state[self.obj.id])
+                    return self._iterate_missions(cls_=cls_, mission=self.missions_state[self.obj.id])
             if isinstance(self.obj, CityTile):
                 logger.info('> perform_missions_and_actions: im citytile')
                 cls_ = CityMission
             logger.info('> perform_missions_and_actions: no mission from previous turn')
-            return self._iterate_missions(cls=cls_, mission=None)
+            return self._iterate_missions(cls_=cls_, mission=None)

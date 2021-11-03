@@ -7,7 +7,6 @@ import json, time
 
 logger.info('Start Logging agent_test.py...')
 
-
 with open("bots_dump/best_bot.json", "r") as f:
     genome_list = json.load(f)
 gen_const = GenConstruct()
@@ -23,7 +22,7 @@ def agent(observation, configuration):
     global genome
     global missions_state
 
-    # Do not edit #
+    # Do not edit
     if observation["step"] == 0:
         game_state = Game()
         game_state._initialize(observation["updates"])
@@ -32,12 +31,13 @@ def agent(observation, configuration):
     else:
         game_state._update(observation["updates"])
 
-    # Bot code #
+    # Bot code
     if game_state.turn == 0:
         logger.info('Agent is running!')
 
     logger.info('------------------->')
     logger.info(f'Current turn: {game_state.turn}')
+    logger.info(f'observation: {observation}')
     logger.info(f'missions_state: {missions_state}')
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]

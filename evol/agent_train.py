@@ -22,7 +22,7 @@ def agent(observation, configuration):
     global game_eval
     global missions_state
 
-    # Do not edit #
+    # Do not edit
     if observation["step"] == 0:
         game_state = Game()
         game_state._initialize(observation["updates"])
@@ -31,10 +31,10 @@ def agent(observation, configuration):
     else:
         game_state._update(observation["updates"])
 
-    # Bot code #
+    # Bot code
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
-   
+    
     # experimental intermediate scoring for fitness function
     # each morning we are scored count of player citytiles * 1000 + palyer units
     # then that numper is multipliced by serial number of the morning
@@ -47,8 +47,12 @@ def agent(observation, configuration):
     )
     
     if game_state.turn == 0:
+        # score additional scoring for each game
         game_eval += 1
+        missions_state = {}
         intermediate[game_eval] = 0
+        # drop missions_state each game
+        missions_state = {}
     
     if game_state.turn in ALL_MORNINGS:
         score = (len(tiles_collection.player_citytiles) * 10000 + \
