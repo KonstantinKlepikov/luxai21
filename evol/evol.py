@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from typing import List, Tuple
 from loguru import logger
-import statistics
 import os, time, json, random, statistics, multiprocessing
 from dotenv import load_dotenv
 
