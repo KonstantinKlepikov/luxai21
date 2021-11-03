@@ -49,6 +49,7 @@ def agent(observation, configuration):
     if game_state.turn == 0:
         # score additional scoring for each game
         game_eval += 1
+        missions_state = {}
         intermediate[game_eval] = 0
         # drop missions_state each game
         missions_state = {}

@@ -214,8 +214,8 @@ def main():
 
     start = time.time()
     
-    pool = multiprocessing.Pool(processes=NUM_OF_PROCESS)
-    toolbox.register("map", pool.map)
+    # pool = multiprocessing.Pool(processes=NUM_OF_PROCESS)
+    # toolbox.register("map", pool.map)
 
     # create initial population (generation 0):
     population = toolbox.populationCreator(n=POPULATION_SIZE)
@@ -240,7 +240,7 @@ def main():
         verbose=True
         )
     
-    pool.close()
+    # pool.close()
     
     timestamp = time.strftime("%m-%d_%H-%M", time.gmtime())
 
