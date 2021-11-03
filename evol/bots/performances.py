@@ -17,7 +17,7 @@ else:
 
 
 class Performance:
-    """Base class, provides constructhor and methods
+    """Base class, provides constructor and methods
     for some calculations with object, that can act
     """
    
@@ -26,7 +26,7 @@ class Performance:
         tiles_collection: TilesCollection, 
         states_collection: StatesCollectionsCollection,
         obj_: Union[Unit, CityTile]
-        ) -> None:
+                ) -> None:
         self.tiles_collection = tiles_collection
         self.states_collection = states_collection
         self.obj = obj_
@@ -95,11 +95,11 @@ class UnitPerformance(Performance):
         tiles_collection: TilesCollection,
         states_collection: StatesCollectionsCollection,
         obj_: Union[Unit, CityTile]
-        ) -> None:
+                ) -> None:
         super().__init__(tiles_collection, states_collection, obj_)
         self.actions:  Dict[str, Union[Unit, CityTile, str]] = {'obj': obj_}
         self.__current_tile_state = None
-        self.__ajacent_tile_states = None
+        self.__adjacent_tile_states = None
 
     @property
     def _current_tile_state(self) -> TileState:
@@ -114,22 +114,22 @@ class UnitPerformance(Performance):
         return self.__current_tile_state
     
     @property 
-    def _ajacent_tile_states(self) -> List[TileState]:
+    def _adjacent_tile_states(self) -> List[TileState]:
         """Get list of statements of adjacent tiles
 
         Returns:
             list: list of statements
         """
-        if self.__ajacent_tile_states is None:
+        if self.__adjacent_tile_states is None:
             tile_state = self.states_collection.get_state(pos=self.obj.pos)
-            ajacent = tile_state.ajacent
+            adjacent = tile_state.adjacent
             states = []
-            for pos in ajacent:
+            for pos in adjacent:
                 tile_state = self.states_collection.get_state(pos=pos)
                 states.append(tile_state)
-            self.__ajacent_tile_states = states
+            self.__adjacent_tile_states = states
  
-        return self.__ajacent_tile_states
+        return self.__adjacent_tile_states
 
     def perform_move_to_city(self) -> None:
         """Perform move to closest city
@@ -143,7 +143,7 @@ class UnitPerformance(Performance):
     def perform_transfer(self) -> None:  # TODO: need to know resource for transfer and destination
         """Perform transfer action
         """
-        for state in self._ajacent_tile_states:
+        for state in self._adjacent_tile_states:
             if state.is_owned_by_player:
                 if (state.is_worker and (cs.RESOURCE_CAPACITY.WORKER - self.obj.get_cargo_space_left())) or \
                    (state.is_cart and (cs.RESOURCE_CAPACITY.CART - self.obj.get_cargo_space_left())):
@@ -176,7 +176,7 @@ class WorkerPerformance(UnitPerformance):
         Units cant mine from the cities
         """
         if self.obj.get_cargo_space_left() and not self._current_tile_state.is_city:
-            for state in self._ajacent_tile_states:
+            for state in self._adjacent_tile_states:
                 if state.is_wood:
                     self.actions[self.perform_mine.__name__] = None
                     break
@@ -187,7 +187,7 @@ class WorkerPerformance(UnitPerformance):
                     self.actions[self.perform_mine.__name__] = None
                     break
 
-    def perform_build_city(self) -> None: # TODO: perform to closest empty space and build
+    def perform_build_city(self) -> None:  # TODO: perform to closest empty space and build
         """Perform build city action
         """
         if self.obj.can_build(self.tiles_collection.game_state.map):
@@ -217,7 +217,7 @@ class CityPerformance(Performance):
         tiles_collection: TilesCollection,
         states_collection: StatesCollectionsCollection,
         obj_: Union[Unit, CityTile]
-        ) -> None:
+                ) -> None:
         super().__init__(tiles_collection, states_collection, obj_)
         self.__can_build = None
         self.actions = {'obj': obj_}
@@ -265,7 +265,7 @@ class PerformAndGetActions(Performance):
         tiles_collection: TilesCollection,
         states_collection: StatesCollectionsCollection,
         obj_: Union[Unit, CityTile]
-        ) -> None:
+                ) -> None:
         super().__init__(tiles_collection, states_collection, obj_)
 
     def get_actions(self) -> Dict[str, Union[Unit, CityTile, str]]:
