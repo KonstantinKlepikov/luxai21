@@ -27,5 +27,9 @@ env = make(
 steps = env.run([PLAYER, OPPONENT])
 
 replay = env.toJSON()
-with open("replays/replay.json", "w") as f:
+
+PATH_TO = 'replays/replay.json'
+if os.path.exists(PATH_TO):
+    os.remove(PATH_TO)
+with open(PATH_TO, "w") as f:
     json.dump(replay, f)
