@@ -880,6 +880,8 @@ class TileState:
     def __init__(self, tiles_collection: TilesCollection, pos: Position) -> None:
         self.tiles_collection = tiles_collection
         self.pos = pos
+        self.map_width = tiles_collection.game_state.map_width
+        self.map_height = tiles_collection.game_state.map_height
         self.cell = tiles_collection.game_state.map.get_cell(pos.x, pos.y)
         self.__is_owned_by_player = None
         self.__is_owned_by_opponent = None
@@ -1027,8 +1029,8 @@ class TileState:
         return self.__is_empty
     
     @property
-    def adjacent(self) -> List[Position]: # TODO: check the border FIXME: out of range
-        """Claculate list of position of adjacent tiles
+    def adjacent(self) -> List[Position]:
+        """Calculate list of position of adjacent tiles
 
         Returns:
             List[Position]: list of positions
@@ -1037,7 +1039,9 @@ class TileState:
             self.__adjacent = []
             for i in cs.DIRECTIONS:
                 if i != 'c':
-                    self.__adjacent.append(self.pos.translate(i, 1))
+                    adjacent_cell = self.pos.translate(i, 1)
+                    if 0 <= adjacent_cell.x < self.map_width and 0 <= adjacent_cell.y < self.map_height:
+                        self.__adjacent.append(adjacent_cell)
         return self.__adjacent
     
     @property

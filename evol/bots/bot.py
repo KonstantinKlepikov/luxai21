@@ -80,7 +80,7 @@ def get_bot_actions(
         chrome = genome[tiles_collection.game_state.turn]._asdict()
 
         for miss in missions_per_object:
-            logger.info('choice action for single object')
+            logger.info('choose action for single object')
         
             posible_missions = {}
             for key in miss.keys():

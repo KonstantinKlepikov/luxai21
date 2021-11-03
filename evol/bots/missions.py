@@ -358,6 +358,7 @@ class PerformMissionsAndActions(MissionInit):
             obj_=self.obj
             )
         if mission:
+            logger.info(f'_iterate_missionss: {mission}')
             class_method = getattr(cls, mission)
             class_method(perform)
         else:
