@@ -1,7 +1,6 @@
 from lux.game import Game
 from bots.genutil import GenConstruct
-from bots.statements import TilesCollection, StatesCollectionsCollection
-from bots.bot import get_bot_actions
+from bots import bot
 from loguru import logger
 import time
 
@@ -10,9 +9,8 @@ logger.info('Start Logging agent_random.py...')
 
 gen_const = GenConstruct()
 genome = gen_const.init_genome()
-
-
 game_state = None
+missions_state = {}
 
 
 def agent(observation, configuration):
@@ -20,8 +18,9 @@ def agent(observation, configuration):
 
     global game_state
     global genome
+    global missions_state
 
-    # Do not edit #
+    # Do not edit
     if observation["step"] == 0:
         game_state = Game()
         game_state._initialize(observation["updates"])
@@ -30,33 +29,28 @@ def agent(observation, configuration):
     else:
         game_state._update(observation["updates"])
 
-    # Bot code #
+    # Bot code
     if game_state.turn == 0:
         logger.info('Agent is running!')
+        # drop missions_state each game
+        missions_state = {}
 
+    logger.info('------------------->')
     logger.info(f'Current turn: {game_state.turn}')
+    logger.info(f'missions_state: {missions_state}')
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
 
-    tiles_collection = TilesCollection(
+    actions, missions_state = bot.get_bot_actions(
+        genome=genome,
         game_state=game_state,
         player=player,
-        opponent=opponent
-    )
-
-    states_collection = StatesCollectionsCollection(
-        game_state=game_state,
-        tiles_collection=tiles_collection
-        )
-
-    actions = get_bot_actions(
-        genome=genome,
-        tiles_collection=tiles_collection,
-        states_collection=states_collection
+        opponent=opponent,
+        missions_state=missions_state
         )
 
     end = time.time()
     logger.info('time on this step: {}'.format(end - start))
-    logger.info('-'*20)
+    logger.info('<-------------------')
 
     return actions

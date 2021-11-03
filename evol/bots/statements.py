@@ -213,10 +213,10 @@ class TilesCollection:
             - team (int): team = 0 for Player.
         """
         if self.__player_citytiles is None:
-            _citytiles = []
+            citytiles = []
             for city in self.player_cities:
-                _citytiles = _citytiles + city.citytiles
-            self.__player_citytiles = _citytiles
+                citytiles = citytiles + city.citytiles
+            self.__player_citytiles = citytiles
         return self.__player_citytiles
 
     @property
@@ -369,10 +369,10 @@ class TilesCollection:
             - team (int): team = 1 for Opponent.
         """
         if self.__opponent_citytiles is None:
-            _citytiles = []
+            citytiles = []
             for city in self.opponent_cities:
-                _citytiles = _citytiles + city.citytiles
-            self.__opponent_citytiles = _citytiles
+                citytiles = citytiles + city.citytiles
+            self.__opponent_citytiles = citytiles
         return self.__opponent_citytiles
 
     @property
@@ -578,7 +578,7 @@ class TilesCollection:
         """
         if self.__citytiles is None:
             self.__citytiles = self.player_citytiles + self.opponent_citytiles
-        return self.__citytiles  
+        return self.__citytiles
 
     @property
     def citytiles_pos(self) -> List[Position]:
@@ -900,7 +900,7 @@ class TileState:
         self.__is_cart = None
 
         self.__is_empty = None
-        self.__ajacent = None
+        self.__adjacent = None
         self.__is_controversial_by = None
 
     @property
@@ -996,7 +996,9 @@ class TileState:
         """Is tile city
         """
         if self.__is_city is None:
-            self.__is_city = bool(self.cell in self.tiles_collection.citytiles)
+            self.__is_city = bool(self.cell.citytile in self.tiles_collection.citytiles)
+            logger.info(f'self.cell.citytile: {self.cell.citytile}')
+            logger.info(f'self.tiles_collection.citytiles: {self.tiles_collection.citytiles}')
         return self.__is_city
 
     @property
@@ -1004,7 +1006,7 @@ class TileState:
         """Is tile worker
         """
         if self.__is_worker is None:
-            self.__is_worker = bool(self.cell in self.tiles_collection.workers)
+            self.__is_worker = bool(self.cell.pos in self.tiles_collection.workers_pos) # FIXME: cell.pos is tuple, but in collection Position obj
         return self.__is_worker
     
     @property
@@ -1012,7 +1014,7 @@ class TileState:
         """Is tile cart
         """
         if self.__is_cart is None:
-            self.__is_cart = bool(self.cell in self.tiles_collection.carts)
+            self.__is_cart = bool(self.cell.pos in self.tiles_collection.carts_pos) # FIXME: cell.pos is tuple, but in collection Position obj
         return self.__is_cart
 
     @property
@@ -1027,20 +1029,20 @@ class TileState:
         return self.__is_empty
     
     @property
-    def ajacent(self) -> List[Position]:
-        """Calculates list of position of adjacent tiles
+    def adjacent(self) -> List[Position]:
+        """Calculate list of position of adjacent tiles
 
         Returns:
             List[Position]: list of positions
         """
-        if self.__ajacent is None:
-            self.__ajacent = []
+        if self.__adjacent is None:
+            self.__adjacent = []
             for i in cs.DIRECTIONS:
                 if i != 'c':
                     adjacent_cell = self.pos.translate(i, 1)
                     if 0 <= adjacent_cell.x < self.map_width and 0 <= adjacent_cell.y < self.map_height:
-                        self.__ajacent.append(adjacent_cell)
-        return self.__ajacent
+                        self.__adjacent.append(adjacent_cell)
+        return self.__adjacent
     
     @property
     def is_controversial_by(self, unit: Unit) -> List[Unit]:

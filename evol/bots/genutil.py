@@ -1,7 +1,7 @@
 from collections import namedtuple
 from typing import List
-from bots.performances import (
-    WorkerPerformance, CartPerformance, CityPerformance
+from bots.missions import (
+    WorkerMission, CartMission, CityMission
 )
 import random
 
@@ -20,9 +20,9 @@ class GenConstruct:
             namedtuple: empty genome object
         """
         if self.__Probability is None:
-            workers_per = [method for method in dir(WorkerPerformance) if method.startswith('perform_')]
-            carts_per = [method for method in dir(CartPerformance) if method.startswith('perform_')]
-            citytiles_per = [method for method in dir(CityPerformance) if method.startswith('perform_')]
+            workers_per = [method for method in dir(WorkerMission) if method.startswith('mission_')]
+            carts_per = [method for method in dir(CartMission) if method.startswith('mission_')]
+            citytiles_per = [method for method in dir(CityMission) if method.startswith('mission_')]
             per = list(set(workers_per + carts_per + citytiles_per))
             self.__Probability = namedtuple('Probability', per)
         return self.__Probability
