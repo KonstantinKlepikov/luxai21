@@ -382,31 +382,12 @@ class PerformMissionsAndActions:
             if isinstance(self.obj, Unit):
                 logger.info('> perform_missions_and_actions: im unit')
                 if self.obj.is_worker():
-                    print('worker')
-                    print(self.obj)
-                    print(self.obj.id)
-                    print(self.obj.type)
                     logger.info('> perform_missions_and_actions: im worker')
                     cls_ = WorkerMission
-                    print(cls_)
-                    print('------')
                 if self.obj.is_cart():
-                    print('cart')
-                    print(self.obj)
-                    print(self.obj.id)
-                    print(self.obj.type)
                     logger.info('> perform_missions_and_actions: im cart')
                     cls_ = CartMission
-                    print(cls_)
-                    print('------')
                 if self.obj.id in self.missions_state.keys():
-                    print('to iterate')
-                    print(self.obj)
-                    print(self.obj.id)
-                    print(self.obj.type)
-                    print(self.missions_state)
-                    print(cls_)
-                    print('------')
                     logger.info('> perform_missions_and_actions: i have mission from previous turn - ' +
                         f'{self.missions_state[self.obj.id]}')
                     return self._iterate_missions(cls_=cls_, mission=self.missions_state[self.obj.id])

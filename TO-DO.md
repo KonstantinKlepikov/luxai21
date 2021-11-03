@@ -22,5 +22,3 @@ class This:
 - [ ] more precision for board data
   - [ ] collision calculation for units
   - [ ] calculate resource coldown needed for cities and workers for nonstohastic resource storage
-
-![evolution](images/evolution.png)

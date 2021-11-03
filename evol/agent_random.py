@@ -32,6 +32,8 @@ def agent(observation, configuration):
     # Bot code
     if game_state.turn == 0:
         logger.info('Agent is running!')
+        # drop missions_state each game
+        missions_state = {}
 
     logger.info('------------------->')
     logger.info(f'Current turn: {game_state.turn}')
