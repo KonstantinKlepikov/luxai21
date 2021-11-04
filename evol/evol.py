@@ -1,13 +1,14 @@
 from deap import base, creator, tools, algorithms
 from kaggle_environments import evaluate
 from bots.genutil import GenConstruct
+from bots.scoring import FinalScoring
 import agent_train
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from typing import List, Tuple
 from loguru import logger
-import os, time, json, random, statistics, multiprocessing
+import os, time, json, random, multiprocessing
 from dotenv import load_dotenv
 
 
@@ -96,18 +97,13 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
         debug=True
         )
     
-    # TODO: move to function or class all scoring function operations
-    # experimental get mean rewards with biased intermediate result for first player
-    in_rewards = list(agent_train.intermediate.values())
-    rewards = [l[0] * 9 for l in rewards]
-    zipped_rewards = zip(in_rewards, rewards)
-    sum_rewards = [x + y for (x, y) in zipped_rewards]
-    mean_r = statistics.mean(sum_rewards)
+    final_scoring = FinalScoring(rewards=rewards)
     
-    # get mean rewards for first player
-    # rewards = [l[0] for l in rewards]
-    # mean_r = statistics.mean(rewards)
-    
+    # day plus night final scoring
+    mean_r = final_scoring.day_plus_night_final_scoring(
+        intermediate=agent_train.intermediate
+        )
+
     return mean_r,
 
 
