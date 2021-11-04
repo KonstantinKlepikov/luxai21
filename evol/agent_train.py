@@ -3,14 +3,18 @@ from bots.statements import TilesCollection
 from bots import bot
 from loguru import logger
 from bots.scoring import TurnScoring
+from typing import Dict
 
 
 logger.info('Start Logging agent_train.py...')
 
 game_state = None
 genome = None
-game_eval = -1
-intermediate = {}
+# This parametr defines the game number in a series 
+# of games with the same individual
+game_eval: int = -1
+# dict where key is a game_eval and value is a that game scour
+intermediate: Dict[int, int] = {}
 missions_state = {}
 
 
@@ -55,7 +59,10 @@ def agent(observation, configuration):
         )
     
     # day plus night scoring
-    score = turn_scoring.day_plus_night_turn_scoring()
+    # score = turn_scoring.day_plus_night_turn_scoring()
+    
+    # each turn scoring
+    score = turn_scoring.each_turn_scoring()
     
     if score:
         intermediate[game_eval] =+ score

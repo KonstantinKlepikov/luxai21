@@ -1,6 +1,6 @@
 from bots.statements import TilesCollection
 from bots.utility import ALL_MORNINGS
-from typing import Dict
+from typing import Dict, List
 import statistics
 
 
@@ -22,12 +22,29 @@ class TurnScoring:
                 len(self.tiles_collection.player_units)) \
                 * self.turn / 40
             return score
+        
+    def each_turn_scoring(self) -> int:
+        """Scoring function part for usage in agent_train.py
+        with each_day_final_scoring()
+        
+        Each turn scoring is multipliced by turn number.
+        Except turn 359 - it has additional *10
+
+        Returns:
+            int: score
+        """
+        score = (len(self.tiles_collection.player_citytiles) * 10000 + \
+                    len(self.tiles_collection.player_units)) * self.turn
+        if self.turn == 359:
+            score = score * 10
+        return score
+
 
 class FinalScoring:
     """Final scorings functions for evolution alghoritm
     """
     
-    def __init__(self, rewards: int) -> None:
+    def __init__(self, rewards: List[List[int]]) -> None:
         self.rewards = rewards
     
     def simple_final_scoring(self) -> int:
@@ -50,7 +67,7 @@ class FinalScoring:
         Use day_plus_night_turn_scoring() from TurnScoring in agent_train.py
 
         Args:
-            intermediate (dict): dict with number of cycles as keys
+            intermediate (Dict[int, int]): dict with number of cycles as keys
             and scorinhgs as values
 
         Returns:
@@ -62,5 +79,16 @@ class FinalScoring:
         sum_rewards = [x + y for (x, y) in zipped_rewards]
         return statistics.mean(sum_rewards)
     
-    def each_day_final_scoring(self) -> int:
-        pass
+    def each_day_final_scoring(self, intermediate: Dict[int, int]) -> int:
+        """Get scoring, calculated at end of each turn of game and
+        weighted by turn number.
+
+        Args:
+            intermediate (Dict[int, int]): dict with number of cycles as keys
+            and scorinhgs as values
+
+        Returns:
+            int: mean scoring
+        """
+        in_rewards = list(intermediate.values())
+        return statistics.mean(in_rewards)
