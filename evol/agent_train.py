@@ -2,15 +2,19 @@ from lux.game import Game
 from bots.statements import TilesCollection
 from bots import bot
 from loguru import logger
-from bots.utility import ALL_MORNINGS
+from bots.scoring import TurnScoring
+from typing import Dict
 
 
 logger.info('Start Logging agent_train.py...')
 
 game_state = None
 genome = None
-game_eval = -1
-intermediate = {}
+# This parametr defines the game number in a series 
+# of games with the same individual
+game_eval: int = -1
+# dict where key is a game_eval and value is a that game scour
+intermediate: Dict[int, int] = {}
 missions_state = {}
 
 
@@ -36,10 +40,6 @@ def agent(observation, configuration):
     opponent = game_state.players[(observation.player + 1) % 2]
     
     # experimental intermediate scoring for fitness function
-    # each morning we are scored count of player citytiles * 1000 + palyer units
-    # then that numper is multipliced by serial number of the morning
-    # for example, for 3 citytiles and 1 unit in turn 120 we have:
-    # (3 * 10000 + 1) * 120/40 = 93000
     tiles_collection = TilesCollection(
         game_state=game_state,
         player=player,
@@ -49,15 +49,22 @@ def agent(observation, configuration):
     if game_state.turn == 0:
         # score additional scoring for each game
         game_eval += 1
-        missions_state = {}
         intermediate[game_eval] = 0
         # drop missions_state each game
         missions_state = {}
+
+    turn_scoring = TurnScoring(
+        turn=game_state.turn, 
+        tiles_collection=tiles_collection
+        )
     
-    if game_state.turn in ALL_MORNINGS:
-        score = (len(tiles_collection.player_citytiles) * 10000 + \
-            len(tiles_collection.player_units)) \
-            * game_state.turn / 40
+    # day plus night scoring
+    # score = turn_scoring.day_plus_night_turn_scoring()
+    
+    # each turn scoring
+    score = turn_scoring.each_turn_scoring()
+    
+    if score:
         intermediate[game_eval] =+ score
     # end scoring
 
