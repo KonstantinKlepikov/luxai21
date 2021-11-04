@@ -13,6 +13,10 @@ from dotenv import load_dotenv
 
 
 logger.remove()
+# logger.add(open(
+#     'errorlogs/run_train.log', 'w'),
+#     format='{time:HH:mm:ss} | {level} | {message}'
+#     )
 
 load_dotenv(dotenv_path='shared.env')
 
