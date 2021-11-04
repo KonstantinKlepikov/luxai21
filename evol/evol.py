@@ -97,10 +97,18 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
         debug=True
         )
     
+    # final scoring - is a scoring, calculated inside game for each game
+    # plus final rewards, returned by game. SYou can see scoring strategies
+    # in scoring.py
     final_scoring = FinalScoring(rewards=rewards)
     
     # day plus night final scoring
-    mean_r = final_scoring.day_plus_night_final_scoring(
+    # mean_r = final_scoring.day_plus_night_final_scoring(
+    #     intermediate=agent_train.intermediate
+    #     )
+    
+    # each day final scoring
+    mean_r = final_scoring.each_day_final_scoring(
         intermediate=agent_train.intermediate
         )
 
