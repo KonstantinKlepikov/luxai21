@@ -8,7 +8,9 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path='shared.env')
 PLAYER = os.environ['PLAYER']
 OPPONENT = os.environ['OPPONENT']
-DEBUG = bool(os.environ['DEBUG'])
+DEBUG = os.environ['DEBUG']
+if DEBUG == 'False': DEBUG == False
+else: DEBUG == True
 
 logger.remove()
 logger.add(open(

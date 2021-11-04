@@ -5,6 +5,8 @@ import statistics
 
 
 class TurnScoring:
+    """Turn scorings functions for agent_train.py
+    """
     
     def __init__(self, turn: int, tiles_collection: TilesCollection) -> None:
         self.turn = turn
