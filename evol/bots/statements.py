@@ -4,7 +4,7 @@ from lux.game_objects import Unit, City, CityTile
 from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
 import os, sys
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Set
 
 if os.path.exists("/kaggle"):  # check if we're on a kaggle server
     import logging
@@ -1690,27 +1690,47 @@ class ContestedTilesCollection:
         tiles_collection: TilesCollection, 
         states_collections: StatesCollectionsCollection
         ) -> None:
-        self.tiles_collextion = tiles_collection
+        self.tiles_collection = tiles_collection
         self.states_collections = states_collections
-        self.__tiles_contested_by_player = None
-    
+        self.__tiles_to_move_in = None
+        self.__tiles_free_by_opponent_to_move_in = None
+        self.__tiles_contested_by_player_units = None
+
     @property
-    def tiles_contested_by_player(self) -> List[Position]:
+    def tiles_to_move_in(self) -> Set[Position]:
+        if self.__tiles_to_move_in is None:
+            all = set()
+            for pos in self.tiles_collection.player_units_pos:
+                tile_state = self.states_collections.get_state(pos=pos)
+                all.update(set(tile_state.adjacent))
+            self.__tiles_to_move_in = all
+        return self.__tiles_to_move_in
+
+    @property
+    def tiles_contested_by_player_units(self) -> Set[Position]:
         """Tiles, contested by player units
         Returns:
             List[Unit]: list of positions
         """
-        if self.__tiles_contested_by_player is None:
-            all = []
-            for pos in self.tiles_collextion.player_units_pos:
-                tile_state = self.states_collections.get_state(pos=pos)
-                all = all + tile_state.adjacent
+        if self.__tiles_contested_by_player_units is None:
+            all = self.tiles_to_move_in
+            all_possible = all.copy()
             contested = set()
-            all_possible = set(all)
             for pos in all:
                 try:
                     all_possible.remove(pos)
                 except KeyError:
                     contested.add(pos)
-            self.__tiles_contested_by_player = list(contested)
-        return self.__tiles_contested_by_player
+            self.__tiles_contested_by_player_units = contested
+        return self.__tiles_contested_by_player_units
+
+    @property
+    def tiles_free_by_opponent_to_move_in(self) -> Set[Position]:
+        if self.__tiles_free_by_opponent_to_move_in is None:
+            all = self.tiles_to_move_in
+            for pos in all:
+                tile_state = self.states_collections.get_state(pos=pos)
+                if tile_state.is_owned_by_opponent:
+                    all.discard(pos)
+            self.__tiles_free_by_opponent_to_move_in  = all
+        return self.__tiles_free_by_opponent_to_move_in
