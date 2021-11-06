@@ -1,7 +1,9 @@
 from lux.game_objects import Unit, CityTile
 from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
-from bots.statements import TileState, TilesCollection, StatesCollectionsCollection
+from bots.statements import (
+    TileState, TilesCollection, StatesCollectionsCollection
+)
 from typing import List, Dict, Tuple, Union
 import os, sys, math, random
 
@@ -32,12 +34,12 @@ class Mission:
     def __init__(
         self, 
         tiles_collection: TilesCollection, 
-        states_collection: StatesCollectionsCollection,
+        states_collections: StatesCollectionsCollection,
         missions_state: Dict[str, str],
         obj_: Union[Unit, CityTile]
         ) -> None:
         self.tiles_collection = tiles_collection
-        self.states_collection = states_collection
+        self.states_collections = states_collections
         self.missions_state = missions_state
         self.obj  = obj_ 
         self.actions:  Dict[str, Union[Unit, CityTile, str]] = {'obj': obj_}
@@ -108,11 +110,11 @@ class CityMission(Mission):
     def __init__(
         self,
         tiles_collection: TilesCollection,
-        states_collection: StatesCollectionsCollection,
+        states_collections: StatesCollectionsCollection,
         missions_state: Dict[str, str],
         obj_: Union[Unit, CityTile]
         ) -> None:
-        super().__init__(tiles_collection, states_collection, missions_state, obj_)
+        super().__init__(tiles_collection, states_collections, missions_state, obj_)
         self.__can_build = None
 
     @property
@@ -159,12 +161,11 @@ class UnitMission(Mission):
     def __init__(
         self,
         tiles_collection: TilesCollection,
-        states_collection: StatesCollectionsCollection,
+        states_collections: StatesCollectionsCollection,
         missions_state: Dict[str, str],
         obj_: Union[Unit, CityTile]
         ) -> None:
-        super().__init__(tiles_collection, states_collection, missions_state, obj_)
-        self.__current_tile_state = None
+        super().__init__(tiles_collection, states_collections, missions_state, obj_)
         self.__adjacent_tile_states = None
 
     @property
@@ -174,9 +175,7 @@ class UnitMission(Mission):
         Returns:
             TileState: current tile statement
         """
-        if self.__current_tile_state is None:
-            self.__current_tile_state = self.states_collection.get_state(pos=self.obj.pos)
-        return self.__current_tile_state
+        return self.states_collections.get_state(pos=self.obj.pos)
     
     @property 
     def _adjacent_tile_states(self) -> List[TileState]:
@@ -189,7 +188,7 @@ class UnitMission(Mission):
             adjacent = self._current_tile_state.adjacent
             states = []
             for pos in adjacent:
-                tile_state = self.states_collection.get_state(pos=pos)
+                tile_state = self.states_collections.get_state(pos=pos)
                 states.append(tile_state)
             self.__adjacent_tile_states = states
         return self.__adjacent_tile_states
@@ -325,12 +324,12 @@ class PerformMissionsAndActions:
     def __init__(
         self, 
         tiles_collection: TilesCollection, 
-        states_collection: StatesCollectionsCollection,
+        states_collections: StatesCollectionsCollection,
         missions_state: Dict[str, str],
         obj_: Union[Unit, CityTile]
         ) -> None:
         self.tiles_collection = tiles_collection
-        self.states_collection = states_collection
+        self.states_collections = states_collections
         self.missions_state = missions_state
         self.obj  = obj_ 
 
@@ -352,7 +351,7 @@ class PerformMissionsAndActions:
         """
         perform = cls_(
             tiles_collection=self.tiles_collection,
-            states_collection=self.states_collection,
+            states_collections=self.states_collections,
             missions_state=self.missions_state,
             obj_=self.obj
             )
