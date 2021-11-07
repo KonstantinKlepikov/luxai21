@@ -3,7 +3,7 @@ from bots.statements import TilesCollection
 from bots import bot
 from loguru import logger
 from bots.scoring import TurnScoring
-from typing import Dict
+from bots.utility import Intermediate, MissionState
 
 
 logger.info('Start Logging agent_train.py...')
@@ -14,8 +14,8 @@ genome = None
 # of games with the same individual
 game_eval: int = -1
 # dict where key is a game_eval and value is a that game scour
-intermediate: Dict[int, int] = {}
-missions_state = {}
+intermediate: Intermediate = {}
+missions_state: MissionState = {}
 
 
 def agent(observation, configuration):
