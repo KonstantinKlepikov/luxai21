@@ -38,6 +38,7 @@ def get_bot_actions(
     Returns:
         List[str]: list of game action for each players object on board
     """
+    logger.info('======Define game objects and define variables======')
     tiles_collection = TilesCollection(
         game_state=game_state,
         player=player,
@@ -52,9 +53,9 @@ def get_bot_actions(
     actions: List[str] = []
     missions_per_object: List[Dict[str, Union[Unit, CityTile, str]]] = []
     player_own: List[Union[Unit, CityTile]] = tiles_collection.player_own
-    logger.info(f'player_own: {player_own}')
 
-    logger.info('======get mission_actions, missions_state, check_again======')
+    logger.info('======Define mission_actions, missions_state, check_again======')
+    logger.info(f'player_own: {player_own}')
     for obj_ in player_own:
         logger.info(f'>>>>>>Obj: {obj_}<<<<<<')
         act = PerformMissionsAndActions(
@@ -75,14 +76,14 @@ def get_bot_actions(
         except TypeError:
             logger.info(f'No can act')
 
-    logger.info('======get actions======')
-    logger.info(f'Missions_per_object: {missions_per_object}')
+    logger.info('======Get actions per each mission======')
+    logger.info(f'missions_per_object: {missions_per_object}')
 
     if missions_per_object:
         chrome = genome[tiles_collection.game_state.turn]._asdict()
 
         for miss in missions_per_object:
-            logger.info('choose action for single object')
+            logger.info('------choose action for single object------')
         
             posible_missions = {}
             for key in miss.keys():

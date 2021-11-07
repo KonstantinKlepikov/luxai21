@@ -1,5 +1,7 @@
 from lux.game_constants import GAME_CONSTANTS as cs
-from typing import List, Dict, NamedTuple
+from lux.game_objects import Unit, CityTile
+from lux.game_map import Position, Cell
+from typing import List, Dict, NamedTuple, Union
 from collections import namedtuple
 
 
@@ -77,3 +79,12 @@ CONSTANTS = make_constants_nt(const=cs)
 ALL_DAYS: List[int] = [x + y for x in range(30) for y in range(0, 360, 40)]
 ALL_MORNINGS: List[int] = [x for x in range(0, 360, 40) if x]
 ALL_NIGHTS: List[int] = [x + y for x in range(30, 40) for y in range(0, 360, 40)]
+
+# Types
+GameActiveObjects = Union[Unit, CityTile]
+GameCellObjects = List[Union[Cell, CityTile, Unit]]
+MissionState = Dict[str, str]
+Missions = Dict[str, Union[Unit, CityTile, List[str]]]
+CheckAgain = Union[Unit, CityTile, str]
+Rewards = List[List[int]]
+Intermediate = Dict[str, str]
