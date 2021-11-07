@@ -10,11 +10,13 @@ if os.path.exists("/kaggle"):  # check if we're on a kaggle server
     logger.setLevel(logging.WARNING)
     handler = logging.StreamHandler(sys.stdout)  # log to stdout on kaggle
     logger.addHandler(handler)
+    dir_path = os.path.dirname(__file__)
+    bot_genome_path = os.path.abspath(os.path.join(dir_path, "bots_dump/best_bot.json"))
 else:
     from loguru import logger  # log to file locally
+    bot_genome_path = "bots_dump/best_bot.json"
 
-dir_path = os.path.dirname(__file__)
-bot_genome_path = os.path.abspath(os.path.join(dir_path, "bots_dump/best_bot.json"))
+
 with open(bot_genome_path, "r") as f:
     genome_list = json.load(f)
 gen_const = GenConstruct()
