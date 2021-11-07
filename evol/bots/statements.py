@@ -4,7 +4,7 @@ from lux.game_objects import Unit, City, CityTile
 from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
 import os, sys
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Set
 
 if os.path.exists("/kaggle"):  # check if we're on a kaggle server
     import logging
@@ -1657,24 +1657,6 @@ class TileState:
                     if 0 <= adjacent_cell.x < self.map_width and 0 <= adjacent_cell.y < self.map_height:
                         self.__adjacent.append(adjacent_cell)
         return self.__adjacent
-    @property
-    def is_controversial_by(self, unit: Unit) -> List[Unit]:
-        """Is controversial by units
-
-        Args:
-            unit (Unit): unit, that placed on adjacent tile
-        Returns:
-            List[Unit]: list of units
-        """
-        if self.__is_controversial_by is None:
-            self.__is_controversial_by = []
-            self.__is_controversial_by.append(unit)
-        elif unit not in self.__is_controversial_by:
-            self.__is_controversial_by.append(unit)
-        if len(self.__is_controversial_by) > 1:
-            return self.__is_controversial_by
-        else:
-            return []
 
 
 class StatesCollectionsCollection:
@@ -1697,3 +1679,58 @@ class StatesCollectionsCollection:
         if self.states_map[pos.x][pos.y] is None:
             self.states_map[pos.x][pos.y] = TileState(tiles_collection=self.tiles_collection, pos=pos)
         return self.states_map[pos.x][pos.y]
+    
+
+class ContestedTilesCollection:
+    """Get tiles collections, contested by player units
+    """
+    
+    def __init__(
+        self,
+        tiles_collection: TilesCollection, 
+        states_collections: StatesCollectionsCollection
+        ) -> None:
+        self.tiles_collection = tiles_collection
+        self.states_collections = states_collections
+        self.__tiles_to_move_in = None
+        self.__tiles_free_by_opponent_to_move_in = None
+        self.__tiles_contested_by_player_units = None
+
+    @property
+    def tiles_to_move_in(self) -> Set[Position]:
+        if self.__tiles_to_move_in is None:
+            all = set()
+            for pos in self.tiles_collection.player_units_pos:
+                tile_state = self.states_collections.get_state(pos=pos)
+                all.update(set(tile_state.adjacent))
+            self.__tiles_to_move_in = all
+        return self.__tiles_to_move_in
+
+    @property
+    def tiles_contested_by_player_units(self) -> Set[Position]:
+        """Tiles, contested by player units
+        Returns:
+            List[Unit]: list of positions
+        """
+        if self.__tiles_contested_by_player_units is None:
+            all = self.tiles_to_move_in
+            all_possible = all.copy()
+            contested = set()
+            for pos in all:
+                try:
+                    all_possible.remove(pos)
+                except KeyError:
+                    contested.add(pos)
+            self.__tiles_contested_by_player_units = contested
+        return self.__tiles_contested_by_player_units
+
+    @property
+    def tiles_free_by_opponent_to_move_in(self) -> Set[Position]:
+        if self.__tiles_free_by_opponent_to_move_in is None:
+            all = self.tiles_to_move_in
+            for pos in all:
+                tile_state = self.states_collections.get_state(pos=pos)
+                if tile_state.is_owned_by_opponent:
+                    all.discard(pos)
+            self.__tiles_free_by_opponent_to_move_in  = all
+        return self.__tiles_free_by_opponent_to_move_in
