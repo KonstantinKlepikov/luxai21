@@ -1,8 +1,6 @@
 from lux.game import Game
 from lux.game_objects import Player, Unit, CityTile
-from bots.statements import (
-    TilesCollection, StatesCollectionsCollection
-)
+from bots.statements import TilesCollection, StatesCollectionsCollection
 from bots.missions import PerformMissionsAndActions
 from typing import List, Dict, Tuple, Union
 from collections import namedtuple
@@ -30,9 +28,8 @@ def get_bot_actions(
 
     Args:
         genome (List[float]): action genome
-        game_state [Game]: game state object
-        player[Player]: player object
-        opponent[Player]: opponent object
+        tiles_collection (TilesCollection): collection of game tales
+        states_collection (StatesCollectionsCollection): collection of game tiles statements
         missions_state: dict with id of object and his mission
 
     Returns:
@@ -44,9 +41,14 @@ def get_bot_actions(
         opponent=opponent
     )
 
+    tiles_resource_collection = TilesResourceCollection(
+        tiles_collection=tiles_collection
+    )
+
     states_collections = StatesCollectionsCollection(
         game_state=game_state,
-        tiles_collection=tiles_collection
+        tiles_collection=tiles_collection,
+        tiles_resource_collection=tiles_resource_collection
         )
 
     actions: List[str] = []

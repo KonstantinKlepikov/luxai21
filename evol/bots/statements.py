@@ -86,51 +86,6 @@ class TilesCollection:
         self.__uraniums = None
         self.__uraniums_pos = None
 
-        self.__empty_adjacent_any_res = None
-        self.__empty_adjacent_one_any_res = None
-        self.__empty_adjacent_two_any_res = None
-        self.__empty_adjacent_three_any_res = None
-        self.__empty_adjacent_four_any_res = None
-        self.__empty_adjacent_any_res_pos = None
-        self.__empty_adjacent_one_any_res_pos = None
-        self.__empty_adjacent_two_any_res_pos = None
-        self.__empty_adjacent_three_any_res_pos = None
-        self.__empty_adjacent_four_any_res_pos = None
-
-        self.__empty_adjacent_one_wood_res = None
-        self.__empty_adjacent_two_wood_res = None
-        self.__empty_adjacent_three_wood_res = None
-        self.__empty_adjacent_four_wood_res = None
-        self.__empty_adjacent_one_wood_res_pos = None
-        self.__empty_adjacent_two_wood_res_pos = None
-        self.__empty_adjacent_three_wood_res_pos = None
-        self.__empty_adjacent_four_wood_res_pos = None
-
-        self.__empty_adjacent_one_coal_res = None
-        self.__empty_adjacent_two_coal_res = None
-        self.__empty_adjacent_three_coal_res = None
-        self.__empty_adjacent_four_coal_res = None
-        self.__empty_adjacent_one_coal_res_pos = None
-        self.__empty_adjacent_two_coal_res_pos = None
-        self.__empty_adjacent_three_coal_res_pos = None
-        self.__empty_adjacent_four_coal_res_pos = None
-
-        self.__empty_adjacent_one_uranium_res = None
-        self.__empty_adjacent_two_uranium_res = None
-        self.__empty_adjacent_three_uranium_res = None
-        self.__empty_adjacent_four_uranium_res = None
-        self.__empty_adjacent_one_uranium_res_pos = None
-        self.__empty_adjacent_two_uranium_res_pos = None
-        self.__empty_adjacent_three_uranium_res_pos = None
-        self.__empty_adjacent_four_uranium_res_pos = None
-
-        self.__empty_adjacent_wood_coal_res = None
-        self.__empty_adjacent_wood_coal_res_pos = None
-        self.__empty_adjacent_coal_uranium_res = None
-        self.__empty_adjacent_coal_uranium_res_pos = None
-        self.__empty_adjacent_wood_coal_uranium_res = None
-        self.__empty_adjacent_wood_coal_uranium_res_pos = None
-
     @property
     def map_cells(self) -> List[Cell]:
         """
@@ -912,8 +867,245 @@ class TilesCollection:
             self.__carts_id = self.player_carts_id + self.opponent_carts_id
         return self.__carts_id
 
-    def adjacent_cells(self, cell) -> List[Position]:  # TODO check if method must be property or not
-        """Calculates list of adjacent Cells
+
+class TileState:
+    """Get tile statement
+    """
+
+    def __init__(self, tiles_collection: TilesCollection, pos: Position) -> None:
+        self.tiles_collection = tiles_collection
+        self.pos = pos
+        self.map_width = tiles_collection.game_state.map_width
+        self.map_height = tiles_collection.game_state.map_height
+        self.cell = tiles_collection.game_state.map.get_cell(pos.x, pos.y)
+        self.__is_owned_by_player = None
+        self.__is_owned_by_opponent = None
+        self.__is_owned = None
+
+        self.__is_resource = None
+        self.__resource_type = None
+        self.__is_wood = None
+        self.__is_coal = None
+        self.__is_uranium = None
+
+        self.__is_road = None
+        self.__is_city = None
+
+        self.__is_worker = None
+        self.__is_cart = None
+
+        self.__is_empty = None
+        self.__adjacent = None
+        self.__is_controversial_by = None
+
+    @property
+    def is_owned_by_player(self) -> bool:
+        """Is owned by player
+        """
+        if self.__is_owned_by_player is None:
+            if self.cell in self.tiles_collection.player_own:
+                self.__is_owned_by_player = True
+                self.__is_owned = True
+            else:
+                self.__is_owned_by_player = False
+        return self.__is_owned_by_player
+
+    @property
+    def is_owned_by_opponent(self) -> bool:
+        """Is owned by opponent
+        """
+        if self.__is_owned_by_opponent is None:
+            if self.cell in self.tiles_collection.opponent_own:
+                self.__is_owned_by_opponent = True
+                self.__is_owned = True
+            else:
+                self.__is_owned_by_opponent = False
+        return self.__is_owned_by_opponent
+
+    @property
+    def is_owned(self) -> bool:
+        """Is owned by any
+        """
+        if self.__is_owned is None:
+            self.__is_owned = bool(self.cell in self.tiles_collection.own)
+        return self.__is_owned
+
+    @property
+    def is_resource(self) -> bool:
+        """Is tile resource
+        """
+        if self.__is_resource is None:
+            self.__is_resource = bool(self.cell in self.tiles_collection.resources)
+        return self.__is_resource
+
+    @property
+    def is_wood(self) -> bool:
+        """Is tile wood
+        """
+        if self.__is_wood is None:
+            self.__is_wood = bool(self.cell in self.tiles_collection.woods)
+        return self.__is_wood
+
+    @property
+    def is_coal(self) -> bool:
+        """Is tile wood
+        """
+        if self.__is_coal is None:
+            self.__is_coal = bool(self.cell in self.tiles_collection.coals)
+        return self.__is_coal
+
+    @property
+    def is_uranium(self) -> bool:
+        """Is tile wood
+        """
+        if self.__is_uranium is None:
+            self.__is_uranium = bool(self.cell in self.tiles_collection.uraniums)
+        return self.__is_uranium
+
+    @property
+    def resource_type(self) -> str:
+        """Returns type of resource
+        """
+        if self.__resource_type is None:
+            if self.cell in self.tiles_collection.woods:
+                self.__resource_type = cs.RESOURCE_TYPES.WOOD
+            elif self.cell in self.tiles_collection.coals:
+                self.__resource_type = cs.RESOURCE_TYPES.COAL
+            elif self.cell in self.tiles_collection.uraniums:
+                self.__resource_type = cs.RESOURCE_TYPES.URANIUM
+            else:
+                self.__resource_type = 'notype'
+        return self.__resource_type
+
+    @property
+    def is_road(self) -> bool:
+        """Is tile Road
+        """
+        if self.__is_road is None:
+            self.__is_road = bool(self.cell in self.tiles_collection.roads)
+        return self.__is_road
+
+    @property
+    def is_city(self) -> bool:
+        """Is tile city
+        """
+        if self.__is_city is None:
+            self.__is_city = bool(self.cell.citytile in self.tiles_collection.citytiles)
+            logger.info(f'self.cell.citytile: {self.cell.citytile}')
+            logger.info(f'self.tiles_collection.citytiles: {self.tiles_collection.citytiles}')
+        return self.__is_city
+
+    @property
+    def is_worker(self) -> bool:
+        """Is tile worker
+        """
+        if self.__is_worker is None:
+            self.__is_worker = bool(self.cell.pos in self.tiles_collection.workers_pos)  # FIXME: cell.pos is tuple, but in collection Position obj
+        return self.__is_worker
+
+    @property
+    def is_cart(self) -> bool:
+        """Is tile cart
+        """
+        if self.__is_cart is None:
+            self.__is_cart = bool(self.cell.pos in self.tiles_collection.carts_pos)  # FIXME: cell.pos is tuple, but in collection Position obj
+        return self.__is_cart
+
+    @property
+    def is_empty(self) -> bool:
+        """Is tile empty
+        """
+        if self.__is_empty is None:
+            if self.cell in self.tiles_collection.empty:
+                self.__is_empty = True
+            else:
+                self.__is_empty = False
+        return self.__is_empty
+
+    @property
+    def adjacent(self) -> List[Position]:
+        """Calculate list of position of adjacent tiles
+
+        Returns:
+            List[Position]: list of positions
+        """
+        if self.__adjacent is None:
+            self.__adjacent = []
+            for i in cs.DIRECTIONS:
+                if i != 'c':
+                    adjacent_cell = self.pos.translate(i, 1)
+                    if 0 <= adjacent_cell.x < self.map_width and 0 <= adjacent_cell.y < self.map_height:
+                        self.__adjacent.append(adjacent_cell)
+        return self.__adjacent
+
+    @property
+    def is_controversial_by(self, unit: Unit) -> List[Unit]:
+        """Is controversial by units
+
+        Args:
+            unit (Unit): unit, that placed on adjacent tile
+        Returns:
+            List[Unit]: list of units
+        """
+        if self.__is_controversial_by is None:
+            self.__is_controversial_by = []
+            self.__is_controversial_by.append(unit)
+        elif unit not in self.__is_controversial_by:
+            self.__is_controversial_by.append(unit)
+        if len(self.__is_controversial_by) > 1:
+            return self.__is_controversial_by
+        else:
+            return []
+
+
+class TilesResourceCollection:
+
+    def __init__(self, tiles_collection: TilesCollection):
+        self.tiles_collection = tiles_collection
+        self.game_state = tiles_collection.game_state
+        self.resources = tiles_collection.resources
+        self.empty_pos = tiles_collection.empty_pos
+
+        self.__empty_adjacent_any_res = None
+        self.__empty_adjacent_one_any_res = None
+        self.__empty_adjacent_two_any_res = None
+        self.__empty_adjacent_three_any_res = None
+        self.__empty_adjacent_any_res_pos = None
+        self.__empty_adjacent_one_any_res_pos = None
+        self.__empty_adjacent_two_any_res_pos = None
+        self.__empty_adjacent_three_any_res_pos = None
+
+        self.__empty_adjacent_one_wood_res = None
+        self.__empty_adjacent_two_wood_res = None
+        self.__empty_adjacent_three_wood_res = None
+        self.__empty_adjacent_one_wood_res_pos = None
+        self.__empty_adjacent_two_wood_res_pos = None
+        self.__empty_adjacent_three_wood_res_pos = None
+
+        self.__empty_adjacent_one_coal_res = None
+        self.__empty_adjacent_two_coal_res = None
+        self.__empty_adjacent_three_coal_res = None
+        self.__empty_adjacent_one_coal_res_pos = None
+        self.__empty_adjacent_two_coal_res_pos = None
+        self.__empty_adjacent_three_coal_res_pos = None
+
+        self.__empty_adjacent_one_uranium_res = None
+        self.__empty_adjacent_two_uranium_res = None
+        self.__empty_adjacent_three_uranium_res = None
+        self.__empty_adjacent_one_uranium_res_pos = None
+        self.__empty_adjacent_two_uranium_res_pos = None
+        self.__empty_adjacent_three_uranium_res_pos = None
+
+        self.__empty_adjacent_wood_coal_res = None
+        self.__empty_adjacent_wood_coal_res_pos = None
+        self.__empty_adjacent_coal_uranium_res = None
+        self.__empty_adjacent_coal_uranium_res_pos = None
+        self.__empty_adjacent_wood_coal_uranium_res = None
+        self.__empty_adjacent_wood_coal_uranium_res_pos = None
+
+    def adjacent_cells(self, cell) -> List[Position]:
+        """
+        Calculates list of adjacent Cells
 
         Args:
             cell: Cell object of checked cell
@@ -944,17 +1136,20 @@ class TilesCollection:
         Returns:
             Dict[N: Dict[Cell: List[resource types]]]
         """
+
         if self.__empty_adjacent_any_res is None:
-            self.__empty_adjacent_any_res = {1: {}, 2: {}, 3: {}, 4: {}}
-            adj_to_res_cells = [(self.game_state.map.get_cell_by_pos(adj_cell_pos), cell.resource.type)
-                                for cell in self.resources
-                                for adj_cell_pos in self.adjacent_cells(cell)
-                                if adj_cell_pos in self.empty_pos]
+            self.__empty_adjacent_any_res = {1: {}, 2: {}, 3: {}}
+            adj_to_res_cells = []
+            for cell in self.resources:
+                for adj_cell_pos in self.adjacent_cells(cell):
+                    cell_obj = self.game_state.map.get_cell_by_pos(adj_cell_pos)
+                    if cell_obj.resource is None and cell_obj.citytile is None and cell_obj.road == 0:
+                        adj_to_res_cells.append((cell_obj, cell.resource.type))
             adj_cells_dict = {}
             for cell, resource in adj_to_res_cells:
                 adj_cells_dict.setdefault(cell, []).append(resource)
 
-            for length in range(1, 5):
+            for length in range(1, 4):
                 for cell, res in adj_cells_dict.items():
                     if len(res) == length:
                         self.__empty_adjacent_any_res[length].setdefault(cell, res)
@@ -1039,31 +1234,6 @@ class TilesCollection:
         return self.__empty_adjacent_three_any_res_pos
 
     @property
-    def empty_adjacent_four_any_res(self) -> Dict[Cell, str]:
-        """
-        Returns dict of Cells close to one resource tiles of any type.
-        Args:
-        Returns:
-            Dict[Cell, [resource type]]: list of cells.
-        """
-        if self.__empty_adjacent_four_any_res is None:
-            self.__empty_adjacent_four_any_res = self.empty_adjacent_any_res[4]
-        return self.__empty_adjacent_four_any_res
-
-    @property
-    def empty_adjacent_four_any_res_pos(self) -> List[Position]:
-        """
-        Returns list of positions of Cells close to four resource tile of any type.
-
-        Args:
-        Returns:
-            List[Position]: game_map.Position object for coordinate of Cell (x: int, y: int).
-        """
-        if self.__empty_adjacent_four_any_res_pos is None:
-            self.__empty_adjacent_four_any_res_pos = [cell.pos for cell in self.empty_adjacent_four_any_res]
-        return self.__empty_adjacent_four_any_res_pos
-
-    @property
     def empty_adjacent_one_wood_res(self) -> List[Cell]:
         """
         Returns list of Cells close to one resource tiles with wood.
@@ -1145,33 +1315,6 @@ class TilesCollection:
         return self.__empty_adjacent_three_wood_res_pos
 
     @property
-    def empty_adjacent_four_wood_res(self) -> List[Cell]:
-        """
-        Returns list of Cells close to four resource tiles with wood.
-
-        Args:
-        Returns:
-            List[Cell]: list of cells.
-        """
-        if self.__empty_adjacent_four_wood_res is None:
-            self.__empty_adjacent_four_wood_res = [cell for cell, resource in self.empty_adjacent_four_any_res.items()
-                                                   if {'wood'} == set(resource)]
-        return self.__empty_adjacent_four_wood_res
-
-    @property
-    def empty_adjacent_four_wood_res_pos(self) -> List[Position]:
-        """
-        Returns list of positions of Cells close to four wood resource tile.
-
-        Args:
-        Returns:
-            List[Position]: game_map.Position object for coordinate of Cell (x: int, y: int).
-        """
-        if self.__empty_adjacent_four_wood_res_pos is None:
-            self.__empty_adjacent_four_wood_res_pos = [cell.pos for cell in self.empty_adjacent_four_wood_res]
-        return self.__empty_adjacent_four_wood_res_pos
-
-    @property
     def empty_adjacent_one_coal_res(self) -> List[Cell]:
         """
         Returns list of Cells close to one resource tiles with coal.
@@ -1251,33 +1394,6 @@ class TilesCollection:
         if self.__empty_adjacent_three_coal_res_pos is None:
             self.__empty_adjacent_three_coal_res_pos = [cell.pos for cell in self.empty_adjacent_three_coal_res]
         return self.__empty_adjacent_three_coal_res_pos
-
-    @property
-    def empty_adjacent_four_coal_res(self) -> List[Cell]:
-        """
-        Returns list of Cells close to four resource tiles with coal.
-
-        Args:
-        Returns:
-            List[Cell]: list of cells.
-        """
-        if self.__empty_adjacent_four_coal_res is None:
-            self.__empty_adjacent_four_coal_res = [cell for cell, resource in self.empty_adjacent_four_any_res.items()
-                                                   if {'coal'} == set(resource)]
-        return self.__empty_adjacent_four_coal_res
-
-    @property
-    def empty_adjacent_four_coal_res_pos(self) -> List[Position]:
-        """
-        Returns list of positions of Cells close to four coal resource tile.
-
-        Args:
-        Returns:
-            List[Position]: game_map.Position object for coordinate of Cell (x: int, y: int).
-        """
-        if self.__empty_adjacent_four_coal_res_pos is None:
-            self.__empty_adjacent_four_coal_res_pos = [cell.pos for cell in self.empty_adjacent_four_coal_res]
-        return self.__empty_adjacent_four_coal_res_pos
 
     @property
     def empty_adjacent_one_uranium_res(self) -> List[Cell]:
@@ -1362,34 +1478,6 @@ class TilesCollection:
         return self.__empty_adjacent_three_uranium_res_pos
 
     @property
-    def empty_adjacent_four_uranium_res(self) -> List[Cell]:
-        """
-        Returns list of Cells close to four resource tiles with uranium.
-
-        Args:
-        Returns:
-            List[Cell]: list of cells.
-        """
-        if self.__empty_adjacent_four_uranium_res is None:
-            self.__empty_adjacent_four_uranium_res = [cell for cell, resource in
-                                                      self.empty_adjacent_four_any_res.items()
-                                                      if {'uranium'} == set(resource)]
-        return self.__empty_adjacent_four_uranium_res
-
-    @property
-    def empty_adjacent_four_uranium_res_pos(self) -> List[Position]:
-        """
-        Returns list of positions of Cells close to four uranium resource tile.
-
-        Args:
-        Returns:
-            List[Position]: game_map.Position object for coordinate of Cell (x: int, y: int).
-        """
-        if self.__empty_adjacent_four_uranium_res_pos is None:
-            self.__empty_adjacent_four_uranium_res_pos = [cell.pos for cell in self.empty_adjacent_four_uranium_res]
-        return self.__empty_adjacent_four_uranium_res_pos
-
-    @property
     def empty_adjacent_wood_coal_res(self) -> List[Cell]:
         """
         Returns list of Cells close to both types of resource: wood and coal.
@@ -1402,8 +1490,6 @@ class TilesCollection:
             self.__empty_adjacent_wood_coal_res = [cell for cell, resource in self.empty_adjacent_two_any_res.items()
                                                    if {'wood', 'coal'} == set(resource)] + \
                                                   [cell for cell, resource in self.empty_adjacent_three_any_res.items()
-                                                   if {'wood', 'coal'} == set(resource)] + \
-                                                  [cell for cell, resource in self.empty_adjacent_four_any_res.items()
                                                    if {'wood', 'coal'} == set(resource)]
         return self.__empty_adjacent_wood_coal_res
 
@@ -1434,9 +1520,6 @@ class TilesCollection:
                                                       if {'coal', 'uranium'} == set(resource)] + \
                                                      [cell for cell, resource in
                                                       self.empty_adjacent_three_any_res.items()
-                                                      if {'coal', 'uranium'} == set(resource)] + \
-                                                     [cell for cell, resource in
-                                                      self.empty_adjacent_four_any_res.items()
                                                       if {'coal', 'uranium'} == set(resource)]
 
         return self.__empty_adjacent_coal_uranium_res
@@ -1466,9 +1549,6 @@ class TilesCollection:
         if self.__empty_adjacent_wood_coal_uranium_res is None:
             self.__empty_adjacent_wood_coal_uranium_res = [cell for cell, resource
                                                            in self.empty_adjacent_three_any_res.items()
-                                                           if {'wood', 'coal', 'uranium'} == set(resource)] + \
-                                                          [cell for cell, resource in
-                                                           self.empty_adjacent_four_any_res.items()
                                                            if {'wood', 'coal', 'uranium'} == set(resource)]
 
         return self.__empty_adjacent_wood_coal_uranium_res
@@ -1663,7 +1743,9 @@ class StatesCollectionsCollection:
     """Get statement matrix across all tiles
     """
 
-    def __init__(self, game_state: Game, tiles_collection: TilesCollection) -> None:
+    def __init__(self, game_state: Game,
+                 tiles_collection: TilesCollection,
+                 tiles_resource_collection: TilesResourceCollection) -> None:
         self.states_map = [[None for _ in range(game_state.map.width)] for _ in range(game_state.map.height)]
         self.tiles_collection = tiles_collection
 
@@ -1679,15 +1761,15 @@ class StatesCollectionsCollection:
         if self.states_map[pos.x][pos.y] is None:
             self.states_map[pos.x][pos.y] = TileState(tiles_collection=self.tiles_collection, pos=pos)
         return self.states_map[pos.x][pos.y]
-    
+
 
 class ContestedTilesCollection:
     """Get tiles collections, contested by player units
     """
-    
+
     def __init__(
         self,
-        tiles_collection: TilesCollection, 
+        tiles_collection: TilesCollection,
         states_collections: StatesCollectionsCollection
         ) -> None:
         self.tiles_collection = tiles_collection
