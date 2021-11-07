@@ -1,6 +1,6 @@
 from lux.game import Game
 from lux.game_objects import Player, Unit, CityTile
-from bots.statements import TilesCollection, StatesCollectionsCollection
+from bots.statements import TilesCollection, StatesCollectionsCollection, TilesResourceCollection
 from bots.missions import PerformMissionsAndActions
 from typing import List, Dict, Tuple, Union
 from collections import namedtuple
@@ -42,9 +42,14 @@ def get_bot_actions(
         opponent=opponent
     )
 
+    tiles_resource_collection = TilesResourceCollection(
+        tiles_collection=tiles_collection
+    )
+
     states_collection = StatesCollectionsCollection(
         game_state=game_state,
-        tiles_collection=tiles_collection
+        tiles_collection=tiles_collection,
+        tiles_resource_collection=tiles_resource_collection
         )
 
     actions: List[str] = []
