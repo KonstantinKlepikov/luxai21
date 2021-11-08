@@ -8,7 +8,7 @@ from typing import List, Tuple, Union
 import os, sys, math, random
 from bots.utility import (
     GameActiveObjects, GameCellObjects, MissionState, 
-    Missions, CheckAgain
+    Missions, CheckAgain, AvailablePos
 )
 
 
@@ -360,11 +360,11 @@ class CartMission(UnitMission):
             )
 
 
-class PerformMissionsAndActions:
-    """This class construct all possible missions and actions for all objects
+class Perform:
+    """Base class construct all possible missions and actions for all objects
     that can act
     """
-   
+    
     def __init__(
         self, 
         tiles_collection: TilesCollection, 
@@ -376,6 +376,12 @@ class PerformMissionsAndActions:
         self.states_collections = states_collections
         self.missions_state = missions_state
         self.obj  = obj_
+
+
+class PerformMissions(Perform):
+    """This class construct all possible missions for all objects
+    that can act
+    """
 
     def _iterate_missions(
         self, 
@@ -409,34 +415,6 @@ class PerformMissionsAndActions:
                 class_method = getattr(cls_, met)
                 class_method(perform)
         return perform.missions, perform.missions_state, perform.check_again
-    
-    def _get_action(
-        self, 
-        cls_: Union[WorkerMission, CartMission, CityMission],
-        mission: str = None
-        ) -> str:
-        """[summary]
-
-        Args:
-            cls_ (Union[WorkerMission, CartMission, CityMission]): mission class
-            mission (str, optional): mission. Defaults to None.
-
-        Returns:
-            str: action
-        """
-        perform = cls_(
-            tiles_collection=self.tiles_collection,
-            states_collections=self.states_collections,
-            missions_state=self.missions_state,
-            obj_=self.obj
-            )
-        logger.info(f'> _get_action mission: {mission}')
-        act = mission.replace("mission_", "action_")
-        logger.info(f'> _get_action action: {mission}')
-        class_method = getattr(cls_, act)
-        logger.info(f'> _get_action class_method: {class_method}')
-        class_method(perform)
-        return perform.action
 
     def perform_missions(self) -> Tuple[
         Missions,
@@ -467,6 +445,50 @@ class PerformMissionsAndActions:
             logger.info('> perform_missions: no mission from previous turn')
             return self._iterate_missions(cls_=cls_, mission=None)
         
+class PerformActions(Perform):
+    """This class construct all possible actions for all objects
+    that can act
+    """
+   
+    def __init__(
+        self, 
+        tiles_collection: TilesCollection, 
+        states_collections: StatesCollectionsCollection,
+        missions_state: MissionState,
+        obj_: GameActiveObjects,
+        available_pos: AvailablePos
+        ) -> None:
+        super().__init__(tiles_collection, states_collections, missions_state, obj_)
+        self.available_pos = available_pos
+
+    def _get_action(
+        self, 
+        cls_: Union[WorkerMission, CartMission, CityMission],
+        mission: str = None
+        ) -> str:
+        """[summary]
+
+        Args:
+            cls_ (Union[WorkerMission, CartMission, CityMission]): mission class
+            mission (str, optional): mission. Defaults to None.
+
+        Returns:
+            str: action
+        """
+        perform = cls_(
+            tiles_collection=self.tiles_collection,
+            states_collections=self.states_collections,
+            missions_state=self.missions_state,
+            obj_=self.obj
+            )
+        logger.info(f'> _get_action mission: {mission}')
+        act = mission.replace("mission_", "action_")
+        logger.info(f'> _get_action action: {mission}')
+        class_method = getattr(cls_, act)
+        logger.info(f'> _get_action class_method: {class_method}')
+        class_method(perform)
+        return perform.action
+
     def perform_actions(self, miss: str) -> str:
         """Set action
 
@@ -485,3 +507,4 @@ class PerformMissionsAndActions:
             logger.info('> perform_actions: im citytile')
             cls_ = CityMission
         return self._get_action(cls_=cls_, mission=miss)
+

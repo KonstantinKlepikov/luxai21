@@ -1,9 +1,9 @@
 from lux.game import Game
 from lux.game_objects import Player, Unit
 from bots.statements import (
-    TilesCollection, StatesCollectionsCollection
+    TilesCollection, StatesCollectionsCollection, ContestedTilesCollection
 )
-from bots.missions import PerformMissionsAndActions
+from bots.missions import PerformMissions, PerformActions
 from bots.utility import (
     MissionState, GameActiveObjects, Missions, Actions, MissionsChoosed
 )
@@ -52,6 +52,13 @@ def get_bot_actions(
         game_state=game_state,
         tiles_collection=tiles_collection
         )
+    
+    contested_collection = ContestedTilesCollection(
+        tiles_collection=tiles_collection,
+        states_collections=states_collections
+    )
+    available_pos = contested_collection.tiles_free_by_opponent_to_move_in.copy()
+    logger.info(f'available_tiles_pos: {available_pos}')
 
     actions: Actions = []
     missions_per_object: List[Missions] = []
@@ -62,7 +69,7 @@ def get_bot_actions(
     logger.info(f'player_own: {player_own}')
     for obj_ in player_own:
         logger.info(f'>>>>>>Obj: {obj_}<<<<<<')
-        act = PerformMissionsAndActions(
+        act = PerformMissions(
             tiles_collection=tiles_collection,
             states_collections=states_collections,
             missions_state=missions_state,
@@ -126,11 +133,12 @@ def get_bot_actions(
     
     if missions_choosen:
         for miss in missions_choosen:
-            act = PerformMissionsAndActions(
+            act = PerformActions(
                 tiles_collection=tiles_collection,
                 states_collections=states_collections,
                 missions_state=missions_state,
-                obj_=miss[0]
+                obj_=miss[0],
+                available_pos=available_pos
             )
             try:
                 action = act.perform_actions(miss=miss[1])

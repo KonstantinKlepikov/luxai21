@@ -3,6 +3,7 @@ from lux.game_objects import Player
 from lux.game_objects import Unit, City, CityTile
 from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
+from bots.utility import AvailablePos
 import os, sys
 from typing import List, Union, Dict, Set
 
@@ -1611,8 +1612,6 @@ class TileState:
         """
         if self.__is_city is None:
             self.__is_city = bool(self.cell.citytile in self.tiles_collection.citytiles)
-            logger.info(f'self.cell.citytile: {self.cell.citytile}')
-            logger.info(f'self.tiles_collection.citytiles: {self.tiles_collection.citytiles}')
         return self.__is_city
 
     @property
@@ -1694,43 +1693,35 @@ class ContestedTilesCollection:
         self.states_collections = states_collections
         self.__tiles_to_move_in = None
         self.__tiles_free_by_opponent_to_move_in = None
-        self.__tiles_contested_by_player_units = None
 
     @property
-    def tiles_to_move_in(self) -> Set[Position]:
+    def tiles_to_move_in(self) -> AvailablePos:
+        """All adjacent to player units tiles
+
+        Returns:
+            AvailablePos: sequence of tiles positions
+        """
         if self.__tiles_to_move_in is None:
-            all = set()
+            all_ = []
             for pos in self.tiles_collection.player_units_pos:
                 tile_state = self.states_collections.get_state(pos=pos)
-                all.update(set(tile_state.adjacent))
-            self.__tiles_to_move_in = all
+                all_ = all_ + tile_state.adjacent
+            all_ = [(pos.x, pos.y) for pos in all_]
+            self.__tiles_to_move_in = set(all_)
         return self.__tiles_to_move_in
 
     @property
-    def tiles_contested_by_player_units(self) -> Set[Position]:
-        """Tiles, contested by player units
-        Returns:
-            List[Unit]: list of positions
-        """
-        if self.__tiles_contested_by_player_units is None:
-            all = self.tiles_to_move_in
-            all_possible = all.copy()
-            contested = set()
-            for pos in all:
-                try:
-                    all_possible.remove(pos)
-                except KeyError:
-                    contested.add(pos)
-            self.__tiles_contested_by_player_units = contested
-        return self.__tiles_contested_by_player_units
+    def tiles_free_by_opponent_to_move_in(self) -> AvailablePos:
+        """Available tiles, exclude opponent cities and units
 
-    @property
-    def tiles_free_by_opponent_to_move_in(self) -> Set[Position]:
+        Returns:
+            AvailablePos: sequence of tiles positions
+        """
         if self.__tiles_free_by_opponent_to_move_in is None:
-            all = self.tiles_to_move_in
-            for pos in all:
-                tile_state = self.states_collections.get_state(pos=pos)
+            all_ = self.tiles_to_move_in
+            for pos in all_:
+                tile_state = self.states_collections.get_state(pos=Position(pos[0], pos[1]))
                 if tile_state.is_owned_by_opponent:
-                    all.discard(pos)
-            self.__tiles_free_by_opponent_to_move_in  = all
+                    all_.discard(pos)
+            self.__tiles_free_by_opponent_to_move_in  = all_
         return self.__tiles_free_by_opponent_to_move_in
