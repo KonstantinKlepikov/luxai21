@@ -1,9 +1,9 @@
 from lux.game import Game
 from lux.game_objects import Player, Unit
 from bots.statements import (
-    TilesCollection, StatesCollectionsCollection
+    TilesCollection, StatesCollectionsCollection, ContestedTilesCollection
 )
-from bots.missions import PerformMissionsAndActions
+from bots.missions import PerformMissions, PerformActions
 from bots.utility import (
     MissionState, GameActiveObjects, Missions, Actions, MissionsChoosed
 )
@@ -52,6 +52,13 @@ def get_bot_actions(
         game_state=game_state,
         tiles_collection=tiles_collection
         )
+    
+    contested_collection = ContestedTilesCollection(
+        tiles_collection=tiles_collection,
+        states_collections=states_collections
+    )
+    available_pos = contested_collection.tiles_free_by_opponent_to_move_in.copy()
+    logger.info(f'> bot: available_pos: {available_pos}')
 
     actions: Actions = []
     missions_per_object: List[Missions] = []
@@ -59,10 +66,10 @@ def get_bot_actions(
     player_own: List[GameActiveObjects] = tiles_collection.player_own
 
     logger.info('======Define missions, missions_state, check_again======')
-    logger.info(f'player_own: {player_own}')
+    logger.info(f'> player_own: {player_own}')
     for obj_ in player_own:
         logger.info(f'>>>>>>Obj: {obj_}<<<<<<')
-        act = PerformMissionsAndActions(
+        act = PerformMissions(
             tiles_collection=tiles_collection,
             states_collections=states_collections,
             missions_state=missions_state,
@@ -70,9 +77,9 @@ def get_bot_actions(
         )
         try:
             missions, missions_state, check_again = act.perform_missions()
-            logger.info(f'missions: {missions}')
-            logger.info(f'Missions_state: {missions_state}')
-            logger.info(f'Check again: {check_again}')
+            logger.info(f'> bot: missions: {missions}')
+            logger.info(f'> bot: Missions_state: {missions_state}')
+            logger.info(f'> bot: Check again: {check_again}')
             missions_per_object.append(missions)
             if check_again:
                 player_own.append(check_again)
@@ -81,7 +88,7 @@ def get_bot_actions(
             logger.info(f'No on can make mission')
 
     logger.info('======Get missions per each mission in missions_per_object======')
-    logger.info(f'missions_per_object: {missions_per_object}')
+    logger.info(f'> bot: missions_per_object: {missions_per_object}')
 
     if missions_per_object:
         chrome = genome[tiles_collection.game_state.turn]._asdict()
@@ -91,10 +98,10 @@ def get_bot_actions(
         
             posible_missions = {}
             for key in miss['missions']:
-                logger.info(f'Key in miss["missions"]: {key}')
+                logger.info(f'> bot: Key in miss["missions"]: {key}')
                 # use genome section for each turn
                 posible_missions[key] = chrome[key]
-                logger.info(f'posible_missions: {posible_missions}')
+                logger.info(f'> bot: posible_missions: {posible_missions}')
 
             if posible_missions:
                 # get list of possible missions
@@ -114,23 +121,24 @@ def get_bot_actions(
                 # If nothing to do (for example for mine) - it is skiped
                 if c[0] in miss['missions']:
                     missions_choosen.append([miss['obj'], c[0]])
-                    logger.info(f'mission choosed append: {missions_choosen}')
+                    logger.info(f'> bot: mission choosed append: {missions_choosen}')
                     # add mission_state of unit to transfer statement
                     # in next turn of game
                     if isinstance(miss['obj'], Unit):
                         missions_state[miss['obj'].id] = c[0]
-                        logger.info(f'missions_state added: {missions_state}')
+                        logger.info(f'> bot: missions_state added: {missions_state}')
 
     logger.info('======Get action for each mission in mission_choosen======')
-    logger.info(f'mission_choosen: {missions_choosen}')
+    logger.info(f'> bot: mission_choosen: {missions_choosen}')
     
     if missions_choosen:
         for miss in missions_choosen:
-            act = PerformMissionsAndActions(
+            act = PerformActions(
                 tiles_collection=tiles_collection,
                 states_collections=states_collections,
                 missions_state=missions_state,
-                obj_=miss[0]
+                obj_=miss[0],
+                available_pos=available_pos
             )
             try:
                 action = act.perform_actions(miss=miss[1])
@@ -140,7 +148,8 @@ def get_bot_actions(
             except TypeError:
                 logger.info(f'No can act')
 
-    logger.info(f'Actions: {actions}')
-    logger.info(f'missions_state: {missions_state}')
+    logger.info(f'> bot: available_pos: {available_pos}')
+    logger.info(f'> bot: Actions: {actions}')
+    logger.info(f'> bot: missions_state: {missions_state}')
 
     return actions, missions_state

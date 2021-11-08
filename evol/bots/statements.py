@@ -3,8 +3,9 @@ from lux.game_objects import Player
 from lux.game_objects import Unit, City, CityTile
 from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
+from bots.utility import AvailablePos
 import os, sys
-from typing import List, Union, Dict, Set
+from typing import List, Tuple, Union, Dict, Set
 
 if os.path.exists("/kaggle"):  # check if we're on a kaggle server
     import logging
@@ -1516,7 +1517,8 @@ class TileState:
 
         self.__is_empty = None
         self.__adjacent = None
-        self.__is_controversial_by = None
+        self.__adjacence_dir = None
+        self.__adjacent_dir_tuples = None
 
     @property
     def is_owned_by_player(self) -> bool:
@@ -1611,8 +1613,6 @@ class TileState:
         """
         if self.__is_city is None:
             self.__is_city = bool(self.cell.citytile in self.tiles_collection.citytiles)
-            logger.info(f'self.cell.citytile: {self.cell.citytile}')
-            logger.info(f'self.tiles_collection.citytiles: {self.tiles_collection.citytiles}')
         return self.__is_city
 
     @property
@@ -1643,6 +1643,22 @@ class TileState:
         return self.__is_empty
 
     @property
+    def adjacence_dir(self) -> Dict[str, Position]:
+        """Calculate dict, where keys are directions, values - positions of adjacent tiles
+
+        Returns:
+            Dict[str, Position]: dict with directions and positions
+        """
+        if self.__adjacence_dir is None:
+            self.__adjacence_dir = {}
+            for dir in cs.DIRECTIONS:
+                if dir != 'c':
+                    adjacent_cell = self.pos.translate(dir, 1)
+                    if 0 <= adjacent_cell.x < self.map_width and 0 <= adjacent_cell.y < self.map_height:
+                        self.__adjacence_dir[dir] = adjacent_cell
+        return self.__adjacence_dir
+    
+    @property
     def adjacent(self) -> List[Position]:
         """Calculate list of position of adjacent tiles
 
@@ -1650,13 +1666,19 @@ class TileState:
             List[Position]: list of positions
         """
         if self.__adjacent is None:
-            self.__adjacent = []
-            for i in cs.DIRECTIONS:
-                if i != 'c':
-                    adjacent_cell = self.pos.translate(i, 1)
-                    if 0 <= adjacent_cell.x < self.map_width and 0 <= adjacent_cell.y < self.map_height:
-                        self.__adjacent.append(adjacent_cell)
+            self.__adjacent = list(self.adjacence_dir.values())
         return self.__adjacent
+    
+    @property
+    def adjacent_dir_tuples(self) -> Dict[str, Tuple[int]]:
+        """Calculate dict, where keys are directions, values - tuples of x, y positions
+
+        Returns:
+            Dict(str, Tuple[int]): dict with directions and tuples with coordinates
+        """
+        if self.__adjacent_dir_tuples is None:
+            self.__adjacent_dir_tuples = {item[0]: (item[1].x, item[1].y) for item in self.adjacence_dir.items()}
+        return self.__adjacent_dir_tuples
 
 
 class StatesCollectionsCollection:
@@ -1694,43 +1716,35 @@ class ContestedTilesCollection:
         self.states_collections = states_collections
         self.__tiles_to_move_in = None
         self.__tiles_free_by_opponent_to_move_in = None
-        self.__tiles_contested_by_player_units = None
 
     @property
-    def tiles_to_move_in(self) -> Set[Position]:
+    def tiles_to_move_in(self) -> AvailablePos:
+        """All adjacent to player units tiles
+
+        Returns:
+            AvailablePos: sequence of tiles positions
+        """
         if self.__tiles_to_move_in is None:
-            all = set()
+            all_ = []
             for pos in self.tiles_collection.player_units_pos:
                 tile_state = self.states_collections.get_state(pos=pos)
-                all.update(set(tile_state.adjacent))
-            self.__tiles_to_move_in = all
+                all_ = all_ + tile_state.adjacent
+            all_ = [(pos.x, pos.y) for pos in all_]
+            self.__tiles_to_move_in = set(all_)
         return self.__tiles_to_move_in
 
     @property
-    def tiles_contested_by_player_units(self) -> Set[Position]:
-        """Tiles, contested by player units
-        Returns:
-            List[Unit]: list of positions
-        """
-        if self.__tiles_contested_by_player_units is None:
-            all = self.tiles_to_move_in
-            all_possible = all.copy()
-            contested = set()
-            for pos in all:
-                try:
-                    all_possible.remove(pos)
-                except KeyError:
-                    contested.add(pos)
-            self.__tiles_contested_by_player_units = contested
-        return self.__tiles_contested_by_player_units
+    def tiles_free_by_opponent_to_move_in(self) -> AvailablePos:
+        """Available tiles, exclude opponent cities and units
 
-    @property
-    def tiles_free_by_opponent_to_move_in(self) -> Set[Position]:
+        Returns:
+            AvailablePos: sequence of tiles positions
+        """
         if self.__tiles_free_by_opponent_to_move_in is None:
-            all = self.tiles_to_move_in
-            for pos in all:
-                tile_state = self.states_collections.get_state(pos=pos)
+            all_ = self.tiles_to_move_in
+            for pos in all_:
+                tile_state = self.states_collections.get_state(pos=Position(pos[0], pos[1]))
                 if tile_state.is_owned_by_opponent:
-                    all.discard(pos)
-            self.__tiles_free_by_opponent_to_move_in  = all
+                    all_.discard(pos)
+            self.__tiles_free_by_opponent_to_move_in  = all_
         return self.__tiles_free_by_opponent_to_move_in

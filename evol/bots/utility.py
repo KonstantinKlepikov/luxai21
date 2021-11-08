@@ -1,7 +1,7 @@
 from lux.game_constants import GAME_CONSTANTS as cs
 from lux.game_objects import Unit, CityTile
-from lux.game_map import Cell
-from typing import List, Dict, NamedTuple, Union
+from lux.game_map import Cell, Position
+from typing import List, Dict, NamedTuple, Union, Set, Tuple
 from collections import namedtuple
 
 
@@ -87,7 +87,8 @@ MissionState = Dict[str, str]
 Missions = Dict[str, Union[Unit, CityTile, List[str]]]
 MissionChoosed = List[Union[GameActiveObjects, str]]
 MissionsChoosed = List[MissionChoosed]
-CheckAgain = Union[Unit, CityTile, str]
+CheckAgain = Union[Unit, CityTile]
 Rewards = List[List[int]]
 Intermediate = Dict[str, str]
 Actions = List[str]
+AvailablePos = Set[Tuple[int]]
