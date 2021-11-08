@@ -5,7 +5,7 @@ from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
 from bots.utility import AvailablePos
 import os, sys
-from typing import List, Union, Dict, Set
+from typing import List, Tuple, Union, Dict, Set
 
 if os.path.exists("/kaggle"):  # check if we're on a kaggle server
     import logging
@@ -1517,7 +1517,8 @@ class TileState:
 
         self.__is_empty = None
         self.__adjacent = None
-        self.__is_controversial_by = None
+        self.__adjacence_dir = None
+        self.__adjacent_dir_tuples = None
 
     @property
     def is_owned_by_player(self) -> bool:
@@ -1642,6 +1643,22 @@ class TileState:
         return self.__is_empty
 
     @property
+    def adjacence_dir(self) -> Dict[str, Position]:
+        """Calculate dict, where keys are directions, values - positions of adjacent tiles
+
+        Returns:
+            Dict[str, Position]: dict with directions and positions
+        """
+        if self.__adjacence_dir is None:
+            self.__adjacence_dir = {}
+            for dir in cs.DIRECTIONS:
+                if dir != 'c':
+                    adjacent_cell = self.pos.translate(dir, 1)
+                    if 0 <= adjacent_cell.x < self.map_width and 0 <= adjacent_cell.y < self.map_height:
+                        self.__adjacence_dir[dir] = adjacent_cell
+        return self.__adjacence_dir
+    
+    @property
     def adjacent(self) -> List[Position]:
         """Calculate list of position of adjacent tiles
 
@@ -1649,13 +1666,19 @@ class TileState:
             List[Position]: list of positions
         """
         if self.__adjacent is None:
-            self.__adjacent = []
-            for i in cs.DIRECTIONS:
-                if i != 'c':
-                    adjacent_cell = self.pos.translate(i, 1)
-                    if 0 <= adjacent_cell.x < self.map_width and 0 <= adjacent_cell.y < self.map_height:
-                        self.__adjacent.append(adjacent_cell)
+            self.__adjacent = list(self.adjacence_dir.values())
         return self.__adjacent
+    
+    @property
+    def adjacent_dir_tuples(self) -> Dict[str, Tuple[int]]:
+        """Calculate dict, where keys are directions, values - tuples of x, y positions
+
+        Returns:
+            Dict(str, Tuple[int]): dict with directions and tuples with coordinates
+        """
+        if self.__adjacent_dir_tuples is None:
+            self.__adjacent_dir_tuples = {item[0]: (item[1].x, item[1].y) for item in self.adjacence_dir.items()}
+        return self.__adjacent_dir_tuples
 
 
 class StatesCollectionsCollection:
