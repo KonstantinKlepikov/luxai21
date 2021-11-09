@@ -26,13 +26,13 @@ class Mission:
     """Base class, provides constructhor and methods
     for some calculations with object, that can act
     
-    We add mission as key to self.action dict. As value we add
+    NOTE: We add mission as key to self.action dict. As value we add
     action string or None if no any action needed in this mission on this turn
     
-    We add new object id and his mission string to self.missions_state or remove
+    NOTE: We add new object id and his mission string to self.missions_state or remove
     ended mission
     
-    self.check_again is used for check unit for new mission, when old is removed
+    NOTE: self.check_again is used for check unit for new mission, when old is removed
     """
    
     def __init__(
@@ -108,7 +108,7 @@ class Mission:
 class CityMission(Mission):
     """Citytile object missions with his posible actions
     
-    Citytile can't add his missions to mission_state, because
+    NOTE: Citytile can't add his missions to mission_state, because
     its missions is continue no longer than one turn
     """
 
@@ -201,7 +201,7 @@ class UnitMission(Mission):
         return self.states_collections.get_state(pos=self.obj.pos)
     
     @property 
-    def _adjacent_tile_states(self) -> List[TileState]: # TODO: move to independed class to statements
+    def _adjacent_tile_states(self) -> List[TileState]: # TODO: move to independed class
         """Get list of statements of adjacent tiles
 
         Returns:
@@ -228,6 +228,8 @@ class UnitMission(Mission):
             tiles (List[Cell]): list of tiles for closest calculation
             available_pos: AvailablePos: dict wih directions and tuple with
             positions x, y
+
+        TODO: we need list of targets for moving, not closest for all
         """
         closest = self._get_closest_pos(tiles)
         if closest:
@@ -256,6 +258,59 @@ class UnitMission(Mission):
                             logger.info(f'> _move_to_closest: action {self.action}')
                             logger.info(f'> _move_to_closest: available_pos {available_pos}')
 
+    def _transfer_resource(self) -> None:
+        """Transfere resource to cart action
+        
+        NOTE: transfer(dest_id, resourceType, amount): str - returns the transfer action. Will 
+        transfer from this Unit the selected Resource type by the desired amount to the Unit 
+        with id dest_id given that both units are adjacent at the start of the turn. (This means 
+        that a destination Unit can receive a transfer of resources by another Unit but also 
+        move away from that Unit)
+        
+        NOTE: Transfer - Send any amount of a single resource-type from a unit's cargo to another 
+        (start-of-turn) adjacent Unit, up to the latter's cargo capacity. Excess is returned to 
+        the original unit.
+        """
+        # init all unit objects in collection of tile states
+        self.states_collections.player_active_obj_to_state
+
+        adjacence = self._adjacent_tile_states
+        logger.info(f'> _transfer_resource: adjacence {adjacence}')
+
+        for state in adjacence:
+            logger.info(f'> _transfer_resource: state {state}')
+            if state.player_cart_object and state.player_cart_object.get_cargo_space_left():
+                logger.info('> _transfer_resource: cart is adjacent and has empty space')
+                logger.info(f'> _transfer_resource: cart id {state.player_cart_object.id}')
+                logger.info(f'> _transfer_resource: cart cargo left {state.player_cart_object.get_cargo_space_left()}')
+                logger.info(f'> _transfer_resource: action {self.action}')
+                if self.obj.cargo.uranium:
+                    logger.info(f'> _transfer_resource: transfer uranium {self.obj.cargo.uranium}')
+                    self.action = self.obj.transfer(
+                        dest_id=state.player_cart_object.id,
+                        resourceType=cs.RESOURCE_TYPES.URANIUM,
+                        amount=self.obj.cargo.uranium
+                        )
+                elif self.obj.cargo.coal:
+                    logger.info(f'> _transfer_resource: transfer coal {self.obj.cargo.coal}')
+                    self.action = self.obj.transfer(
+                        dest_id=state.player_cart_object.id,
+                        resourceType=cs.RESOURCE_TYPES.COAL,
+                        amount=self.obj.cargo.coal
+                        )
+                elif self.obj.cargo.wood:
+                    logger.info(f'> _transfer_resource: transfer wood {self.obj.cargo.wood}')
+                    self.action = self.obj.transfer(
+                        dest_id=state.player_cart_object.id,
+                        resourceType=cs.RESOURCE_TYPES.WOOD,
+                        amount=self.obj.cargo.wood
+                        )
+                else:
+                    logger.info('> _transfer_resource: nothing to transfer')
+            else:
+                logger.info('> _transfer_resource: no adjacent carts or is fool')
+            logger.info(f'> _transfer_resource: action {self.action}')
+
     def _end_mission(self) -> None:
         """End mission and add object to check_again
         """
@@ -267,6 +322,9 @@ class UnitMission(Mission):
 
     def mission_drop_the_resources(self) -> None:
         """Move to closest city mission
+        
+        NOTE: we dont check how many capacity unit has. We check - is completely empty?
+        If it is empty - it cant move to drop his resources.
         """
         name = self.mission_drop_the_resources.__name__
         if not self.obj.get_cargo_space_left():
@@ -285,12 +343,18 @@ class UnitMission(Mission):
     
     def action_drop_the_resources(self, available_pos: AvailablePos) -> None:
         """Move to closest city action
+        
+        NOTE: if it possible - drop resources to cart
         """
-        logger.info('> action_drop_the_resources: im here and go to closest city')
-        self._move_to_closest_action(
-            tiles=self.tiles_collection.player_citytiles,
-            available_pos=available_pos
-            )
+        if self.obj.is_worker:
+            logger.info('> action_drop_the_resources: im worker and try drop resources')
+            self._transfer_resource()
+        if not self.action:
+            logger.info('> action_drop_the_resources: im go to closest city')
+            self._move_to_closest_action(
+                tiles=self.tiles_collection.player_citytiles,
+                available_pos=available_pos
+                )
 
 
 class WorkerMission(UnitMission):
@@ -299,6 +363,9 @@ class WorkerMission(UnitMission):
 
     def mission_mine_resource(self) -> None:
         """Worker mission for mining resources
+        
+        NOTE: we dont check how many capacity unit has. We check - is it fool?
+        If it is fool - it cant mine.
         """
         name = self.mission_mine_resource.__name__
         if not self.obj.get_cargo_space_left():
@@ -321,7 +388,7 @@ class WorkerMission(UnitMission):
                 )
         else:
             adjacence = self._adjacent_tile_states
-            main_now = False # FIXME: no good resources to mine
+            main_now = False
             for state in adjacence: 
                 if state.is_wood:
                     logger.info('> action_mine_resource: i mine wood')
@@ -337,10 +404,24 @@ class WorkerMission(UnitMission):
                     break
             if not main_now:
                 logger.info('> action_mine_resource: im not in city and go mine')
-                self._move_to_closest_action(
-                    tiles=self.tiles_collection.resources,
-                    available_pos=available_pos
-                    )
+                if self.tiles_collection.player.researched_uranium():
+                    logger.info('> action_mine_resource: im go mine uranium')
+                    self._move_to_closest_action(
+                        tiles=self.tiles_collection.uraniums,
+                        available_pos=available_pos
+                        )
+                elif self.tiles_collection.player.researched_coal():
+                    logger.info('> action_mine_resource: im go mine coal')
+                    self._move_to_closest_action(
+                        tiles=self.tiles_collection.coals,
+                        available_pos=available_pos
+                        )
+                else:
+                    logger.info('> action_mine_resource: im go mine wood')
+                    self._move_to_closest_action(
+                        tiles=self.tiles_collection.woods,
+                        available_pos=available_pos
+                        )
 
     def mission_buld_the_city(self) -> None:
         """Worker mission to build a city
