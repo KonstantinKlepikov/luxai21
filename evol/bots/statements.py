@@ -5,7 +5,7 @@ from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
 from bots.utility import AvailablePos
 import os, sys
-from typing import List, Tuple, Union, Dict, Set
+from typing import List, Tuple, Union, Dict
 
 if os.path.exists("/kaggle"):  # check if we're on a kaggle server
     import logging
@@ -897,7 +897,8 @@ class TileState:
 
         self.__is_empty = None
         self.__adjacent = None
-        self.__is_controversial_by = None
+        self.__adjacence_dir = None
+        self.__adjacent_dir_tuples = None
 
     @property
     def is_owned_by_player(self) -> bool:
@@ -992,8 +993,6 @@ class TileState:
         """
         if self.__is_city is None:
             self.__is_city = bool(self.cell.citytile in self.tiles_collection.citytiles)
-            logger.info(f'self.cell.citytile: {self.cell.citytile}')
-            logger.info(f'self.tiles_collection.citytiles: {self.tiles_collection.citytiles}')
         return self.__is_city
 
     @property
@@ -1001,7 +1000,8 @@ class TileState:
         """Is tile worker
         """
         if self.__is_worker is None:
-            self.__is_worker = bool(self.cell.pos in self.tiles_collection.workers_pos)  # FIXME: cell.pos is tuple, but in collection Position obj
+            self.__is_worker = bool(
+                self.cell.pos in self.tiles_collection.workers_pos)  # FIXME: cell.pos is tuple, but in collection Position obj
         return self.__is_worker
 
     @property
@@ -1009,7 +1009,8 @@ class TileState:
         """Is tile cart
         """
         if self.__is_cart is None:
-            self.__is_cart = bool(self.cell.pos in self.tiles_collection.carts_pos)  # FIXME: cell.pos is tuple, but in collection Position obj
+            self.__is_cart = bool(
+                self.cell.pos in self.tiles_collection.carts_pos)  # FIXME: cell.pos is tuple, but in collection Position obj
         return self.__is_cart
 
     @property
@@ -1024,48 +1025,119 @@ class TileState:
         return self.__is_empty
 
     @property
+    def adjacence_dir(self) -> Dict[str, Position]:
+        """Calculate dict, where keys are directions, values - positions of adjacent tiles
+        Returns:
+            Dict[str, Position]: dict with directions and positions
+        """
+        if self.__adjacence_dir is None:
+            self.__adjacence_dir = {}
+            for direction in cs.DIRECTIONS:
+                if direction != 'c':
+                    adjacent_cell = self.pos.translate(direction, 1)
+                    if 0 <= adjacent_cell.x < self.map_width and 0 <= adjacent_cell.y < self.map_height:
+                        self.__adjacence_dir[direction] = adjacent_cell
+        return self.__adjacence_dir
+
+    @property
     def adjacent(self) -> List[Position]:
         """Calculate list of position of adjacent tiles
-
         Returns:
             List[Position]: list of positions
         """
         if self.__adjacent is None:
-            self.__adjacent = []
-            for i in cs.DIRECTIONS:
-                if i != 'c':
-                    adjacent_cell = self.pos.translate(i, 1)
-                    if 0 <= adjacent_cell.x < self.map_width and 0 <= adjacent_cell.y < self.map_height:
-                        self.__adjacent.append(adjacent_cell)
+            self.__adjacent = list(self.adjacence_dir.values())
         return self.__adjacent
 
     @property
-    def is_controversial_by(self, unit: Unit) -> List[Unit]:
-        """Is controversial by units
+    def adjacent_dir_tuples(self) -> Dict[str, Tuple[int]]:
+        """Calculate dict, where keys are directions, values - tuples of x, y positions
+        Returns:
+            Dict(str, Tuple[int]): dict with directions and tuples with coordinates
+        """
+        if self.__adjacent_dir_tuples is None:
+            self.__adjacent_dir_tuples = {item[0]: (item[1].x, item[1].y) for item in self.adjacence_dir.items()}
+        return self.__adjacent_dir_tuples
+
+
+class StatesCollectionsCollection:
+    """Get statement matrix across all tiles
+    """
+
+    def __init__(self, game_state: Game,
+                 tiles_collection: TilesCollection) -> None:
+        self.states_map = [[None for _ in range(game_state.map.width)] for _ in range(game_state.map.height)]
+        self.tiles_collection = tiles_collection
+
+    def get_state(self, pos: Position) -> TileState:
+        """Get TileState of any tile by position
 
         Args:
-            unit (Unit): unit, that placed on adjacent tile
+            pos (Position): position object
+
         Returns:
-            List[Unit]: list of units
+            [type]: TileState object for given position
         """
-        if self.__is_controversial_by is None:
-            self.__is_controversial_by = []
-            self.__is_controversial_by.append(unit)
-        elif unit not in self.__is_controversial_by:
-            self.__is_controversial_by.append(unit)
-        if len(self.__is_controversial_by) > 1:
-            return self.__is_controversial_by
-        else:
-            return []
+        if self.states_map[pos.x][pos.y] is None:
+            self.states_map[pos.x][pos.y] = TileState(tiles_collection=self.tiles_collection, pos=pos)
+        return self.states_map[pos.x][pos.y]
 
 
-class TilesResourceCollection:
+class ContestedTilesCollection:
+    """Get tiles collections, contested by player units
+    """
 
-    def __init__(self, tiles_collection: TilesCollection):
+    def __init__(
+        self,
+        tiles_collection: TilesCollection,
+        states_collections: StatesCollectionsCollection
+                ) -> None:
+        self.tiles_collection = tiles_collection
+        self.states_collections = states_collections
+        self.__tiles_to_move_in = None
+        self.__tiles_free_by_opponent_to_move_in = None
+
+    @property
+    def tiles_to_move_in(self) -> AvailablePos:
+        """All adjacent to player units tiles
+
+        Returns:
+            AvailablePos: sequence of tiles positions
+        """
+        if self.__tiles_to_move_in is None:
+            all_ = []
+            for pos in self.tiles_collection.player_units_pos:
+                tile_state = self.states_collections.get_state(pos=pos)
+                all_ = all_ + tile_state.adjacent
+            all_ = [(pos.x, pos.y) for pos in all_]
+            self.__tiles_to_move_in = set(all_)
+        return self.__tiles_to_move_in
+
+    @property
+    def tiles_free_by_opponent_to_move_in(self) -> AvailablePos:
+        """Available tiles, exclude opponent cities and units
+
+        Returns:
+            AvailablePos: sequence of tiles positions
+        """
+        if self.__tiles_free_by_opponent_to_move_in is None:
+            all_ = self.tiles_to_move_in
+            for pos in all_:
+                tile_state = self.states_collections.get_state(pos=Position(pos[0], pos[1]))
+                if tile_state.is_owned_by_opponent:
+                    all_.discard(pos)
+            self.__tiles_free_by_opponent_to_move_in = all_
+        return self.__tiles_free_by_opponent_to_move_in
+
+
+class AdjacentToResourceTilesCollection:
+
+    def __init__(self, tiles_collection: TilesCollection,
+                 states_collection: StatesCollectionsCollection):
         self.tiles_collection = tiles_collection
         self.game_state = tiles_collection.game_state
         self.resources = tiles_collection.resources
-        self.empty_pos = tiles_collection.empty_pos
+        self.states_collection = states_collection
 
         self.__empty_adjacent_any_res = None
         self.__empty_adjacent_one_any_res = None
@@ -1104,26 +1176,6 @@ class TilesResourceCollection:
         self.__empty_adjacent_wood_coal_uranium_res = None
         self.__empty_adjacent_wood_coal_uranium_res_pos = None
 
-    def adjacent_cells(self, cell) -> List[Position]:
-        """
-        Calculates list of adjacent Cells
-
-        Args:
-            cell: Cell object of checked cell
-        Returns:
-            List[Position]: list of positions of adjacent Cells
-        """
-        width = self.game_state.map_width
-        height = self.game_state.map_height
-        adjacent_cells_pos = []
-        for i in cs.DIRECTIONS:
-            if i != 'c':
-                adjacent_cell_pos = cell.pos.translate(i, 1)
-                if 0 <= adjacent_cell_pos.x < width and 0 <= adjacent_cell_pos.y < height:
-                    adjacent_cells_pos.append(adjacent_cell_pos)
-        return adjacent_cells_pos
-
-    # empty cells adjacent to resources
     @property
     def empty_adjacent_any_res(self) -> Dict[int, Dict[Cell, List[str]]]:
         """
@@ -1142,9 +1194,10 @@ class TilesResourceCollection:
             self.__empty_adjacent_any_res = {1: {}, 2: {}, 3: {}}
             adj_to_res_cells = []
             for cell in self.resources:
-                for adj_cell_pos in self.adjacent_cells(cell):
+                adjacent_cells = self.states_collection.get_state(pos=cell.pos).adjacent
+                for adj_cell_pos in adjacent_cells:
                     cell_obj = self.game_state.map.get_cell_by_pos(adj_cell_pos)
-                    if cell_obj.resource is None and cell_obj.citytile is None and cell_obj.road == 0:
+                    if cell_obj.resource is None and cell_obj.citytile is None:  # and cell_obj.road == 0:  #TODO: decide if road level should be checked or we can build right on the road
                         adj_to_res_cells.append((cell_obj, cell.resource.type))
             adj_cells_dict = {}
             for cell, resource in adj_to_res_cells:
@@ -1567,266 +1620,3 @@ class TilesResourceCollection:
             self.__empty_adjacent_wood_coal_uranium_res_pos = [cell.pos for cell
                                                                in self.empty_adjacent_wood_coal_uranium_res]
         return self.__empty_adjacent_wood_coal_uranium_res_pos
-
-
-class TileState:
-    """Get tile statement
-    """
-
-    def __init__(self, tiles_collection: TilesCollection, pos: Position) -> None:
-        self.tiles_collection = tiles_collection
-        self.pos = pos
-        self.map_width = tiles_collection.game_state.map_width
-        self.map_height = tiles_collection.game_state.map_height
-        self.cell = tiles_collection.game_state.map.get_cell(pos.x, pos.y)
-        self.__is_owned_by_player = None
-        self.__is_owned_by_opponent = None
-        self.__is_owned = None
-
-        self.__is_resource = None
-        self.__resource_type = None
-        self.__is_wood = None
-        self.__is_coal = None
-        self.__is_uranium = None
-
-        self.__is_road = None
-        self.__is_city = None
-
-        self.__is_worker = None
-        self.__is_cart = None
-
-        self.__is_empty = None
-        self.__adjacent = None
-        self.__adjacence_dir = None
-        self.__adjacent_dir_tuples = None
-
-    @property
-    def is_owned_by_player(self) -> bool:
-        """Is owned by player
-        """
-        if self.__is_owned_by_player is None:
-            if self.cell in self.tiles_collection.player_own:
-                self.__is_owned_by_player = True
-                self.__is_owned = True
-            else:
-                self.__is_owned_by_player = False
-        return self.__is_owned_by_player
-
-    @property
-    def is_owned_by_opponent(self) -> bool:
-        """Is owned by opponent
-        """
-        if self.__is_owned_by_opponent is None:
-            if self.cell in self.tiles_collection.opponent_own:
-                self.__is_owned_by_opponent = True
-                self.__is_owned = True
-            else:
-                self.__is_owned_by_opponent = False
-        return self.__is_owned_by_opponent
-
-    @property
-    def is_owned(self) -> bool:
-        """Is owned by any
-        """
-        if self.__is_owned is None:
-            self.__is_owned = bool(self.cell in self.tiles_collection.own)
-        return self.__is_owned
-
-    @property
-    def is_resource(self) -> bool:
-        """Is tile resource
-        """
-        if self.__is_resource is None:
-            self.__is_resource = bool(self.cell in self.tiles_collection.resources)
-        return self.__is_resource
-
-    @property
-    def is_wood(self) -> bool:
-        """Is tile wood
-        """
-        if self.__is_wood is None:
-            self.__is_wood = bool(self.cell in self.tiles_collection.woods)
-        return self.__is_wood
-
-    @property
-    def is_coal(self) -> bool:
-        """Is tile wood
-        """
-        if self.__is_coal is None:
-            self.__is_coal = bool(self.cell in self.tiles_collection.coals)
-        return self.__is_coal
-
-    @property
-    def is_uranium(self) -> bool:
-        """Is tile wood
-        """
-        if self.__is_uranium is None:
-            self.__is_uranium = bool(self.cell in self.tiles_collection.uraniums)
-        return self.__is_uranium
-
-    @property
-    def resource_type(self) -> str:
-        """Returns type of resource
-        """
-        if self.__resource_type is None:
-            if self.cell in self.tiles_collection.woods:
-                self.__resource_type = cs.RESOURCE_TYPES.WOOD
-            elif self.cell in self.tiles_collection.coals:
-                self.__resource_type = cs.RESOURCE_TYPES.COAL
-            elif self.cell in self.tiles_collection.uraniums:
-                self.__resource_type = cs.RESOURCE_TYPES.URANIUM
-            else:
-                self.__resource_type = 'notype'
-        return self.__resource_type
-
-    @property
-    def is_road(self) -> bool:
-        """Is tile Road
-        """
-        if self.__is_road is None:
-            self.__is_road = bool(self.cell in self.tiles_collection.roads)
-        return self.__is_road
-
-    @property
-    def is_city(self) -> bool:
-        """Is tile city
-        """
-        if self.__is_city is None:
-            self.__is_city = bool(self.cell.citytile in self.tiles_collection.citytiles)
-        return self.__is_city
-
-    @property
-    def is_worker(self) -> bool:
-        """Is tile worker
-        """
-        if self.__is_worker is None:
-            self.__is_worker = bool(self.cell.pos in self.tiles_collection.workers_pos) # FIXME: cell.pos is tuple, but in collection Position obj
-        return self.__is_worker
-
-    @property
-    def is_cart(self) -> bool:
-        """Is tile cart
-        """
-        if self.__is_cart is None:
-            self.__is_cart = bool(self.cell.pos in self.tiles_collection.carts_pos) # FIXME: cell.pos is tuple, but in collection Position obj
-        return self.__is_cart
-
-    @property
-    def is_empty(self) -> bool:
-        """Is tile empty
-        """
-        if self.__is_empty is None:
-            if self.cell in self.tiles_collection.empty:
-                self.__is_empty = True
-            else:
-                self.__is_empty = False
-        return self.__is_empty
-
-    @property
-    def adjacence_dir(self) -> Dict[str, Position]:
-        """Calculate dict, where keys are directions, values - positions of adjacent tiles
-
-        Returns:
-            Dict[str, Position]: dict with directions and positions
-        """
-        if self.__adjacence_dir is None:
-            self.__adjacence_dir = {}
-            for dir in cs.DIRECTIONS:
-                if dir != 'c':
-                    adjacent_cell = self.pos.translate(dir, 1)
-                    if 0 <= adjacent_cell.x < self.map_width and 0 <= adjacent_cell.y < self.map_height:
-                        self.__adjacence_dir[dir] = adjacent_cell
-        return self.__adjacence_dir
-    
-    @property
-    def adjacent(self) -> List[Position]:
-        """Calculate list of position of adjacent tiles
-
-        Returns:
-            List[Position]: list of positions
-        """
-        if self.__adjacent is None:
-            self.__adjacent = list(self.adjacence_dir.values())
-        return self.__adjacent
-    
-    @property
-    def adjacent_dir_tuples(self) -> Dict[str, Tuple[int]]:
-        """Calculate dict, where keys are directions, values - tuples of x, y positions
-
-        Returns:
-            Dict(str, Tuple[int]): dict with directions and tuples with coordinates
-        """
-        if self.__adjacent_dir_tuples is None:
-            self.__adjacent_dir_tuples = {item[0]: (item[1].x, item[1].y) for item in self.adjacence_dir.items()}
-        return self.__adjacent_dir_tuples
-
-
-class StatesCollectionsCollection:
-    """Get statement matrix across all tiles
-    """
-
-    def __init__(self, game_state: Game,
-                 tiles_collection: TilesCollection,
-                 tiles_resource_collection: TilesResourceCollection) -> None:
-        self.states_map = [[None for _ in range(game_state.map.width)] for _ in range(game_state.map.height)]
-        self.tiles_collection = tiles_collection
-
-    def get_state(self, pos: Position) -> TileState:
-        """Get TileState of any tile by position
-
-        Args:
-            pos (Position): position object
-
-        Returns:
-            [type]: TileState object for given position
-        """
-        if self.states_map[pos.x][pos.y] is None:
-            self.states_map[pos.x][pos.y] = TileState(tiles_collection=self.tiles_collection, pos=pos)
-        return self.states_map[pos.x][pos.y]
-
-
-class ContestedTilesCollection:
-    """Get tiles collections, contested by player units
-    """
-
-    def __init__(
-        self,
-        tiles_collection: TilesCollection,
-        states_collections: StatesCollectionsCollection
-        ) -> None:
-        self.tiles_collection = tiles_collection
-        self.states_collections = states_collections
-        self.__tiles_to_move_in = None
-        self.__tiles_free_by_opponent_to_move_in = None
-
-    @property
-    def tiles_to_move_in(self) -> AvailablePos:
-        """All adjacent to player units tiles
-
-        Returns:
-            AvailablePos: sequence of tiles positions
-        """
-        if self.__tiles_to_move_in is None:
-            all_ = []
-            for pos in self.tiles_collection.player_units_pos:
-                tile_state = self.states_collections.get_state(pos=pos)
-                all_ = all_ + tile_state.adjacent
-            all_ = [(pos.x, pos.y) for pos in all_]
-            self.__tiles_to_move_in = set(all_)
-        return self.__tiles_to_move_in
-
-    @property
-    def tiles_free_by_opponent_to_move_in(self) -> AvailablePos:
-        """Available tiles, exclude opponent cities and units
-
-        Returns:
-            AvailablePos: sequence of tiles positions
-        """
-        if self.__tiles_free_by_opponent_to_move_in is None:
-            all_ = self.tiles_to_move_in
-            for pos in all_:
-                tile_state = self.states_collections.get_state(pos=Position(pos[0], pos[1]))
-                if tile_state.is_owned_by_opponent:
-                    all_.discard(pos)
-            self.__tiles_free_by_opponent_to_move_in  = all_
-        return self.__tiles_free_by_opponent_to_move_in

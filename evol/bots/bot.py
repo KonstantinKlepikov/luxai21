@@ -1,7 +1,7 @@
 from lux.game import Game
 from lux.game_objects import Player, Unit
 from bots.statements import (
-    TilesCollection, StatesCollectionsCollection, ContestedTilesCollection
+    TilesCollection, StatesCollectionsCollection, ContestedTilesCollection, AdjacentToResourceTilesCollection
 )
 from bots.missions import PerformMissions, PerformActions
 from bots.utility import (
@@ -48,10 +48,6 @@ def get_bot_actions(
         opponent=opponent
     )
 
-    tiles_resource_collection = TilesResourceCollection(
-        tiles_collection=tiles_collection
-    )
-
     states_collections = StatesCollectionsCollection(
         game_state=game_state,
         tiles_collection=tiles_collection
@@ -61,6 +57,12 @@ def get_bot_actions(
         tiles_collection=tiles_collection,
         states_collections=states_collections
     )
+
+    tiles_resource_collection = AdjacentToResourceTilesCollection(
+        tiles_collection=tiles_collection,
+        states_collection=states_collections
+    )
+
     available_pos = contested_collection.tiles_free_by_opponent_to_move_in.copy()
     logger.info(f'> bot: available_pos: {available_pos}')
 
