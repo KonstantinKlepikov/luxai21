@@ -1519,6 +1519,11 @@ class TileState:
         self.__adjacent = None
         self.__adjacence_dir = None
         self.__adjacent_dir_tuples = None
+        
+        self.player_worker_object: Union[Unit, None] = None
+        self.player_cart_object: Union[Unit, None] = None
+        self.opponent_worker_object: Union[Unit, None] = None
+        self.opponent_cart_object: Union[Unit, None] = None
 
     @property
     def is_owned_by_player(self) -> bool:
@@ -1620,7 +1625,8 @@ class TileState:
         """Is tile worker
         """
         if self.__is_worker is None:
-            self.__is_worker = bool(self.cell.pos in self.tiles_collection.workers_pos) # FIXME: cell.pos is tuple, but in collection Position obj
+            x, y = self.cell.pos
+            self.__is_worker = bool(Position(x, y) in self.tiles_collection.workers_pos)
         return self.__is_worker
 
     @property
@@ -1628,7 +1634,8 @@ class TileState:
         """Is tile cart
         """
         if self.__is_cart is None:
-            self.__is_cart = bool(self.cell.pos in self.tiles_collection.carts_pos) # FIXME: cell.pos is tuple, but in collection Position obj
+            x, y = self.cell.pos
+            self.__is_worker = bool(Position(x, y) in self.tiles_collection.carts_pos)
         return self.__is_cart
 
     @property
@@ -1688,6 +1695,8 @@ class StatesCollectionsCollection:
     def __init__(self, game_state: Game, tiles_collection: TilesCollection) -> None:
         self.states_map = [[None for _ in range(game_state.map.width)] for _ in range(game_state.map.height)]
         self.tiles_collection = tiles_collection
+        self.__player_active_obj_to_state = None
+        self.__opponent_active_obj_to_state = None
 
     def get_state(self, pos: Position) -> TileState:
         """Get TileState of any tile by position
@@ -1701,7 +1710,33 @@ class StatesCollectionsCollection:
         if self.states_map[pos.x][pos.y] is None:
             self.states_map[pos.x][pos.y] = TileState(tiles_collection=self.tiles_collection, pos=pos)
         return self.states_map[pos.x][pos.y]
-    
+
+    @property
+    def player_active_obj_to_state(self) -> None:
+        if self.__player_active_obj_to_state is None:
+            carts = self.tiles_collection.player_carts
+            workers = self.tiles_collection.player_workers
+            for worker in workers:
+                tile_state = self.get_state(worker.pos)
+                tile_state.player_worker_object = worker
+            for cart in carts:
+                tile_state = self.get_state(cart.pos)
+                tile_state.player_cart_object = cart
+            self.__player_active_obj_to_state = True
+            
+    @property
+    def opponent_active_obj_to_state(self) -> None:
+        if self.__opponent_active_obj_to_state is None:
+            carts = self.tiles_collection.opponent_carts
+            workers = self.tiles_collection.opponent_workers
+            for worker in workers:
+                tile_state = self.get_state(worker.pos)
+                tile_state.opponent_worker_object = worker
+            for cart in carts:
+                tile_state = self.get_state(cart.pos)
+                tile_state.opponent_cart_object = cart
+            self.__opponent_active_obj_to_state = True
+
 
 class ContestedTilesCollection:
     """Get tiles collections, contested by player units
