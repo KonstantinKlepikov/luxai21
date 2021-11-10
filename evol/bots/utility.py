@@ -1,6 +1,6 @@
 from lux.game_constants import GAME_CONSTANTS as cs
 from lux.game_objects import Unit, CityTile
-from lux.game_map import Cell, Position
+from lux.game_map import Cell
 from typing import List, Dict, NamedTuple, Union, Set, Tuple
 from collections import namedtuple
 
@@ -79,6 +79,14 @@ CONSTANTS = make_constants_nt(const=cs)
 ALL_DAYS: List[int] = [x + y for x in range(30) for y in range(0, 360, 40)]
 ALL_MORNINGS: List[int] = [x for x in range(0, 360, 40) if x]
 ALL_NIGHTS: List[int] = [x + y for x in range(30, 40) for y in range(0, 360, 40)]
+
+
+def day_or_night_number(current: int, days=ALL_DAYS, nights=ALL_NIGHTS) -> int:
+    if current in days:
+        n = current // 30 * 2
+    elif current in nights:
+        n = current // 40 * 2 + 1
+    return n
 
 # Types
 GameActiveObjects = Union[Unit, CityTile]
