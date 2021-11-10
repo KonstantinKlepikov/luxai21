@@ -52,7 +52,7 @@ def get_bot_actions(
         game_state=game_state,
         tiles_collection=tiles_collection
         )
-    
+
     contested_collection = ContestedTilesCollection(
         tiles_collection=tiles_collection,
         states_collections=states_collections
@@ -136,7 +136,7 @@ def get_bot_actions(
 
     logger.info('======Get action for each mission in mission_choosen======')
     logger.info(f'> bot: mission_choosen: {missions_choosen}')
-    
+
     if missions_choosen:
         for miss in missions_choosen:
             act = PerformActions(
