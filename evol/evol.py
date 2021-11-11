@@ -3,6 +3,7 @@ from kaggle_environments import evaluate
 from bots.genutil import GenConstruct
 from bots.scoring import FinalScoring
 import agent_train
+import agent_random
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -39,8 +40,9 @@ NUM_EPISODES = int(os.environ.get('NUM_EPISODES'))
 NUM_OF_PROCESS = multiprocessing.cpu_count()
 # Genetic Algorithm constants
 gen_const = GenConstruct()  # get genome construction object
+REPLICATE = int(os.environ.get('REPLICATE')) # type of replication for genome model
 GENOME_LINE_LENGHT = gen_const.prob_len  # length of genome line
-GENOME_LENGHT = 360*GENOME_LINE_LENGHT  # length of genome
+GENOME_LENGHT = REPLICATE*GENOME_LINE_LENGHT  # length of genome
 TOURNAMENT_SIZE = int(os.environ.get('TOURNAMENT_SIZE'))
 POPULATION_SIZE = int(os.environ.get('POPULATION_SIZE'))
 MAX_GENERATIONS = int(os.environ.get('MAX_GENERATIONS'))
@@ -89,13 +91,14 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
     Returns:
         Tuple[float]: tuple, that contains only one value of mean rewards for first player
     """
-    agent_train.genome = gen_const.convert_genome(vector=individual)
+    # agent_train.genome = gen_const.convert_day_genome(vector=individual)
+    agent_train.genome = gen_const.convert_daily_genome(vector=individual)
     agent_train.intermediate = {}
     agent_train.game_eval = -1
     agent_train.missions_state = {}
     rewards = evaluate(
         'lux_ai_2021',
-        [agent_train.agent, 'simple_agent'],
+        [agent_train.agent, agent_random.agent],
         configuration=CONFIGURATIONS,
         num_episodes=NUM_EPISODES,
         debug=True
@@ -126,7 +129,8 @@ toolbox.register("evaluate", GameScoreFitness)
 # Tournament selection with tournament size
 toolbox.register("select", tools.selTournament, tournsize=TOURNAMENT_SIZE)
 
-# Single-point crossover:
+# Crossover:
+# toolbox.register("mate", tools.cxTwoPoint)
 toolbox.register("mate", tools.cxUniform, indpb=INDPB_CROSSOVER)
 
 # Flip-bit mutation:

@@ -8,7 +8,8 @@ import time
 logger.info('Start Logging agent_random.py...')
 
 gen_const = GenConstruct()
-genome = gen_const.init_genome()
+# genome = gen_const.init_day_genome()
+genome = gen_const.init_daily_genome()
 game_state = None
 missions_state = {}
 

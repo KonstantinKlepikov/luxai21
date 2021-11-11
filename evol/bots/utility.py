@@ -81,7 +81,21 @@ ALL_MORNINGS: List[int] = [x for x in range(0, 360, 40) if x]
 ALL_NIGHTS: List[int] = [x + y for x in range(30, 40) for y in range(0, 360, 40)]
 
 
-def day_or_night_number(current: int, days=ALL_DAYS, nights=ALL_NIGHTS) -> int:
+def day_or_night_number(
+    current: int,
+    days: List[int] = ALL_DAYS,
+    nights: List[int] = ALL_NIGHTS
+    ) -> int:
+    """Is night or day
+
+    Args:
+        current (int): curent turn
+        days (List[int], optional): days constant. Defaults to ALL_DAYS.
+        nights (List[int], optional): night constant. Defaults to ALL_NIGHTS.
+
+    Returns:
+        int: the number of day or night since begin the game
+    """
     if current in days:
         n = current // 30 * 2
     elif current in nights:

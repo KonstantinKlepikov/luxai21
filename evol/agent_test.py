@@ -10,7 +10,8 @@ logger.info('Start Logging agent_test.py...')
 with open("bots_dump/best_bot.json", "r") as f:
     genome_list = json.load(f)
 gen_const = GenConstruct()
-genome = gen_const.convert_genome(vector=genome_list)
+# genome = gen_const.convert_day_genome(vector=genome_list)
+genome = gen_const.convert_daily_genome(vector=genome_list)
 game_state = None
 missions_state = {}
 
