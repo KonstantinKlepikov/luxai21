@@ -1659,3 +1659,27 @@ class AdjacentToResourceTilesCollection:
             self.__empty_adjacent_wood_coal_uranium_res_pos = [cell.pos for cell
                                                                in self.empty_adjacent_wood_coal_uranium_res]
         return self.__empty_adjacent_wood_coal_uranium_res_pos
+
+
+class MultiCollection:
+    """Collected geme statements
+    """
+    
+    def __init__(self, game_state: Game, player: Player, opponent: Player) -> None:
+        self.tiles_collection = TilesCollection(
+            game_state=game_state,
+            player=player,
+            opponent=opponent
+            )
+        self.states_collections = StatesCollectionsCollection(
+            game_state=game_state,
+            tiles_collection=self.tiles_collection
+        )
+        self.contested_collection = ContestedTilesCollection(
+            tiles_collection=self.tiles_collection,
+            states_collections=self.states_collections
+            )
+        self.tiles_resource_collection = AdjacentToResourceTilesCollection(
+            tiles_collection=self.tiles_collection,
+            states_collection=self.states_collections
+            )

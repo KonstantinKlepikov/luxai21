@@ -7,7 +7,7 @@ from bots.statements import (
 from typing import List, Tuple, Union
 import os, sys, math, random
 from bots.utility import (
-    GameActiveObjects, GameCellObjects, MissionState, 
+    GameActiveObjects, GameCellObjects, MissionsState, 
     Missions, CheckAgain, AvailablePos
 )
 
@@ -39,7 +39,7 @@ class Mission:
         self, 
         tiles_collection: TilesCollection, 
         states_collections: StatesCollectionsCollection,
-        missions_state: MissionState,
+        missions_state: MissionsState,
         obj_: GameActiveObjects
         ) -> None:
         self.tiles_collection = tiles_collection
@@ -116,7 +116,7 @@ class CityMission(Mission):
         self,
         tiles_collection: TilesCollection,
         states_collections: StatesCollectionsCollection,
-        missions_state: MissionState,
+        missions_state: MissionsState,
         obj_: GameActiveObjects
         ) -> None:
         super().__init__(tiles_collection, states_collections, missions_state, obj_)
@@ -185,7 +185,7 @@ class UnitMission(Mission):
         self,
         tiles_collection: TilesCollection,
         states_collections: StatesCollectionsCollection,
-        missions_state: MissionState,
+        missions_state: MissionsState,
         obj_: GameActiveObjects
         ) -> None:
         super().__init__(tiles_collection, states_collections, missions_state, obj_)
@@ -481,7 +481,7 @@ class Perform:
         self, 
         tiles_collection: TilesCollection, 
         states_collections: StatesCollectionsCollection,
-        missions_state: MissionState,
+        missions_state: MissionsState,
         obj_: GameActiveObjects
         ) -> None:
         self.tiles_collection = tiles_collection
@@ -499,7 +499,7 @@ class PerformMissions(Perform):
         self, 
         cls_: Union[WorkerMission, CartMission, CityMission],
         mission: str = None
-        ) -> Tuple[Missions, MissionState, CheckAgain]:
+        ) -> Tuple[Missions, MissionsState, CheckAgain]:
         """Iterate missions for get all missions for all objects
 
         Args:
@@ -530,7 +530,7 @@ class PerformMissions(Perform):
 
     def perform_missions(self) -> Tuple[
         Missions,
-        MissionState,
+        MissionsState,
         CheckAgain
         ]:
         """Set or cancel missions and set mission_statement
@@ -569,7 +569,7 @@ class PerformActions(Perform):
         self, 
         tiles_collection: TilesCollection, 
         states_collections: StatesCollectionsCollection,
-        missions_state: MissionState,
+        missions_state: MissionsState,
         obj_: GameActiveObjects,
         available_pos: AvailablePos
         ) -> None:

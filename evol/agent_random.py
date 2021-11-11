@@ -36,7 +36,7 @@ def agent(observation, configuration):
         # drop missions_state each game
         missions_state = {}
 
-    logger.info('------------------->')
+    logger.info(f'-------------------> Start random turn {game_state.turn} <')
     logger.info(f'Current turn: {game_state.turn}')
     logger.info(f'missions_state: {missions_state}')
     player = game_state.players[observation.player]
@@ -52,6 +52,6 @@ def agent(observation, configuration):
 
     end = time.time()
     logger.info('time on this step: {}'.format(end - start))
-    logger.info('<-------------------')
+    logger.info(f'-------------------> End random turn {game_state.turn} <')
 
     return actions
