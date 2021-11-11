@@ -96,12 +96,13 @@ class GenConstruct:
         """
         genome = []
         for i in range(18):
+            point = i * self.prob_len
             if i % 2 == 0:
-                line_v = vector[i // 2 * self.prob_len * 30: i // 2 * self.prob_len * 30 + self.prob_len]
+                line_v = vector[point: point + self.prob_len]
                 genome_line = self.Probability._make(line_v)
                 gen = [genome_line for _ in range(30)]
             else:
-                line_v = vector[i // 2 * self.prob_len * 10: i // 2 * self.prob_len * 10 + self.prob_len]
+                line_v = vector[point: point + self.prob_len]
                 genome_line = self.Probability._make(line_v)
                 gen = [genome_line for _ in range(10)]
             genome = genome + gen

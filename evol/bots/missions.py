@@ -4,12 +4,12 @@ from bots.utility import CONSTANTS as cs
 from bots.statements import (
     TileState, TilesCollection, StatesCollectionsCollection
 )
-from typing import List, Tuple, Union
-import os, sys, math, random
 from bots.utility import (
     GameActiveObjects, GameCellObjects, MissionsState, 
     Missions, CheckAgain, AvailablePos
 )
+from typing import List, Tuple, Union
+import os, sys, math, random
 
 
 if os.path.exists("/kaggle"): # check if we're on a kaggle server

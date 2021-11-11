@@ -14,11 +14,6 @@ from dotenv import load_dotenv
 
 
 logger.remove()
-# logger.add(open(
-#     'errorlogs/run_train.log', 'w'),
-#     format='{time:HH:mm:ss} | {level} | {message}'
-#     )
-
 load_dotenv(dotenv_path='shared.env')
 
 # dont forget remove seeds for real learning!!!
@@ -40,7 +35,8 @@ NUM_EPISODES = int(os.environ.get('NUM_EPISODES'))
 NUM_OF_PROCESS = multiprocessing.cpu_count()
 # Genetic Algorithm constants
 gen_const = GenConstruct()  # get genome construction object
-REPLICATE = int(os.environ.get('REPLICATE')) # type of replication for genome model
+REPLICATE = 18 # type of replication for genome model
+# REPLICATE = 360
 GENOME_LINE_LENGHT = gen_const.prob_len  # length of genome line
 GENOME_LENGHT = REPLICATE*GENOME_LINE_LENGHT  # length of genome
 TOURNAMENT_SIZE = int(os.environ.get('TOURNAMENT_SIZE'))

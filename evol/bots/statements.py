@@ -1662,7 +1662,7 @@ class AdjacentToResourceTilesCollection:
 
 
 class MultiCollection:
-    """Collected geme statements
+    """Collected game statements
     """
     
     def __init__(self, game_state: Game, player: Player, opponent: Player) -> None:

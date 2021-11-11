@@ -1,6 +1,6 @@
 from lux.game import Game
 from bots.statements import TilesCollection
-from bots import bot
+import bots.bot as bot
 from loguru import logger
 from bots.scoring import TurnScoring
 from bots.utility import Intermediate, MissionsState

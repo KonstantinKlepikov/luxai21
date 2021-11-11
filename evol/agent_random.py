@@ -1,6 +1,6 @@
 from lux.game import Game
 from bots.genutil import GenConstruct
-from bots import bot
+import bots.bot as bot
 from loguru import logger
 import time
 
@@ -37,7 +37,6 @@ def agent(observation, configuration):
         missions_state = {}
 
     logger.info(f'-------------------> Start random turn {game_state.turn} <')
-    logger.info(f'Current turn: {game_state.turn}')
     logger.info(f'missions_state: {missions_state}')
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
