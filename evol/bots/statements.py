@@ -87,51 +87,6 @@ class TilesCollection:
         self.__uraniums = None
         self.__uraniums_pos = None
 
-        self.__empty_adjacent_any_res = None
-        self.__empty_adjacent_one_any_res = None
-        self.__empty_adjacent_two_any_res = None
-        self.__empty_adjacent_three_any_res = None
-        self.__empty_adjacent_four_any_res = None
-        self.__empty_adjacent_any_res_pos = None
-        self.__empty_adjacent_one_any_res_pos = None
-        self.__empty_adjacent_two_any_res_pos = None
-        self.__empty_adjacent_three_any_res_pos = None
-        self.__empty_adjacent_four_any_res_pos = None
-
-        self.__empty_adjacent_one_wood_res = None
-        self.__empty_adjacent_two_wood_res = None
-        self.__empty_adjacent_three_wood_res = None
-        self.__empty_adjacent_four_wood_res = None
-        self.__empty_adjacent_one_wood_res_pos = None
-        self.__empty_adjacent_two_wood_res_pos = None
-        self.__empty_adjacent_three_wood_res_pos = None
-        self.__empty_adjacent_four_wood_res_pos = None
-
-        self.__empty_adjacent_one_coal_res = None
-        self.__empty_adjacent_two_coal_res = None
-        self.__empty_adjacent_three_coal_res = None
-        self.__empty_adjacent_four_coal_res = None
-        self.__empty_adjacent_one_coal_res_pos = None
-        self.__empty_adjacent_two_coal_res_pos = None
-        self.__empty_adjacent_three_coal_res_pos = None
-        self.__empty_adjacent_four_coal_res_pos = None
-
-        self.__empty_adjacent_one_uranium_res = None
-        self.__empty_adjacent_two_uranium_res = None
-        self.__empty_adjacent_three_uranium_res = None
-        self.__empty_adjacent_four_uranium_res = None
-        self.__empty_adjacent_one_uranium_res_pos = None
-        self.__empty_adjacent_two_uranium_res_pos = None
-        self.__empty_adjacent_three_uranium_res_pos = None
-        self.__empty_adjacent_four_uranium_res_pos = None
-
-        self.__empty_adjacent_wood_coal_res = None
-        self.__empty_adjacent_wood_coal_res_pos = None
-        self.__empty_adjacent_coal_uranium_res = None
-        self.__empty_adjacent_coal_uranium_res_pos = None
-        self.__empty_adjacent_wood_coal_uranium_res = None
-        self.__empty_adjacent_wood_coal_uranium_res_pos = None
-
     @property
     def map_cells(self) -> List[Cell]:
         """
