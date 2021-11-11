@@ -1,6 +1,6 @@
 from lux.game_constants import GAME_CONSTANTS as cs
 from lux.game_objects import Unit, CityTile
-from lux.game_map import Cell, Position
+from lux.game_map import Cell
 from typing import List, Dict, NamedTuple, Union, Set, Tuple
 from collections import namedtuple
 
@@ -80,10 +80,32 @@ ALL_DAYS: List[int] = [x + y for x in range(30) for y in range(0, 360, 40)]
 ALL_MORNINGS: List[int] = [x for x in range(0, 360, 40) if x]
 ALL_NIGHTS: List[int] = [x + y for x in range(30, 40) for y in range(0, 360, 40)]
 
+
+def day_or_night_number(
+    current: int,
+    days: List[int] = ALL_DAYS,
+    nights: List[int] = ALL_NIGHTS
+    ) -> int:
+    """Is night or day
+
+    Args:
+        current (int): curent turn
+        days (List[int], optional): days constant. Defaults to ALL_DAYS.
+        nights (List[int], optional): night constant. Defaults to ALL_NIGHTS.
+
+    Returns:
+        int: the number of day or night since begin the game
+    """
+    if current in days:
+        n = current // 30 * 2
+    elif current in nights:
+        n = current // 40 * 2 + 1
+    return n
+
 # Types
 GameActiveObjects = Union[Unit, CityTile]
 GameCellObjects = List[Union[Cell, CityTile, Unit]]
-MissionState = Dict[str, str]
+MissionsState = Dict[str, str]
 Missions = Dict[str, Union[Unit, CityTile, List[str]]]
 MissionChoosed = List[Union[GameActiveObjects, str]]
 MissionsChoosed = List[MissionChoosed]

@@ -1,9 +1,9 @@
 from lux.game import Game
 from bots.statements import TilesCollection
-from bots import bot
+import bots.bot as bot
 from loguru import logger
 from bots.scoring import TurnScoring
-from bots.utility import Intermediate, MissionState
+from bots.utility import Intermediate, MissionsState
 
 
 logger.info('Start Logging agent_train.py...')
@@ -15,7 +15,7 @@ genome = None
 game_eval: int = -1
 # dict where key is a game_eval and value is a that game scour
 intermediate: Intermediate = {}
-missions_state: MissionState = {}
+missions_state: MissionsState = {}
 
 
 def agent(observation, configuration):

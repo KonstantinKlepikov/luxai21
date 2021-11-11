@@ -1,6 +1,6 @@
 from lux.game import Game
 from bots.genutil import GenConstruct
-from bots import bot
+import bots.bot as bot
 import os, sys, json
 
 
@@ -18,7 +18,8 @@ bot_genome_path = os.path.abspath(os.path.join(dir_path, "bots_dump/best_bot.jso
 with open(bot_genome_path, "r") as f:
     genome_list = json.load(f)
 gen_const = GenConstruct()
-genome = gen_const.convert_genome(vector=genome_list)
+# genome = gen_const.convert_day_genome(vector=genome_list)
+genome = gen_const.convert_daily_genome(vector=genome_list)
 game_state = None
 missions_state = {}
 

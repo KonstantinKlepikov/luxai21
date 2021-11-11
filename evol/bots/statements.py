@@ -5,7 +5,7 @@ from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
 from bots.utility import AvailablePos
 import os, sys
-from typing import List, Tuple, Union, Dict, Set
+from typing import List, Tuple, Union, Dict
 
 if os.path.exists("/kaggle"):  # check if we're on a kaggle server
     import logging
@@ -86,51 +86,6 @@ class TilesCollection:
         self.__coals_pos = None
         self.__uraniums = None
         self.__uraniums_pos = None
-
-        self.__empty_adjacent_any_res = None
-        self.__empty_adjacent_one_any_res = None
-        self.__empty_adjacent_two_any_res = None
-        self.__empty_adjacent_three_any_res = None
-        self.__empty_adjacent_four_any_res = None
-        self.__empty_adjacent_any_res_pos = None
-        self.__empty_adjacent_one_any_res_pos = None
-        self.__empty_adjacent_two_any_res_pos = None
-        self.__empty_adjacent_three_any_res_pos = None
-        self.__empty_adjacent_four_any_res_pos = None
-
-        self.__empty_adjacent_one_wood_res = None
-        self.__empty_adjacent_two_wood_res = None
-        self.__empty_adjacent_three_wood_res = None
-        self.__empty_adjacent_four_wood_res = None
-        self.__empty_adjacent_one_wood_res_pos = None
-        self.__empty_adjacent_two_wood_res_pos = None
-        self.__empty_adjacent_three_wood_res_pos = None
-        self.__empty_adjacent_four_wood_res_pos = None
-
-        self.__empty_adjacent_one_coal_res = None
-        self.__empty_adjacent_two_coal_res = None
-        self.__empty_adjacent_three_coal_res = None
-        self.__empty_adjacent_four_coal_res = None
-        self.__empty_adjacent_one_coal_res_pos = None
-        self.__empty_adjacent_two_coal_res_pos = None
-        self.__empty_adjacent_three_coal_res_pos = None
-        self.__empty_adjacent_four_coal_res_pos = None
-
-        self.__empty_adjacent_one_uranium_res = None
-        self.__empty_adjacent_two_uranium_res = None
-        self.__empty_adjacent_three_uranium_res = None
-        self.__empty_adjacent_four_uranium_res = None
-        self.__empty_adjacent_one_uranium_res_pos = None
-        self.__empty_adjacent_two_uranium_res_pos = None
-        self.__empty_adjacent_three_uranium_res_pos = None
-        self.__empty_adjacent_four_uranium_res_pos = None
-
-        self.__empty_adjacent_wood_coal_res = None
-        self.__empty_adjacent_wood_coal_res_pos = None
-        self.__empty_adjacent_coal_uranium_res = None
-        self.__empty_adjacent_coal_uranium_res_pos = None
-        self.__empty_adjacent_wood_coal_uranium_res = None
-        self.__empty_adjacent_wood_coal_uranium_res_pos = None
 
     @property
     def map_cells(self) -> List[Cell]:
@@ -1704,3 +1659,27 @@ class AdjacentToResourceTilesCollection:
             self.__empty_adjacent_wood_coal_uranium_res_pos = [cell.pos for cell
                                                                in self.empty_adjacent_wood_coal_uranium_res]
         return self.__empty_adjacent_wood_coal_uranium_res_pos
+
+
+class MultiCollection:
+    """Collected game statements
+    """
+    
+    def __init__(self, game_state: Game, player: Player, opponent: Player) -> None:
+        self.tiles_collection = TilesCollection(
+            game_state=game_state,
+            player=player,
+            opponent=opponent
+            )
+        self.states_collections = StatesCollectionsCollection(
+            game_state=game_state,
+            tiles_collection=self.tiles_collection
+        )
+        self.contested_collection = ContestedTilesCollection(
+            tiles_collection=self.tiles_collection,
+            states_collections=self.states_collections
+            )
+        self.tiles_resource_collection = AdjacentToResourceTilesCollection(
+            tiles_collection=self.tiles_collection,
+            states_collection=self.states_collections
+            )

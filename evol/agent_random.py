@@ -1,6 +1,6 @@
 from lux.game import Game
 from bots.genutil import GenConstruct
-from bots import bot
+import bots.bot as bot
 from loguru import logger
 import time
 
@@ -8,7 +8,8 @@ import time
 logger.info('Start Logging agent_random.py...')
 
 gen_const = GenConstruct()
-genome = gen_const.init_genome()
+# genome = gen_const.init_day_genome()
+genome = gen_const.init_daily_genome()
 game_state = None
 missions_state = {}
 
@@ -35,8 +36,7 @@ def agent(observation, configuration):
         # drop missions_state each game
         missions_state = {}
 
-    logger.info('------------------->')
-    logger.info(f'Current turn: {game_state.turn}')
+    logger.info(f'-------------------> Start random turn {game_state.turn} <')
     logger.info(f'missions_state: {missions_state}')
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
@@ -51,6 +51,6 @@ def agent(observation, configuration):
 
     end = time.time()
     logger.info('time on this step: {}'.format(end - start))
-    logger.info('<-------------------')
+    logger.info(f'-------------------> End random turn {game_state.turn} <')
 
     return actions

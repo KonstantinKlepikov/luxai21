@@ -7,6 +7,8 @@ import random
 
 
 class GenConstruct:
+    """Class where genome vector or genome tuple constructed
+    """
 
     def __init__(self) -> None:
         self.__Probability = None
@@ -35,28 +37,40 @@ class GenConstruct:
         """
         return random.randint(0, 10)
 
-    def init_genome(self) -> List[namedtuple]:
+    def init_day_genome(self) -> List[namedtuple]:
         """Initialize probability timiline for start learning
+        for day genom model
 
         Returns:
             List[namedtuple]: lis of probability for each turn of game
         """
-        genome_init = [self.rnd() for _ in range(self.prob_len)]
-        prob = self.Probability._make(genome_init)
-        genome = [prob for _ in range(360)]
+        genome = []
+        for i in range(360):
+            genome_init = [self.rnd() for _ in range(self.prob_len)]
+            prob = self.Probability._make(genome_init)
+            genome.append(prob)
         return genome
-
-    def get_genome_vector(self) -> List[int]:
-        """Create random genome vector
+    
+    def init_daily_genome(self) -> List[namedtuple]:
+        """Initialize probability timiline for start learning
+        for daily genom model
 
         Returns:
-            List[int]: list of random int with range [0, 10]
+            List[namedtuple]: lis of probability for each turn of game
         """
-        vector = [self.rnd() for _ in range(360*self.prob_len)]
-        return vector
+        genome = []
+        for i in range(18):
+            genome_init = [self.rnd() for _ in range(self.prob_len)]
+            prob = self.Probability._make(genome_init)
+            if i % 2 == 0:
+                gen = [prob for _ in range(30)]
+            else:
+                gen = [prob for _ in range(10)]
+            genome= genome + gen
+        return genome
 
-    def convert_genome(self, vector: List[int]) -> List[namedtuple]:
-        """Convert genome list to lost of named tuples
+    def convert_day_genome(self, vector: List[int]) -> List[namedtuple]:
+        """Convert day genome list to named tuples
 
         Args:
             vector (List[int]): genom
@@ -69,4 +83,27 @@ class GenConstruct:
             line_v = vector[i * self.prob_len: i * self.prob_len + self.prob_len]
             genome_line = self.Probability._make(line_v)
             genome.append(genome_line)
+        return genome
+    
+    def convert_daily_genome(self, vector: List[int]) -> List[namedtuple]:
+        """Convert daily genome list to named tuples
+
+        Args:
+            vector (List[int]): genome
+
+        Returns:
+            List[namedtuple]: list of named tuples representation
+        """
+        genome = []
+        for i in range(18):
+            point = i * self.prob_len
+            if i % 2 == 0:
+                line_v = vector[point: point + self.prob_len]
+                genome_line = self.Probability._make(line_v)
+                gen = [genome_line for _ in range(30)]
+            else:
+                line_v = vector[point: point + self.prob_len]
+                genome_line = self.Probability._make(line_v)
+                gen = [genome_line for _ in range(10)]
+            genome = genome + gen
         return genome

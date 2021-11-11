@@ -1,6 +1,6 @@
 from lux.game import Game
 from bots.genutil import GenConstruct
-from bots import bot
+import bots.bot as bot
 from loguru import logger
 import json, time
 
@@ -10,7 +10,8 @@ logger.info('Start Logging agent_test.py...')
 with open("bots_dump/best_bot.json", "r") as f:
     genome_list = json.load(f)
 gen_const = GenConstruct()
-genome = gen_const.convert_genome(vector=genome_list)
+# genome = gen_const.convert_day_genome(vector=genome_list)
+genome = gen_const.convert_daily_genome(vector=genome_list)
 game_state = None
 missions_state = {}
 
@@ -37,8 +38,7 @@ def agent(observation, configuration):
         # drop missions_state each game
         missions_state = {}
 
-    logger.info('------------------->')
-    logger.info(f'Current turn: {game_state.turn}')
+    logger.info(f'-------------------> Start test turn {game_state.turn} <')
     logger.info(f'observation: {observation}')
     logger.info(f'missions_state: {missions_state}')
     player = game_state.players[observation.player]
@@ -54,6 +54,6 @@ def agent(observation, configuration):
 
     end = time.time()
     logger.info('time on this step: {}'.format(end - start))
-    logger.info('<-------------------')
+    logger.info(f'-------------------> End test turn {game_state.turn} <')
 
     return actions
