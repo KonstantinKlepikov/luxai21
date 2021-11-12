@@ -41,11 +41,11 @@ class BotPipe:
         self.missions = None
         self.check_again = None
         
-    def define_missions_missions_state_check_again(self):
-        """Define missions, missions_state and check_again variable
+    def set_missions_missions_state_check_again(self):
+        """set missions, missions_state and check_again variable
         """
-        logger.info('------define_missions_missions_state_check_again------')
-        logger.info(f'> define_missions_missions_state_check_again: player_own: {self.player_own}')
+        logger.info('------set_missions_missions_state_check_again------')
+        logger.info(f'> set_missions_missions_state_check_again: player_own: {self.player_own}')
         for obj_ in self.player_own:
             logger.info(f'>>>>>>Obj: {obj_}<<<<<<')
             act = PerformMissions(
@@ -56,35 +56,58 @@ class BotPipe:
             )
             try:
                 self.missions, self.missions_state, self.check_again = act.perform_missions()
-                logger.info(f'> define_missions_missions_state_check_again: : missions: {self.missions}')
-                logger.info(f'> define_missions_missions_state_check_again: : Missions_state: {self.missions_state}')
-                logger.info(f'> define_missions_missions_state_check_again: : Check again: {self.check_again}')
+                logger.info(f'> set_missions_missions_state_check_again: : missions: {self.missions}')
+                logger.info(f'> set_missions_missions_state_check_again: : Missions_state: {self.missions_state}')
+                logger.info(f'> set_missions_missions_state_check_again: : Check again: {self.check_again}')
                 self.missions_per_object.append(self.missions)
                 if self.check_again:
                     self.player_own.append(self.check_again)
-                    logger.info(f'define_missions_missions_state_check_again: player_own: {self.player_own}')
+                    logger.info(f'set_missions_missions_state_check_again: player_own: {self.player_own}')
             except TypeError:
-                logger.info(f'> define_missions_missions_state_check_again: No on can get mission')
-                
-    def _choose_mission_for_single_object(
+                logger.info(f'> set_missions_missions_state_check_again: No on can get mission')
+    
+    def _set_mission_and_state(self, miss: Missions, p_miss: List[str], weights: List[float]) -> None:
+        """set mission_choosen and missions_state
+
+        Args:
+            miss (Missions): missions object
+            p_miss (List[str]): missions names
+            weights (List[float]): missions probabilities
+        """
+        logger.info('------_set_mission_and_state------')
+        # get random choice 
+        c = random.choices(population=p_miss, weights=weights)
+        logger.info(f'> _get_mission: choice: {c}')
+        # append chosen mission, associated with object of unit or city
+        # If nothing to do (for example for mine) - it is skiped
+        if c[0] in miss['missions']:
+            self.missions_choosen.append([miss['obj'], c[0]])
+            logger.info(f'> _get_mission: mission choosed append: {self.missions_choosen}')
+            # add missions_state of unit to transfer statement
+            # in next turn of game
+            if isinstance(miss['obj'], Unit):
+                self.missions_state[miss['obj'].id] = c[0]
+                logger.info(f'> _get_mission: missions_state added: {self.missions_state}')
+
+    def _set_mission_for_single_object(
         self,
         miss: Missions,
         chrome: dict
         ) -> None:
-        """Choose for single object
+        """Set for single object
 
         Args:
             miss (Missions): missions for choosing
             chrome (dict): genome
         """
-        logger.info('------choose_mission_for_single_object------')
+        logger.info('------_set_mission_for_single_object------')
 
         possible_missions = {}
         for key in miss['missions']:
-            logger.info(f'> choose_mission_for_single_object: Key in miss["missions"]: {key}')
+            logger.info(f'> _set_mission_for_single_object: Key in miss["missions"]: {key}')
             # use genome section for each turn
             possible_missions[key] = chrome[key]
-            logger.info(f'> choose_mission_for_single_object: possible_missions: {possible_missions}')
+            logger.info(f'> _set_mission_for_single_object: possible_missions: {possible_missions}')
 
         if possible_missions:
             # get list of possible missions
@@ -97,51 +120,38 @@ class BotPipe:
                 weights = [w / s for w in weights]
             except ZeroDivisionError:
                 pass
-            # get random choice 
-            c = random.choices(population=p_miss, weights=weights)
-            logger.info(f'> choose_mission_for_single_object: choice: {c}')
+            self._set_mission_and_state(miss=miss, p_miss=p_miss, weights=weights)
 
-            # append chosen mission, associated with object of unit or city
-            # If nothing to do (for example for mine) - it is skiped
-            if c[0] in miss['missions']:
-                self.missions_choosen.append([miss['obj'], c[0]])
-                logger.info(f'> choose_mission_for_single_object: mission choosed append: {self.missions_choosen}')
-                # add missions_state of unit to transfer statement
-                # in next turn of game
-                if isinstance(miss['obj'], Unit):
-                    self.missions_state[miss['obj'].id] = c[0]
-                    logger.info(f'> choose_mission_for_single_object: missions_state added: {self.missions_state}')
-
-    def _choose_mission_for_single_object_with_passing(
+    def _set_mission_for_single_object_with_passing(
         self,
         miss: Missions,
         chrome: dict,
         gen_const: GenConstruct
         ) -> None:
-        """Choose mission for single object with passing probability
+        """Set mission for single object with passing probability
 
         Args:
             miss (Missions): missions
             chrome (dict): genome
         """
-        logger.info('------choose_mission_for_single_object_with_passing------')
+        logger.info('------_set_mission_for_single_object_with_passing------')
         
         # get reduced probabilities
-        logger.info(f'> choose_mission_for_single_object_with_passing: chrome: {chrome}')
+        logger.info(f'> _set_mission_for_single_object_with_passing: chrome: {chrome}')
         if isinstance(miss['obj'], Unit):
             if miss['obj'].is_worker():
                 spec =  gen_const.workers_per
-                logger.info('> choose_mission_for_single_object_with_passing: im worker')
+                logger.info('> _set_mission_for_single_object_with_passing: im worker')
             if miss['obj'].is_cart():
                 spec =  gen_const.carts_per
-                logger.info('> choose_mission_for_single_object_with_passing: im cart')
+                logger.info('> _set_mission_for_single_object_with_passing: im cart')
         if isinstance(miss['obj'], CityTile):
             spec = gen_const.citytiles_per
-            logger.info('> choose_mission_for_single_object_with_passing: im cititile')
+            logger.info('> _set_mission_for_single_object_with_passing: im cititile')
         chrome = {key: val for key, val in chrome.items() if key in spec}
         prob = [val[1] for val in chrome.items()]
-        logger.info(f'> choose_mission_for_single_object_with_passing: chrome after spec: {chrome}')
-        logger.info(f'> choose_mission_for_single_object_with_passing: unweighted prob: {prob}')
+        logger.info(f'> _set_mission_for_single_object_with_passing: chrome after spec: {chrome}')
+        logger.info(f'> _set_mission_for_single_object_with_passing: unweighted prob: {prob}')
         s = sum(prob)
         try:
             prob = [w / s for w in prob]
@@ -150,70 +160,57 @@ class BotPipe:
                 chrome[place[0]] = place[1]
         except ZeroDivisionError:
             pass
-        logger.info(f'> choose_mission_for_single_object_with_passing: reduced chrome: {chrome}')
+        logger.info(f'> _set_mission_for_single_object_with_passing: reduced chrome: {chrome}')
 
         # get missions
         possible_missions = {}
         for key in miss['missions']:
-            logger.info(f'> choose_mission_for_single_object_with_passing: Key in miss["missions"]: {key}')
+            logger.info(f'> _set_mission_for_single_object_with_passing: Key in miss["missions"]: {key}')
             # use genome section for each turn
             possible_missions[key] = chrome[key]
-            logger.info(f'> choose_mission_for_single_object_with_passing: possible_missions: {possible_missions}')
+            logger.info(f'> _set_mission_for_single_object_with_passing: possible_missions: {possible_missions}')
 
         # get probabilities of all possible missions
         all_possible_prob = sum(possible_missions.values())
-        logger.info(f'> choose_mission_for_single_object_with_passing: all_possible_prob: {all_possible_prob}')
+        logger.info(f'> _set_mission_for_single_object_with_passing: all_possible_prob: {all_possible_prob}')
         if 0 <= all_possible_prob < 1:
             possible_missions['pass'] = 1 - all_possible_prob
-        logger.info(f'> choose_mission_for_single_object_with_passing: possible_missions: {possible_missions}')
+        logger.info(f'> _set_mission_for_single_object_with_passing: possible_missions: {possible_missions}')
 
         if possible_missions:
             # get list of possible missions
             p_miss = list(possible_missions.keys())
             # get list of probabilities of performances
             weights = list(possible_missions.values())
-            # get random choice 
-            c = random.choices(population=p_miss, weights=weights)
-            logger.info(f'> choose_mission_for_single_object_with_passing: choice: {c}')
+            self._set_mission_and_state(miss=miss, p_miss=p_miss, weights=weights)
 
-            # append chosen mission, associated with object of unit or city
-            # If nothing to do (for example for mine or pass) - it is skiped
-            if c[0] in miss['missions']:
-                self.missions_choosen.append([miss['obj'], c[0]])
-                logger.info(f'> choose_mission_for_single_object_with_passing: mission choosed append: {self.missions_choosen}')
-                # add missions_state of unit to transfer statement
-                # in next turn of game
-                if isinstance(miss['obj'], Unit):
-                    self.missions_state[miss['obj'].id] = c[0]
-                    logger.info(f'> choose_mission_for_single_object_with_passing: missions_state added: {self.missions_state}')
-
-    def choose_mission_for_each_object(self, gen_const: GenConstruct, method: str = 'simple') -> None:
+    def set_mission_and_state_for_each_object(self, gen_const: GenConstruct, method: str = 'simple') -> None:
         """Get choiices interface
 
         Args:
             method (str, optional): method for usage. Defaults to 'simple'.
         """
-        logger.info('------choose_mission_for_each_object------')
-        logger.info(f'> choose_mission_for_each_object: {self.missions_per_object}')
-        logger.info(f'> choose_mission_for_each_object: method {method}')
+        logger.info('------set_mission_for_each_object------')
+        logger.info(f'> set_mission_for_each_object: {self.missions_per_object}')
+        logger.info(f'> set_mission_for_each_object: method {method}')
         if self.missions_per_object:
             chrome = self.genome[self.collection.tiles_collection.game_state.turn]._asdict()
             for miss in self.missions_per_object:
-                logger.info(f'> choose_mission_for_each_object: obj {miss["obj"]}')
+                logger.info(f'> set_mission_for_each_object: obj {miss["obj"]}')
                 if method == 'simple':
-                    self._choose_mission_for_single_object(miss=miss, chrome=chrome)
+                    self._set_mission_for_single_object(miss=miss, chrome=chrome)
                 if method == 'passing':
-                    self._choose_mission_for_single_object_with_passing(
+                    self._set_mission_for_single_object_with_passing(
                         miss=miss,
                         chrome=chrome,
                         gen_const=gen_const
                         )
 
-    def get_action_for_each_mission_in_mission_choosen(self) -> None:
+    def set_action_for_each_mission_in_mission_choosen(self) -> None:
         """Get action for each mission on this turn
         """
-        logger.info('------get_action_for_each_mission_in_mission_choosen------')
-        logger.info(f'> get_action_for_each_mission_in_mission_choosen: {self.missions_choosen}')
+        logger.info('------set_action_for_each_mission_in_mission_choosen------')
+        logger.info(f'> set_action_for_each_mission_in_mission_choosen: {self.missions_choosen}')
         if self.missions_choosen:
             for miss in self.missions_choosen:
                 act = PerformActions(
@@ -225,11 +222,11 @@ class BotPipe:
                 )
                 try:
                     action = act.perform_actions(miss=miss[1])
-                    logger.info(f'> get_action_for_each_mission_in_mission_choosenchoosed action: {action}')
+                    logger.info(f'> set_action_for_each_mission_in_mission_choosenchoosed action: {action}')
                     if action:
                         self.actions.append(action)
                 except TypeError:
-                    logger.info('> get_action_for_each_mission_in_mission_choosen: no can act')
+                    logger.info('> set_action_for_each_mission_in_mission_choosen: no can act')
 
 def get_bot_actions(
     genome: List[namedtuple],
@@ -251,7 +248,7 @@ def get_bot_actions(
     Returns:
         Tuple[Actions, MissionsState]: [description]
     """
-    logger.info('======Define game objects and define variables======')
+    logger.info('======set game objects and define variables======')
     
     collection = MultiCollection(
         game_state=game_state,
@@ -261,15 +258,15 @@ def get_bot_actions(
     
     pipe = BotPipe(collection=collection, missions_state=missions_state, genome=genome)
     
-    logger.info('======Define missions, missions_state, check_again======')
-    pipe.define_missions_missions_state_check_again()
+    logger.info('======Set missions, missions_state, check_again======')
+    pipe.set_missions_missions_state_check_again()
     
-    logger.info('======Choose mission for each object======')
-    # pipe.choose_mission_for_each_object(gen_const=gen_const, method='simple')
-    pipe.choose_mission_for_each_object(gen_const=gen_const, method='passing')
+    logger.info('======Set mission for each object======')
+    # pipe.set_mission_and_state_for_each_object(gen_const=gen_const, method='simple')
+    pipe.set_mission_and_state_for_each_object(gen_const=gen_const, method='passing')
     
-    logger.info('======Get action for each mission in mission_choosen======')
-    pipe.get_action_for_each_mission_in_mission_choosen()
+    logger.info('======Set action for each mission in mission_choosen======')
+    pipe.set_action_for_each_mission_in_mission_choosen()
 
     logger.info(f'> bot: available_pos: {pipe.available_pos}')
     logger.info(f'> bot: Actions: {pipe.actions}')
