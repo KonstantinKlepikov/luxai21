@@ -1,5 +1,5 @@
 from lux.game_constants import GAME_CONSTANTS as cs
-from lux.game_objects import Unit, CityTile
+from lux.game_objects import Unit, CityTile, City
 from lux.game_map import Cell
 from typing import List, Dict, NamedTuple, Union, Set, Tuple
 from collections import namedtuple
@@ -71,6 +71,14 @@ def make_constants_nt(const: dict = cs, name: str = 'CONSTANTS') -> namedtuple:
     nt = Nt(**data)
             
     return nt
+
+
+def get_id(map_object: Union[City, Unit]) -> str:
+    """
+    Makes ID from City.cityid or Unit.id
+    Used for representation objects in logging only
+    """
+    return map_object.cityid if "cityid" in dir(map_object) else map_object.id
 
 
 CONSTANTS = make_constants_nt(const=cs)

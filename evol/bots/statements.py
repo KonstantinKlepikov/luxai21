@@ -1077,6 +1077,7 @@ class StatesCollectionsCollection:
         self.tiles_collection = tiles_collection
         self.__player_active_obj_to_state = None
         self.__opponent_active_obj_to_state = None
+        self.turn = game_state.turn
 
     def get_state(self, pos: Position) -> TileState:
         """Get TileState of any tile by position
