@@ -123,15 +123,13 @@ class CityMission(Mission):
         self.__can_build = None
 
     @property
-    def _can_build(self) -> bool: # TODO: move to StateCollection
+    def _can_build(self) -> bool:  # TODO: move to StateCollection
         """Set citytile can build
         
         City cant build units if citytiles == units, owned by player
         """
         if self.__can_build is None:
-            self.__can_build = bool(
-                len(self.tiles_collection.player_units) - len(self.tiles_collection.player_cities)
-                )
+            self.__can_build = len(self.tiles_collection.player_units) < len(self.tiles_collection.player_cities)
         return self.__can_build
 
     def mission_research(self) -> None:
