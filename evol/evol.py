@@ -87,6 +87,7 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
     Returns:
         Tuple[float]: tuple, that contains only one value of mean rewards for first player
     """
+    agent_train.gen_const = gen_const
     # agent_train.genome = gen_const.convert_day_genome(vector=individual)
     agent_train.genome = gen_const.convert_daily_genome(vector=individual)
     agent_train.intermediate = {}

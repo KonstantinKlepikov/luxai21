@@ -46,7 +46,8 @@ def agent(observation, configuration):
         game_state=game_state,
         player=player,
         opponent=opponent,
-        missions_state=missions_state
+        missions_state=missions_state,
+        gen_const=gen_const
         )
 
     end = time.time()
