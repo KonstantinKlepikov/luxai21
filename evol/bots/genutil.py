@@ -11,8 +11,29 @@ class GenConstruct:
     """
 
     def __init__(self) -> None:
+        self.__workers_per = None
+        self.__carts_per = None
+        self.__citytiles_per = None
         self.__Probability = None
         self.prob_len = len(self.Probability._fields)
+    
+    @property
+    def workers_per(self) -> List[str]:
+        if self.__workers_per is None:
+            self.__workers_per = [method for method in dir(WorkerMission) if method.startswith('mission_')]
+        return self.__workers_per
+    
+    @property
+    def carts_per(self) -> List[str]:
+        if self.__carts_per is None:
+            self.__carts_per = [method for method in dir(CartMission) if method.startswith('mission_')]
+        return self.__carts_per
+    
+    @property
+    def citytiles_per(self) -> List[str]:
+        if self.__citytiles_per is None:
+            self.__citytiles_per = [method for method in dir(CityMission) if method.startswith('mission_')]
+        return self.__citytiles_per
     
     @property
     def Probability(self) -> namedtuple:
@@ -22,10 +43,7 @@ class GenConstruct:
             namedtuple: empty genome object
         """
         if self.__Probability is None:
-            workers_per = [method for method in dir(WorkerMission) if method.startswith('mission_')]
-            carts_per = [method for method in dir(CartMission) if method.startswith('mission_')]
-            citytiles_per = [method for method in dir(CityMission) if method.startswith('mission_')]
-            per = list(set(workers_per + carts_per + citytiles_per))
+            per = list(set(self.workers_per + self.carts_per + self.citytiles_per))
             self.__Probability = namedtuple('Probability', per)
         return self.__Probability
 

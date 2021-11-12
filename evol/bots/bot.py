@@ -1,5 +1,6 @@
+from bots.genutil import GenConstruct
 from lux.game import Game
-from lux.game_objects import Player, Unit
+from lux.game_objects import CityTile, Player, Unit
 from bots.statements import MultiCollection
 from bots.missions import PerformMissions, PerformActions
 from bots.utility import (
@@ -114,7 +115,8 @@ class BotPipe:
     def _choose_mission_for_single_object_with_passing(
         self,
         miss: Missions,
-        chrome: dict
+        chrome: dict,
+        gen_const: GenConstruct
         ) -> None:
         """Choose mission for single object with passing probability
 
@@ -126,7 +128,20 @@ class BotPipe:
         
         # get reduced probabilities
         logger.info(f'> choose_mission_for_single_object_with_passing: chrome: {chrome}')
-        prob = [val[1] for val in chrome.items()] # FIXME: is choised from full vector of probability
+        if isinstance(miss['obj'], Unit):
+            if miss['obj'].is_worker():
+                spec =  gen_const.workers_per
+                logger.info('> choose_mission_for_single_object_with_passing: im worker')
+            if miss['obj'].is_cart():
+                spec =  gen_const.carts_per
+                logger.info('> choose_mission_for_single_object_with_passing: im cart')
+        if isinstance(miss['obj'], CityTile):
+            spec = gen_const.citytiles_per
+            logger.info('> choose_mission_for_single_object_with_passing: im cititile')
+        chrome = {key: val for key, val in chrome.items() if key in spec}
+        prob = [val[1] for val in chrome.items()]
+        logger.info(f'> choose_mission_for_single_object_with_passing: chrome after spec: {chrome}')
+        logger.info(f'> choose_mission_for_single_object_with_passing: unweighted prob: {prob}')
         s = sum(prob)
         try:
             prob = [w / s for w in prob]
@@ -172,7 +187,7 @@ class BotPipe:
                     self.missions_state[miss['obj'].id] = c[0]
                     logger.info(f'> choose_mission_for_single_object_with_passing: missions_state added: {self.missions_state}')
 
-    def choose_mission_for_each_object(self, method: str = 'simple') -> None:
+    def choose_mission_for_each_object(self, gen_const: GenConstruct, method: str = 'simple') -> None:
         """Get choiices interface
 
         Args:
@@ -184,10 +199,15 @@ class BotPipe:
         if self.missions_per_object:
             chrome = self.genome[self.collection.tiles_collection.game_state.turn]._asdict()
             for miss in self.missions_per_object:
+                logger.info(f'> choose_mission_for_each_object: obj {miss["obj"]}')
                 if method == 'simple':
                     self._choose_mission_for_single_object(miss=miss, chrome=chrome)
                 if method == 'passing':
-                    self._choose_mission_for_single_object_with_passing(miss=miss, chrome=chrome)
+                    self._choose_mission_for_single_object_with_passing(
+                        miss=miss,
+                        chrome=chrome,
+                        gen_const=gen_const
+                        )
 
     def get_action_for_each_mission_in_mission_choosen(self) -> None:
         """Get action for each mission on this turn
@@ -216,7 +236,8 @@ def get_bot_actions(
     game_state: Game,
     player: Player,
     opponent: Player,
-    missions_state: MissionsState
+    missions_state: MissionsState,
+    gen_const: GenConstruct = None
     ) -> Tuple[Actions, MissionsState]:
     """Get bot actions
 
@@ -244,8 +265,8 @@ def get_bot_actions(
     pipe.define_missions_missions_state_check_again()
     
     logger.info('======Choose mission for each object======')
-    pipe.choose_mission_for_each_object(method='simple')
-    # pipe.choose_mission_for_each_object(method='passing')
+    # pipe.choose_mission_for_each_object(gen_const=gen_const, method='simple')
+    pipe.choose_mission_for_each_object(gen_const=gen_const, method='passing')
     
     logger.info('======Get action for each mission in mission_choosen======')
     pipe.get_action_for_each_mission_in_mission_choosen()
