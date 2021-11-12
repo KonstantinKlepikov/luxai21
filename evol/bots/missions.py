@@ -129,7 +129,7 @@ class CityMission(Mission):
         City cant build units if citytiles == units, owned by player
         """
         if self.__can_build is None:
-            self.__can_build = len(self.tiles_collection.player_units) - len(self.tiles_collection.player_cities)
+            self.__can_build = len(self.tiles_collection.player_units) < len(self.tiles_collection.player_cities)
         return self.__can_build
 
     def mission_research(self) -> None:
