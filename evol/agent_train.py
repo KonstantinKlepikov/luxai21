@@ -62,7 +62,7 @@ def agent(observation, configuration):
     # score = turn_scoring.day_plus_night_turn_scoring()
     
     # each turn scoring
-    score = turn_scoring.each_turn_scoring()
+    score = turn_scoring.each_turn_scoring(weighted=False)
     
     if score:
         intermediate[game_eval] =+ score

@@ -126,7 +126,7 @@ class BotPipe:
         
         # get reduced probabilities
         logger.info(f'> choose_mission_for_single_object_with_passing: chrome: {chrome}')
-        prob = [val[1] for val in chrome.items()]
+        prob = [val[1] for val in chrome.items()] # FIXME: is choised from full vector of probability
         s = sum(prob)
         try:
             prob = [w / s for w in prob]
