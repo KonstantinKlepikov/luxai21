@@ -1,6 +1,6 @@
 from lux.game_objects import Unit, CityTile
 from lux.game_map import Position, Cell
-from bots.utility import CONSTANTS as cs
+from bots.utility import CONSTANTS as cs, get_id
 from bots.statements import (
     TileState, TilesCollection, StatesCollectionsCollection
 )
@@ -45,7 +45,7 @@ class Mission:
         self.tiles_collection = tiles_collection
         self.states_collections = states_collections
         self.missions_state = missions_state
-        self.obj  = obj_ 
+        self.obj = obj_
         self.missions:  Missions = {'obj': obj_, 'missions': []}
         self.action: str = None
         self.check_again: CheckAgain = None
@@ -106,11 +106,13 @@ class Mission:
 
 
 class CityMission(Mission):
-    """Citytile object missions with his posible actions
+    """Citytile object missions with his possible actions
     
     NOTE: Citytile can't add his missions to mission_state, because
     its missions is continue no longer than one turn
     """
+    current_turn = -1
+    build_units_counter = 0
 
     def __init__(
         self,
@@ -121,6 +123,11 @@ class CityMission(Mission):
         ) -> None:
         super().__init__(tiles_collection, states_collections, missions_state, obj_)
         self.__can_build = None
+        self.build_unit = False
+        if CityMission.current_turn != states_collections.turn:
+            CityMission.current_turn = states_collections.turn
+            CityMission.build_units_counter = 0
+            logger.warning(f'=====Turn {self.current_turn} =====')
 
     @property
     def _can_build(self) -> bool:  # TODO: move to StateCollection
@@ -129,7 +136,14 @@ class CityMission(Mission):
         City cant build units if citytiles == units, owned by player
         """
         if self.__can_build is None:
-            self.__can_build = len(self.tiles_collection.player_units) < len(self.tiles_collection.player_cities)
+            city_units_diff = len(self.tiles_collection.player_citytiles) - len(self.tiles_collection.player_units)
+            logger.warning(f'Cities: {", ".join(get_id(city) for city in self.tiles_collection.player_cities)}; '
+                           f'Citytiles: {", ".join(str(tile.pos) for tile in self.tiles_collection.player_citytiles)}; '
+                           f'Units: {len(self.tiles_collection.player_units)}')
+            if city_units_diff > 0:
+                self.__can_build = (city_units_diff - CityMission.build_units_counter) > 0
+                logger.warning(f'Tile {get_id(self.obj)}; {self.__can_build=}; '
+                               f'counter={CityMission.build_units_counter}')
         return self.__can_build
 
     def mission_research(self) -> None:
@@ -153,6 +167,10 @@ class CityMission(Mission):
         if self._can_build:
             logger.info('> citytile mission_build_worker added')
             self.missions['missions'].append(name)
+            if not self.build_unit:
+                CityMission.build_units_counter += 1
+                self.build_unit = True
+            logger.warning(f'BW Counter={CityMission.build_units_counter}')
 
     def action_build_worker(self, available_pos: AvailablePos) -> None:
         """Citytile build worker action
@@ -167,7 +185,11 @@ class CityMission(Mission):
         if self._can_build:
             logger.info('> citytile mission_build_cart added')
             self.missions['missions'].append(name)
-            
+            if not self.build_unit:
+                CityMission.build_units_counter += 1
+                self.build_unit = True
+            logger.warning(f'BC Counter={CityMission.build_units_counter}')
+
     def action_build_cart(self, available_pos: AvailablePos) -> None:
         """Citytile build cart action
         """

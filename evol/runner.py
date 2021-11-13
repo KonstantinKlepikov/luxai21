@@ -15,8 +15,15 @@ else: DEBUG == True
 logger.remove()
 logger.add(open(
     'errorlogs/run_test.log', 'w'),
+    level='INFO',
     format='{time:HH:mm:ss} | {level} | {message}'
     )
+logger.add(open(
+    'errorlogs/run_test_debug.log', 'w'),
+    level='WARNING',
+    format='{time:HH:mm:ss} | {level} | {message}'
+    )
+
 logger.info('Start Logging...')
 logger.info(f'Is logged player: {PLAYER}, opponent: {OPPONENT} with debug: {DEBUG}')
 
