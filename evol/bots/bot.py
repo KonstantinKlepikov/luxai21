@@ -40,7 +40,7 @@ class BotPipe:
         self.missions_choosen: MissionsChoosed = []
         self.missions = None
         self.check_again = None
-        
+
     def set_missions_missions_state_check_again(self):
         """set missions, missions_state and check_again variable
         """
@@ -262,8 +262,8 @@ def get_bot_actions(
     pipe.set_missions_missions_state_check_again()
     
     logger.info('======Set mission for each object======')
-    # pipe.set_mission_and_state_for_each_object(gen_const=gen_const, method='simple')
-    pipe.set_mission_and_state_for_each_object(gen_const=gen_const, method='passing')
+    pipe.set_mission_and_state_for_each_object(gen_const=gen_const, method='simple')
+    # pipe.set_mission_and_state_for_each_object(gen_const=gen_const, method='passing')
     
     logger.info('======Set action for each mission in mission_choosen======')
     pipe.set_action_for_each_mission_in_mission_choosen()
