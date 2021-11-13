@@ -9,6 +9,7 @@ from bots.utility import Intermediate, MissionsState
 logger.info('Start Logging agent_train.py...')
 
 game_state = None
+gen_const = None
 genome = None
 # This parametr defines the game number in a series 
 # of games with the same individual
@@ -62,7 +63,7 @@ def agent(observation, configuration):
     # score = turn_scoring.day_plus_night_turn_scoring()
     
     # each turn scoring
-    score = turn_scoring.each_turn_scoring()
+    score = turn_scoring.each_turn_scoring(weighted=False)
     
     if score:
         intermediate[game_eval] =+ score
@@ -73,7 +74,8 @@ def agent(observation, configuration):
         game_state=game_state,
         player=player,
         opponent=opponent,
-        missions_state=missions_state
+        missions_state=missions_state,
+        gen_const=gen_const
         )
 
     return actions

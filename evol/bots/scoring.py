@@ -23,19 +23,26 @@ class TurnScoring:
                 len(self.tiles_collection.player_units)) \
                 * self.turn / 40
             return score
-        
-    def each_turn_scoring(self) -> int:
+
+    def each_turn_scoring(self, weighted: bool = True) -> int:
         """Scoring function part for usage in agent_train.py
         with each_day_final_scoring()
         
-        Each turn scoring is multipliced by turn number.
-        Except turn 359 - it has additional *10
+        NOTE: Each turn scoring is multipliced by turn number for weighted option.
+        If turn 359 - it has additional multiplied by 10
+        
+        Args:
+            weighted[bool]: use weight or not. Default True
 
         Returns:
             int: score
         """
-        score = (len(self.tiles_collection.player_citytiles) * 10000 + \
-                    len(self.tiles_collection.player_units)) * self.turn
+        if weighted:
+            score = (len(self.tiles_collection.player_citytiles) * 10000 + \
+                        len(self.tiles_collection.player_units)) * self.turn
+        else:
+            score = (len(self.tiles_collection.player_citytiles) * 10000 + \
+                        len(self.tiles_collection.player_units))
         if self.turn == 359:
             score = score * 10
         return score

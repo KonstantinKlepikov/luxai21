@@ -190,7 +190,7 @@ class CityMission(Mission):
                 CityMission.build_units_counter += 1
                 self.build_unit = True
             logger.warning(f'BC Counter={CityMission.build_units_counter}')
-            
+
     def action_build_cart(self, available_pos: AvailablePos) -> None:
         """Citytile build cart action
         """
