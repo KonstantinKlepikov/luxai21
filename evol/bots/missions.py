@@ -137,11 +137,10 @@ class CityMission(Mission):
         """
         if self.__can_build is None:
             city_units_diff = len(self.tiles_collection.player_citytiles) - len(self.tiles_collection.player_units)
-            self.__can_build = city_units_diff > 0
             logger.warning(f'Cities: {", ".join(get_id(city) for city in self.tiles_collection.player_cities)}; '
                            f'Citytiles: {", ".join(str(tile.pos) for tile in self.tiles_collection.player_citytiles)}; '
                            f'Units: {len(self.tiles_collection.player_units)}')
-            if self.__can_build:
+            if city_units_diff > 0:
                 self.__can_build = (city_units_diff - CityMission.build_units_counter) > 0
                 logger.warning(f'Tile {get_id(self.obj)}; {self.__can_build=}; '
                                f'counter={CityMission.build_units_counter}')
