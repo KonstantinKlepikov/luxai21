@@ -873,12 +873,12 @@ class TileState:
     """Get tile statement
     """
 
-    def __init__(self, tiles_collection: TilesCollection, pos: Position) -> None:
-        self.tiles_collection = tiles_collection
+    def __init__(self, tiles: TilesCollection, pos: Position) -> None:
+        self.tiles = tiles
         self.pos = pos
-        self.map_width = tiles_collection.game_state.map_width
-        self.map_height = tiles_collection.game_state.map_height
-        self.cell = tiles_collection.game_state.map.get_cell(pos.x, pos.y)
+        self.map_width = tiles.game_state.map_width
+        self.map_height = tiles.game_state.map_height
+        self.cell = tiles.game_state.map.get_cell(pos.x, pos.y)
         self.__is_owned_by_player = None
         self.__is_owned_by_opponent = None
         self.__is_owned = None
@@ -910,7 +910,7 @@ class TileState:
         """Is owned by player
         """
         if self.__is_owned_by_player is None:
-            if self.cell in self.tiles_collection.player_own:
+            if self.cell in self.tiles.player_own:
                 self.__is_owned_by_player = True
                 self.__is_owned = True
             else:
@@ -922,7 +922,7 @@ class TileState:
         """Is owned by opponent
         """
         if self.__is_owned_by_opponent is None:
-            if self.cell in self.tiles_collection.opponent_own:
+            if self.cell in self.tiles.opponent_own:
                 self.__is_owned_by_opponent = True
                 self.__is_owned = True
             else:
@@ -934,7 +934,7 @@ class TileState:
         """Is owned by any
         """
         if self.__is_owned is None:
-            self.__is_owned = bool(self.cell in self.tiles_collection.own)
+            self.__is_owned = bool(self.cell in self.tiles.own)
         return self.__is_owned
 
     @property
@@ -942,7 +942,7 @@ class TileState:
         """Is tile resource
         """
         if self.__is_resource is None:
-            self.__is_resource = bool(self.cell in self.tiles_collection.resources)
+            self.__is_resource = bool(self.cell in self.tiles.resources)
         return self.__is_resource
 
     @property
@@ -950,7 +950,7 @@ class TileState:
         """Is tile wood
         """
         if self.__is_wood is None:
-            self.__is_wood = bool(self.cell in self.tiles_collection.woods)
+            self.__is_wood = bool(self.cell in self.tiles.woods)
         return self.__is_wood
 
     @property
@@ -958,7 +958,7 @@ class TileState:
         """Is tile wood
         """
         if self.__is_coal is None:
-            self.__is_coal = bool(self.cell in self.tiles_collection.coals)
+            self.__is_coal = bool(self.cell in self.tiles.coals)
         return self.__is_coal
 
     @property
@@ -966,7 +966,7 @@ class TileState:
         """Is tile wood
         """
         if self.__is_uranium is None:
-            self.__is_uranium = bool(self.cell in self.tiles_collection.uraniums)
+            self.__is_uranium = bool(self.cell in self.tiles.uraniums)
         return self.__is_uranium
 
     @property
@@ -974,11 +974,11 @@ class TileState:
         """Returns type of resource
         """
         if self.__resource_type is None:
-            if self.cell in self.tiles_collection.woods:
+            if self.cell in self.tiles.woods:
                 self.__resource_type = cs.RESOURCE_TYPES.WOOD
-            elif self.cell in self.tiles_collection.coals:
+            elif self.cell in self.tiles.coals:
                 self.__resource_type = cs.RESOURCE_TYPES.COAL
-            elif self.cell in self.tiles_collection.uraniums:
+            elif self.cell in self.tiles.uraniums:
                 self.__resource_type = cs.RESOURCE_TYPES.URANIUM
             else:
                 self.__resource_type = 'notype'
@@ -989,7 +989,7 @@ class TileState:
         """Is tile Road
         """
         if self.__is_road is None:
-            self.__is_road = bool(self.cell in self.tiles_collection.roads)
+            self.__is_road = bool(self.cell in self.tiles.roads)
         return self.__is_road
 
     @property
@@ -997,7 +997,7 @@ class TileState:
         """Is tile city
         """
         if self.__is_city is None:
-            self.__is_city = bool(self.cell.citytile in self.tiles_collection.citytiles)
+            self.__is_city = bool(self.cell.citytile in self.tiles.citytiles)
         return self.__is_city
 
     @property
@@ -1006,7 +1006,7 @@ class TileState:
         """
         if self.__is_worker is None:
             x, y = self.cell.pos
-            self.__is_worker = bool(Position(x, y) in self.tiles_collection.workers_pos)
+            self.__is_worker = bool(Position(x, y) in self.tiles.workers_pos)
         return self.__is_worker
 
     @property
@@ -1015,7 +1015,7 @@ class TileState:
         """
         if self.__is_cart is None:
             x, y = self.cell.pos
-            self.__is_worker = bool(Position(x, y) in self.tiles_collection.carts_pos)
+            self.__is_worker = bool(Position(x, y) in self.tiles.carts_pos)
         return self.__is_cart
 
     @property
@@ -1023,7 +1023,7 @@ class TileState:
         """Is tile empty
         """
         if self.__is_empty is None:
-            if self.cell in self.tiles_collection.empty:
+            if self.cell in self.tiles.empty:
                 self.__is_empty = True
             else:
                 self.__is_empty = False
@@ -1068,13 +1068,13 @@ class TileState:
         return self.__adjacent_dir_tuples
 
 
-class StatesCollectionsCollection:
+class TileStatesCollection:
     """Get statement matrix across all tiles
     """
 
-    def __init__(self, game_state: Game, tiles_collection: TilesCollection) -> None:
+    def __init__(self, game_state: Game, tiles: TilesCollection) -> None:
         self.states_map = [[None for _ in range(game_state.map.width)] for _ in range(game_state.map.height)]
-        self.tiles_collection = tiles_collection
+        self.tiles = tiles
         self.__player_active_obj_to_state = None
         self.__opponent_active_obj_to_state = None
         self.turn = game_state.turn
@@ -1089,14 +1089,14 @@ class StatesCollectionsCollection:
             [type]: TileState object for given position
         """
         if self.states_map[pos.x][pos.y] is None:
-            self.states_map[pos.x][pos.y] = TileState(tiles_collection=self.tiles_collection, pos=pos)
+            self.states_map[pos.x][pos.y] = TileState(tiles=self.tiles, pos=pos)
         return self.states_map[pos.x][pos.y]
 
     @property
     def player_active_obj_to_state(self) -> None:
         if self.__player_active_obj_to_state is None:
-            carts = self.tiles_collection.player_carts
-            workers = self.tiles_collection.player_workers
+            carts = self.tiles.player_carts
+            workers = self.tiles.player_workers
             for worker in workers:
                 tile_state = self.get_state(worker.pos)
                 tile_state.player_worker_object = worker
@@ -1108,8 +1108,8 @@ class StatesCollectionsCollection:
     @property
     def opponent_active_obj_to_state(self) -> None:
         if self.__opponent_active_obj_to_state is None:
-            carts = self.tiles_collection.opponent_carts
-            workers = self.tiles_collection.opponent_workers
+            carts = self.tiles.opponent_carts
+            workers = self.tiles.opponent_workers
             for worker in workers:
                 tile_state = self.get_state(worker.pos)
                 tile_state.opponent_worker_object = worker
@@ -1125,59 +1125,59 @@ class ContestedTilesCollection:
 
     def __init__(
         self,
-        tiles_collection: TilesCollection,
-        states_collections: StatesCollectionsCollection
+        tiles: TilesCollection,
+        states: TileStatesCollection
         ) -> None:
-        self.tiles_collection = tiles_collection
-        self.states_collections = states_collections
-        self.__tiles_to_move_in = None
-        self.__tiles_free_by_opponent_to_move_in = None
+        self.tiles = tiles
+        self.states = states
+        self.__tiles_to_move = None
+        self.__tiles_free = None
 
     @property
-    def tiles_to_move_in(self) -> AvailablePos:
+    def tiles_to_move(self) -> AvailablePos:
         """All adjacent to player units tiles
 
         Returns:
             AvailablePos: sequence of tiles positions
         """
-        if self.__tiles_to_move_in is None:
+        if self.__tiles_to_move is None:
             all_ = []
-            for pos in self.tiles_collection.player_units_pos:
-                tile_state = self.states_collections.get_state(pos=pos)
+            for pos in self.tiles.player_units_pos:
+                tile_state = self.states.get_state(pos=pos)
                 all_ = all_ + tile_state.adjacent
             all_ = [(pos.x, pos.y) for pos in all_]
-            self.__tiles_to_move_in = set(all_)
-        return self.__tiles_to_move_in
+            self.__tiles_to_move = set(all_)
+        return self.__tiles_to_move
 
     @property
-    def tiles_free_by_opponent_to_move_in(self) -> AvailablePos:
+    def tiles_free(self) -> AvailablePos:
         """Available tiles, exclude opponent cities and units
 
         Returns:
             AvailablePos: sequence of tiles positions
         """
-        if self.__tiles_free_by_opponent_to_move_in is None:
-            all_ = self.tiles_to_move_in
+        if self.__tiles_free is None:
+            all_ = self.tiles_to_move
             for pos in all_:
-                tile_state = self.states_collections.get_state(pos=Position(pos[0], pos[1]))
+                tile_state = self.states.get_state(pos=Position(pos[0], pos[1]))
                 if tile_state.is_owned_by_opponent:
                     all_.discard(pos)
-            self.__tiles_free_by_opponent_to_move_in  = all_
-        return self.__tiles_free_by_opponent_to_move_in
+            self.__tiles_free  = all_
+        return self.__tiles_free
 
 
 class AdjacentToResourceTilesCollection:
 
     def __init__(
         self,
-        tiles_collection: TilesCollection,
-        states_collection: StatesCollectionsCollection
+        tiles: TilesCollection,
+        states: TileStatesCollection
         ) -> None:
 
-        self.tiles_collection = tiles_collection
-        self.game_state = tiles_collection.game_state
-        self.resources = tiles_collection.resources
-        self.states_collection = states_collection
+        self.tiles = tiles
+        self.game_state = tiles.game_state
+        self.resources = tiles.resources
+        self.states = states
 
         self.__empty_adjacent_any_res = None
         self.__empty_adjacent_one_any_res = None
@@ -1234,7 +1234,7 @@ class AdjacentToResourceTilesCollection:
             self.__empty_adjacent_any_res = {1: {}, 2: {}, 3: {}}
             adj_to_res_cells = []
             for cell in self.resources:
-                adjacent_cells = self.states_collection.get_state(pos=cell.pos).adjacent
+                adjacent_cells = self.states.get_state(pos=cell.pos).adjacent
                 for adj_cell_pos in adjacent_cells:
                     cell_obj = self.game_state.map.get_cell_by_pos(adj_cell_pos)
                     if cell_obj.resource is None and cell_obj.citytile is None:  # and cell_obj.road == 0:  #TODO: decide if road level should be checked or we can build right on the road
@@ -1667,20 +1667,20 @@ class MultiCollection:
     """
     
     def __init__(self, game_state: Game, player: Player, opponent: Player) -> None:
-        self.tiles_collection = TilesCollection(
+        self.tiles = TilesCollection(
             game_state=game_state,
             player=player,
             opponent=opponent
             )
-        self.states_collections = StatesCollectionsCollection(
+        self.states = TileStatesCollection(
             game_state=game_state,
-            tiles_collection=self.tiles_collection
+            tiles=self.tiles
         )
-        self.contested_collection = ContestedTilesCollection(
-            tiles_collection=self.tiles_collection,
-            states_collections=self.states_collections
+        self.contested = ContestedTilesCollection(
+            tiles=self.tiles,
+            states=self.states
             )
-        self.tiles_resource_collection = AdjacentToResourceTilesCollection(
-            tiles_collection=self.tiles_collection,
-            states_collection=self.states_collections
+        self.tiles_resource = AdjacentToResourceTilesCollection(
+            tiles=self.tiles,
+            states=self.states
             )

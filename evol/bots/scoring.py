@@ -7,9 +7,9 @@ class TurnScoring:
     """Turn scorings functions for agent_train.py
     """
     
-    def __init__(self, turn: int, tiles_collection: TilesCollection) -> None:
+    def __init__(self, turn: int, tiles: TilesCollection) -> None:
         self.turn = turn
-        self.tiles_collection = tiles_collection
+        self.tiles = tiles
     
     def day_plus_night_turn_scoring(self) -> int:
         """Scoring function part for usage in agent_train.py
@@ -19,8 +19,8 @@ class TurnScoring:
             int: score
         """
         if self.turn in ALL_MORNINGS:
-            score = (len(self.tiles_collection.player_citytiles) * 10000 + \
-                len(self.tiles_collection.player_units)) \
+            score = (len(self.tiles.player_citytiles) * 10000 + \
+                len(self.tiles.player_units)) \
                 * self.turn / 40
             return score
 
@@ -38,11 +38,11 @@ class TurnScoring:
             int: score
         """
         if weighted:
-            score = (len(self.tiles_collection.player_citytiles) * 10000 + \
-                        len(self.tiles_collection.player_units)) * self.turn
+            score = (len(self.tiles.player_citytiles) * 10000 + \
+                        len(self.tiles.player_units)) * self.turn
         else:
-            score = (len(self.tiles_collection.player_citytiles) * 10000 + \
-                        len(self.tiles_collection.player_units))
+            score = len(self.tiles.player_citytiles) * 10000 + \
+                        len(self.tiles.player_units)
         if self.turn == 359:
             score = score * 10
         return score
