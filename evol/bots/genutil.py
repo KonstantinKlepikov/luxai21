@@ -19,20 +19,47 @@ class GenConstruct:
     
     @property
     def workers_per(self) -> List[str]:
+        """Possible performancies for workers
+
+        Returns:
+            List[str]: list of method names
+        """
         if self.__workers_per is None:
-            self.__workers_per = [method for method in dir(WorkerMission) if method.startswith('mission_')]
+            self.__workers_per = [
+                method
+                for method in dir(WorkerMission)
+                if method.startswith('mission_')
+                ]
         return self.__workers_per
     
     @property
     def carts_per(self) -> List[str]:
+        """Possible performancies for carts
+
+        Returns:
+            List[str]: list of method names
+        """
         if self.__carts_per is None:
-            self.__carts_per = [method for method in dir(CartMission) if method.startswith('mission_')]
+            self.__carts_per = [
+                method
+                for method in dir(CartMission)
+                if method.startswith('mission_')
+                ]
         return self.__carts_per
     
     @property
     def citytiles_per(self) -> List[str]:
+        """Possible performancies for cititiles
+
+        Returns:
+            List[str]: list of method names
+        """
         if self.__citytiles_per is None:
-            self.__citytiles_per = [method for method in dir(CityMission) if method.startswith('mission_')]
+            self.__citytiles_per = [
+                method
+                for method in dir(CityMission)
+                if method.startswith('mission_')
+                ]
         return self.__citytiles_per
     
     @property
