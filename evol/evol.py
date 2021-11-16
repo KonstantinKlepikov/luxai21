@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from typing import List, Tuple
 from loguru import logger
-import os, time, json, random, multiprocessing
+import os, time, datetime, json, random, multiprocessing
 from dotenv import load_dotenv
 
 
@@ -213,7 +213,7 @@ def eaSimpleWithElitism(
 # Genetic Algorithm flow:
 def main():
 
-    start = time.time()
+    start = datetime.datetime.now().replace(microsecond=0)
     
     pool = multiprocessing.Pool(processes=NUM_OF_PROCESS)
     toolbox.register("map", pool.map)
@@ -257,7 +257,7 @@ def main():
     # extract statistics:
     maxFitnessValues, meanFitnessValues = logbook.select("max", "avg")
 
-    end = time.time()
+    end = datetime.datetime.now().replace(microsecond=0)
     cum = end - start
     print(f'time on this step: {cum}')
     
@@ -273,7 +273,7 @@ POPULATION_SIZE: {POPULATION_SIZE}, MAX_GENERATIONS: {MAX_GENERATIONS}\n\
 P_CROSSOVER: {P_CROSSOVER}, INDPB_CROSSOVER: {INDPB_CROSSOVER}\n\
 P_MUTATION: {P_MUTATION}, INDPB_MUTATION: {INDPB_MUTATION}\n\
 HALL_OF_FAME_SIZE: {HALL_OF_FAME_SIZE}, RANDOM_SEED: {RANDOM_SEED}\n\
-Time cumulative: {cum}')
+GENOME_LENGHT: {GENOME_LENGHT}, Time cumulative: {cum}')
 
     plt.savefig(f'img/evolution_{timestamp}.png')
 

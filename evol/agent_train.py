@@ -41,7 +41,7 @@ def agent(observation, configuration):
     opponent = game_state.players[(observation.player + 1) % 2]
     
     # experimental intermediate scoring for fitness function
-    tiles_collection = TilesCollection(
+    tiles = TilesCollection(
         game_state=game_state,
         player=player,
         opponent=opponent
@@ -56,7 +56,7 @@ def agent(observation, configuration):
 
     turn_scoring = TurnScoring(
         turn=game_state.turn, 
-        tiles_collection=tiles_collection
+        tiles=tiles
         )
     
     # day plus night scoring
