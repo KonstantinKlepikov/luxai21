@@ -81,7 +81,7 @@ class BotPipe:
         # append chosen mission, associated with object of unit or city
         # If nothing to do (for example for mine) - it is skiped
         if c[0] in miss['missions']:
-            self.missions_choosed.append([miss['obj'], c[0]])
+            self.missions_choosed.append((miss['obj'], c[0]))
             logger.info(f'> _get_mission: mission choosed append: {self.missions_choosed}')
             # add missions_state of unit to transfer statement
             # in next turn of game

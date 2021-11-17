@@ -111,14 +111,25 @@ def day_or_night_number(
     return n
 
 # Types
-GameActiveObjects = Union[Unit, CityTile]
-GameCellObjects = List[Union[Cell, CityTile, Unit]]
-MissionsState = Dict[str, str]
-Missions = Dict[str, Union[Unit, CityTile, List[str]]]
-MissionChoosed = List[Union[GameActiveObjects, str]]
+
+# objects
+ObjId = str
+GameActiveObject = Union[Unit, CityTile]
+GameObjects = List[Union[Cell, CityTile, Unit]]
+
+# positions
+AvailablePos = Set[Tuple[int]]
+
+# missions
+MissionName = str
+MissionsState = Dict[ObjId, MissionName]
+MissionChoosed = Tuple[Union[GameActiveObject, MissionName]]
 MissionsChoosed = List[MissionChoosed]
-CheckAgain = Union[Unit, CityTile]
+Missions = Dict[str, Union[Unit, CityTile, List[MissionName]]]
+
+# scoring
 Rewards = List[List[int]]
 Intermediate = Dict[str, str]
+
+# game actions
 Actions = List[str]
-AvailablePos = Set[Tuple[int]]
