@@ -211,6 +211,11 @@ class BotPipe:
         """
         logger.info('------set_action_for_each_mission_in_mission_choosed------')
         logger.info(f'> set_action_for_each_mission_in_mission_choosed: {self.missions_choosed}')
+        resources = {
+            'wood': self.collection.tiles_resource.empty_adjacent_wood.copy(),
+            'wood_coal': self.collection.tiles_resource.empty_adjacent_wood_and_coal.copy(),
+            'any': self.collection.tiles_resource.empty_adjacent_any.copy()
+        }
         if self.missions_choosed:
             for miss in self.missions_choosed:
                 act = PerformActions(
@@ -218,7 +223,8 @@ class BotPipe:
                     states=self.collection.states,
                     missions_state=self.missions_state,
                     obj_=miss[0],
-                    available_pos=self.available_pos
+                    available_pos=self.available_pos,
+                    resources=resources
                 )
                 try:
                     action = act.perform_actions(miss=miss[1])

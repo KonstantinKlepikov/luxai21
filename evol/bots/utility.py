@@ -116,6 +116,7 @@ def day_or_night_number(
 ObjId = str
 GameActiveObject = Union[Unit, CityTile]
 GameObjects = List[Union[Cell, CityTile, Unit]]
+Resources = Dict[str, List[Cell]]
 
 # positions
 AvailablePos = Set[Tuple[int]]
