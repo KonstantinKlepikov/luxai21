@@ -119,7 +119,7 @@ GameObjects = List[Union[Cell, CityTile, Unit]]
 Resources = Dict[str, List[Cell]]
 
 # positions
-AvailablePos = Set[Tuple[int]]
+UnicPos = Set[Tuple[int]]
 
 # missions
 MissionName = str

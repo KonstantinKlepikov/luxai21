@@ -6,7 +6,7 @@ from bots.statements import (
 )
 from bots.utility import (
     GameActiveObject, GameObjects, MissionsState, 
-    Missions, AvailablePos, Resources
+    Missions, UnicPos, Resources
 )
 from typing import List, Tuple, Union
 import os, sys, math, random
@@ -201,7 +201,7 @@ class UnitMission(Mission):
     """Missions for units of any type
     """
     
-    available_pos: AvailablePos = None
+    available_pos: UnicPos = None
     resources: Resources = None
 
     def __init__(
@@ -244,7 +244,7 @@ class UnitMission(Mission):
 
         Args:
             target (Position): position of target cell
-            available_pos (AvailablePos): dict wih directions and tuple with
+            available_pos (UnicPos): dict wih directions and tuple with
             positions x, y
         """
         adj_dir = self._current_tile_state.adjacent_dir_tuples
@@ -636,7 +636,7 @@ class PerformActions(Perform):
     """This class construct all possible actions for all objects
     that can act
     
-        available_pos: AvailablePos: dict wih directions and tuple with
+        available_pos: UnicPos: dict wih directions and tuple with
         positions x, y
     """
    
@@ -646,7 +646,7 @@ class PerformActions(Perform):
         states: TileStatesCollection,
         missions_state: MissionsState,
         obj_: GameActiveObject,
-        available_pos: AvailablePos,
+        available_pos: UnicPos,
         resources: Resources
         ) -> None:
         super().__init__(tiles, states, missions_state, obj_)
