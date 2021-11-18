@@ -142,7 +142,7 @@ class CityMission(Mission):
                            f'Units: {len(self.tiles.player_units)}')
             if city_units_diff > 0:
                 self.__can_build = (city_units_diff - CityMission.build_units_counter) > 0
-                logger.warning(f'Tile {get_id(self.obj)}; {self.__can_build=}; '
+                logger.warning(f'Tile {get_id(self.obj)}; {self.__can_build}; '
                                f'counter={CityMission.build_units_counter}')
         return self.__can_build
 

@@ -95,7 +95,8 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
     agent_train.missions_state = {}
     rewards = evaluate(
         'lux_ai_2021',
-        [agent_train.agent, agent_random.agent],
+        [agent_train.agent, 'simple_agent'],
+        # [agent_train.agent, agent_random.agent],
         configuration=CONFIGURATIONS,
         num_episodes=NUM_EPISODES,
         debug=True
@@ -248,7 +249,10 @@ def main():
     # Hall of Fame info and best bot:
     # print("Hall of Fame Individuals = ", *hof.items, sep="\n")
     # print("Best Ever Individual = ", hof.items[0])
-    with open("bots_dump/best_bot.json", "w") as f:
+    with open("bots_dump/best_bot_{timestamp}.json", "w") as f:
+        json.dump(hof.items[0], f)
+        
+    with open(f"bots_dump/best_bot.json", "w") as f:
         json.dump(hof.items[0], f)
 
     with open("bots_dump/hall_of_fame.json", "w") as f:
