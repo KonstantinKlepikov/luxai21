@@ -20,6 +20,7 @@ tar -czvf submissions/submission.tar.gz \
 --exclude="tournament.py" \
 --exclude="evol.py" \
 --exclude="scoring.py" \
+--exclude="_state_res.py" \
 --exclude="bots_dump/hall_of_fame.json" \
 --exclude="shared.env" \
 *
