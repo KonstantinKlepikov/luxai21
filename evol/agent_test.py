@@ -37,15 +37,15 @@ def agent(observation, configuration):
     if game_state.turn == 0:
         logger.info('Agent is running!')
         # drop missions_state each game
-        transited.mission_state = {}
+        transited.missions_state = {}
 
     logger.info(f'-------------------> Start test turn {game_state.turn} <')
     logger.info(f'observation: {observation}')
-    logger.info(f'missions_state: {transited.mission_state}')
+    logger.info(f'missions_state: {transited.missions_state}')
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
 
-    actions, transited.mission_state = bot.get_bot_actions(
+    actions = bot.get_bot_actions(
         genome=genome,
         game_state=game_state,
         player=player,

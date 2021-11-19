@@ -1,6 +1,7 @@
 from bots.genutil import GenConstruct
 from lux.game import Game
 from lux.game_objects import CityTile, Player, Unit
+from lux.game_map import Position
 from bots.statements import MultiCollection, TransitionStates
 from bots.missions import PerformMissions, PerformActions
 from bots.utility import (
@@ -31,7 +32,7 @@ class BotPipe:
         genome: List[namedtuple]
     ) -> None:
         self.collection = collection
-        self.missions_state = transited.mission_state
+        self.transited = transited
         self.genome = genome
         self.available_pos = collection.contested.tiles_free.copy()
         self.player_own = collection.tiles.player_own
@@ -40,6 +41,51 @@ class BotPipe:
         self.missions_choosed: MissionsChoosed = []
         self.missions = None
         self.check_again = None
+        
+    def update_resource_statements(self):
+        """Update resource statements transited between turns
+        
+        NOTE: calculate position of resources and adjacent set in turn 0
+        Then in subseqwence turns calculate new positions of resource and remove 
+        difference from adjacent set
+        """
+        if self.collection.tiles.game_state.turn == 0:
+            # res coordinates and adjacent coordinates
+            self.transited.res_and_adj = {
+                tuple(self.collection.states.get_state(pos=pos).adjacent_dir_tuples.values()): pos
+                for pos in self.collection.tiles.resources_pos
+            }
+            logger.info(f'> update_resource_statements: res_and_adj {len(self.transited.res_and_adj)}')
+            # set of adjacent coordinates
+            self.transited.adj_coord_unic = {
+                coord
+                for val in self.transited.res_and_adj.keys()
+                for coord in val
+                }
+            logger.info(f'> update_resource_statements: adj_coord_unic {len(self.transited.adj_coord_unic)}')
+        else:
+            # new set of resources
+            d = {
+                coords: self.transited.res_and_adj[coords]
+                for coords in self.transited.res_and_adj.keys()
+                if self.collection.tiles.game_state.map.get_cell_by_pos(self.transited.res_and_adj[coords]).has_resource()
+                }
+            logger.info(f'> update_resource_statements: res_and_adj {len(self.transited.res_and_adj)}')
+            logger.info(f'> update_resource_statements: adj_coord_unic {len(self.transited.adj_coord_unic)}')
+            logger.info(f'> update_resource_statements: d {len(d)}')
+            un = {
+                coord 
+                for seq
+                in d.keys()
+                for coord in seq
+                if coord in self.transited.adj_coord_unic
+                }
+            # diff = {coord for val in d for coord in val}
+            logger.info(f'> update_resource_statements: diff {len(un)}')
+            self.transited.res_and_adj = d
+            self.transited.adj_coord_unic = un
+            logger.info(f'> update_resource_statements: res_and_adj {len(self.transited.res_and_adj)}')
+            logger.info(f'> update_resource_statements: adj_coord_unic {len(self.transited.adj_coord_unic)}')
 
     def init_missions_and_state_and_check_again(self):
         """init missions, missions_state and check_again variable
@@ -51,13 +97,13 @@ class BotPipe:
             act = PerformMissions(
                 tiles=self.collection.tiles,
                 states=self.collection.states,
-                missions_state=self.missions_state,
+                missions_state=self.transited.missions_state,
                 obj_=obj_
             )
             try:
-                self.missions, self.missions_state, self.check_again = act.perform_missions()
+                self.missions, self.transited.missions_state, self.check_again = act.perform_missions()
                 logger.info(f'> init_missions_and_state_and_check_again: : missions: {self.missions}')
-                logger.info(f'> init_missions_and_state_and_check_again: : Missions_state: {self.missions_state}')
+                logger.info(f'> init_missions_and_state_and_check_again: : Missions_state: {self.transited.missions_state}')
                 logger.info(f'> init_missions_and_state_and_check_again: : Check again: {self.check_again}')
                 self.missions_per_object.append(self.missions)
                 if self.check_again:
@@ -86,8 +132,8 @@ class BotPipe:
             # add missions_state of unit to transfer statement
             # in next turn of game
             if isinstance(miss['obj'], Unit):
-                self.missions_state[miss['obj'].id] = c[0]
-                logger.info(f'> _get_mission: missions_state added: {self.missions_state}')
+                self.transited.missions_state[miss['obj'].id] = c[0]
+                logger.info(f'> _get_mission: missions_state added: {self.transited.missions_state}')
 
     def _set_mission_for_single_object(
         self,
@@ -221,7 +267,7 @@ class BotPipe:
                 act = PerformActions(
                     tiles=self.collection.tiles,
                     states=self.collection.states,
-                    missions_state=self.missions_state,
+                    missions_state=self.transited.missions_state,
                     obj_=miss[0],
                     available_pos=self.available_pos,
                     resources=resources
@@ -264,6 +310,9 @@ def get_bot_actions(
     
     pipe = BotPipe(collection=collection, transited=transited, genome=genome)
     
+    logger.info('======Update resource statements======')
+    pipe.update_resource_statements()
+    
     logger.info('======Set missions, missions_state, check_again======')
     pipe.init_missions_and_state_and_check_again()
     
@@ -276,6 +325,6 @@ def get_bot_actions(
 
     logger.info(f'> bot: available_pos: {pipe.available_pos}')
     logger.info(f'> bot: Actions: {pipe.actions}')
-    logger.info(f'> bot: missions_state: {pipe.missions_state}')
+    logger.info(f'> bot: missions_state: {pipe.transited.missions_state}')
     
-    return pipe.actions, pipe.missions_state
+    return pipe.actions

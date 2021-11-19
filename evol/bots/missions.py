@@ -108,7 +108,7 @@ class Mission:
 class CityMission(Mission):
     """Citytile object missions with his possible actions
     
-    NOTE: Citytile can't add his missions to mission_state, because
+    NOTE: Citytile can't add his missions to missions_state, because
     its missions is continue no longer than one turn
     """
     current_turn = -1
@@ -127,7 +127,6 @@ class CityMission(Mission):
         if CityMission.current_turn != states.turn:
             CityMission.current_turn = states.turn
             CityMission.build_units_counter = 0
-            logger.warning(f'=====Turn {self.current_turn} =====')
 
     @property
     def _can_build(self) -> bool:  # TODO: move to StatesCollection
@@ -137,12 +136,14 @@ class CityMission(Mission):
         """
         if self.__can_build is None:
             city_units_diff = len(self.tiles.player_citytiles) - len(self.tiles.player_units)
-            logger.warning(f'Cities: {", ".join(get_id(city) for city in self.tiles.player_cities)}; '
+            logger.warning('_can_build: '
+                           f'Cities: {", ".join(get_id(city) for city in self.tiles.player_cities)}; '
                            f'Citytiles: {", ".join(str(tile.pos) for tile in self.tiles.player_citytiles)}; '
                            f'Units: {len(self.tiles.player_units)}')
             if city_units_diff > 0:
                 self.__can_build = (city_units_diff - CityMission.build_units_counter) > 0
-                logger.warning(f'Tile {get_id(self.obj)}; {self.__can_build}; '
+                logger.warning('_can_build: '
+                               f'Tile {get_id(self.obj)}; {self.__can_build}; '
                                f'counter={CityMission.build_units_counter}')
         return self.__can_build
 
@@ -170,7 +171,7 @@ class CityMission(Mission):
             if not self.build_unit:
                 CityMission.build_units_counter += 1
                 self.build_unit = True
-            logger.warning(f'BW Counter={CityMission.build_units_counter}')
+            logger.warning(f'> citytile mission_build_worker BW Counter={CityMission.build_units_counter}')
 
     def action_build_worker(self) -> None:
         """Citytile build worker action
@@ -188,7 +189,7 @@ class CityMission(Mission):
             if not self.build_unit:
                 CityMission.build_units_counter += 1
                 self.build_unit = True
-            logger.warning(f'BC Counter={CityMission.build_units_counter}')
+            logger.warning(f'> citytile mission_build_worker BC Counter={CityMission.build_units_counter}')
 
     def action_build_cart(self) -> None:
         """Citytile build cart action
@@ -544,7 +545,7 @@ class PerformMissions(Perform):
             mission (str, optional): mission. Defaults to None
 
         Returns:
-            missions, mission_state and check_again
+            missions, missions_state and check_again
         """
         perform = cls_(
             tiles=self.tiles,
@@ -569,10 +570,10 @@ class PerformMissions(Perform):
         MissionsState,
         GameActiveObject
         ]:
-        """Set or cancel missions and set mission_statement
+        """Set or cancel missions and set missions_statement
 
         Returns:
-            missions. mission_state and check_again
+            missions. missions_state and check_again
         """
         if self.obj.can_act():
             if isinstance(self.obj, Unit):

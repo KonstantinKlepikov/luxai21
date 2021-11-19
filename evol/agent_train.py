@@ -52,7 +52,7 @@ def agent(observation, configuration):
         game_num += 1
         cross_game_score[game_num] = 0
         # drop missions_state each game
-        transited.mission_state = {}
+        transited.missions_state = {}
 
     turn_scoring = TurnScoring(
         turn=game_state.turn, 
@@ -69,7 +69,7 @@ def agent(observation, configuration):
         cross_game_score[game_num] =+ score
     # end scoring
 
-    actions, transited.missions_state = bot.get_bot_actions(
+    actions = bot.get_bot_actions(
         genome=genome,
         game_state=game_state,
         player=player,

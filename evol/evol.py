@@ -92,7 +92,7 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
     agent_train.genome = gen_const.convert_daily_genome(vector=individual)
     agent_train.cross_game_score = {}
     agent_train.game_num = -1
-    agent_train.transited.mission_state = {}
+    agent_train.transited.missions_state = {}
     rewards = evaluate(
         'lux_ai_2021',
         [agent_train.agent, 'simple_agent'],

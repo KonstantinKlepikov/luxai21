@@ -28,7 +28,7 @@ def agent(observation, configuration):
 
     global game_state
     global genome
-    global missions_state
+    global transited
 
     # Do not edit
     if observation["step"] == 0:
@@ -42,12 +42,12 @@ def agent(observation, configuration):
     # Bot code
     if game_state.turn == 0:
         # drop missions_state each game
-        transited.mission_state = {}
+        transited.missions_state = {}
 
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
 
-    actions, missions_state = bot.get_bot_actions(
+    actions = bot.get_bot_actions(
         genome=genome,
         game_state=game_state,
         player=player,

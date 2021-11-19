@@ -5,7 +5,7 @@ from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
 from bots.utility import (
     UnicPos, GameObjects, GameActiveObject, MissionsState,
-    ResourceAndAdjaced
+    ResourceAndAdjaced, Coord
 )
 import os, sys
 from typing import List, Tuple, Union, Dict, Set
@@ -25,8 +25,9 @@ class TransitionStates:
     """Statement transition to next turn"""
     
     def __init__(self) -> None:
-        self.mission_state: MissionsState = {}
-        res_and_adj: ResourceAndAdjaced = {}
+        self.missions_state: MissionsState = {}
+        self.res_and_adj: ResourceAndAdjaced = {}
+        self.adj_coord_unic: Set(Coord) = set()
 
 
 class TilesCollection:
