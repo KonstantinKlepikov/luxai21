@@ -5,7 +5,8 @@ from lux.game_map import Position
 from bots.statements import MultiCollection, TransitionStates
 from bots.missions import PerformMissions, PerformActions
 from bots.utility import (
-    MissionsState, Missions, Actions, MissionsChoosed
+    MissionsState, Missions, Actions, MissionsChoosed,
+    GameActiveObject
 )
 from collections import namedtuple
 from typing import List, Tuple
@@ -39,8 +40,8 @@ class BotPipe:
         self.actions: Actions = []
         self.missions_per_object: List[Missions] = []
         self.missions_choosed: MissionsChoosed = []
-        self.missions = None
-        self.check_again = None
+        self.missions: Missions = None
+        self.check_again: GameActiveObject = None
         
     def update_resource_statements(self):
         """Update resource statements transited between turns
@@ -61,6 +62,7 @@ class BotPipe:
                 coord
                 for val in self.transited.res_and_adj.keys()
                 for coord in val
+                if self.collection.states.get_state(Position(coord[0], coord[1])).is_empty
                 }
             logger.info(f'> update_resource_statements: adj_coord_unic {len(self.transited.adj_coord_unic)}')
         else:
@@ -78,7 +80,7 @@ class BotPipe:
                 for seq
                 in d.keys()
                 for coord in seq
-                if coord in self.transited.adj_coord_unic
+                if self.collection.states.get_state(Position(coord[0], coord[1])).is_empty 
                 }
             # diff = {coord for val in d for coord in val}
             logger.info(f'> update_resource_statements: diff {len(un)}')
@@ -97,11 +99,11 @@ class BotPipe:
             act = PerformMissions(
                 tiles=self.collection.tiles,
                 states=self.collection.states,
-                missions_state=self.transited.missions_state,
+                translated=self.transited,
                 obj_=obj_
             )
             try:
-                self.missions, self.transited.missions_state, self.check_again = act.perform_missions()
+                self.missions, self.check_again = act.perform_missions()
                 logger.info(f'> init_missions_and_state_and_check_again: : missions: {self.missions}')
                 logger.info(f'> init_missions_and_state_and_check_again: : Missions_state: {self.transited.missions_state}')
                 logger.info(f'> init_missions_and_state_and_check_again: : Check again: {self.check_again}')
@@ -110,7 +112,7 @@ class BotPipe:
                     self.player_own.append(self.check_again)
                     logger.info(f'init_missions_and_state_and_check_again: player_own: {self.player_own}')
             except TypeError:
-                logger.info(f'> init_missions_and_state_and_check_again: No on can get mission')
+                logger.info(f'> init_missions_and_state_and_check_again: No one can get mission')
     
     def _set_mission_choosed_and_state(self, miss: Missions, p_miss: List[str], weights: List[float]) -> None:
         """set mission_choosed and missions_state
@@ -257,20 +259,14 @@ class BotPipe:
         """
         logger.info('------set_action_for_each_mission_in_mission_choosed------')
         logger.info(f'> set_action_for_each_mission_in_mission_choosed: {self.missions_choosed}')
-        resources = {
-            'wood': self.collection.tiles_resource.empty_adjacent_wood.copy(),
-            'wood_coal': self.collection.tiles_resource.empty_adjacent_wood_and_coal.copy(),
-            'any': self.collection.tiles_resource.empty_adjacent_any.copy()
-        }
         if self.missions_choosed:
             for miss in self.missions_choosed:
                 act = PerformActions(
                     tiles=self.collection.tiles,
                     states=self.collection.states,
-                    missions_state=self.transited.missions_state,
+                    translated= self.transited,
                     obj_=miss[0],
                     available_pos=self.available_pos,
-                    resources=resources
                 )
                 try:
                     action = act.perform_actions(miss=miss[1])

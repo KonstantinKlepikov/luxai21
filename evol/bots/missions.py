@@ -2,13 +2,13 @@ from lux.game_objects import Unit, CityTile
 from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs, get_id
 from bots.statements import (
-    TileState, TilesCollection, TileStatesCollection
+    TileState, TilesCollection, TileStatesCollection, TransitionStates
 )
 from bots.utility import (
     GameActiveObject, GameObjects, MissionsState, 
-    Missions, UnicPos, Resources
+    Missions, UnicPos, Coord
 )
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Set
 import os, sys, math, random
 
 
@@ -29,7 +29,7 @@ class Mission:
     NOTE: We add mission as key to self.action dict. As value we add
     action string or None if no any action needed in this mission on this turn
     
-    NOTE: We add new object id and his mission string to self.missions_state or remove
+    NOTE: We add new object id and his mission string to missions_state or remove
     ended mission
     
     NOTE: self.check_again is used for check unit for new mission, when old is removed
@@ -39,12 +39,12 @@ class Mission:
         self, 
         tiles: TilesCollection, 
         states: TileStatesCollection,
-        missions_state: MissionsState,
+        translated: TransitionStates,
         obj_: GameActiveObject
         ) -> None:
         self.tiles = tiles
         self.states = states
-        self.missions_state = missions_state
+        self.translated = translated
         self.obj = obj_
         self.missions:  Missions = {'obj': obj_, 'missions': []}
         self.action: str = None
@@ -118,10 +118,10 @@ class CityMission(Mission):
         self,
         tiles: TilesCollection,
         states: TileStatesCollection,
-        missions_state: MissionsState,
+        translated: TransitionStates,
         obj_: GameActiveObject
         ) -> None:
-        super().__init__(tiles, states, missions_state, obj_)
+        super().__init__(tiles, states, translated, obj_)
         self.__can_build = None
         self.build_unit = False
         if CityMission.current_turn != states.turn:
@@ -203,16 +203,16 @@ class UnitMission(Mission):
     """
     
     available_pos: UnicPos = None
-    resources: Resources = None
+    adj_coord_unic: Set[Coord] = None
 
     def __init__(
         self,
         tiles: TilesCollection,
         states: TileStatesCollection,
-        missions_state: MissionsState,
+        translated: TransitionStates,
         obj_: GameActiveObject
         ) -> None:
-        super().__init__(tiles, states, missions_state, obj_)
+        super().__init__(tiles, states, translated, obj_)
         self.__adjacent_tile_states = None
 
     @property
@@ -300,7 +300,12 @@ class UnitMission(Mission):
     def _move_to_closest_available_tile_to_main(self, res_type: str = 'any') -> None:
         """Get move to closest available tile to main
         """
-        closest = self._get_closest_pos(self.resources[res_type])
+        cells = [
+            self.states.tiles.game_state.map.get_cell_by_pos(Position(coord[0], coord[1]))
+            for coord in self.adj_coord_unic
+            ]
+        logger.info(f'> _move_to_closest_available_tile_to_main: cells {len(cells)}')
+        closest = self._get_closest_pos(cells)
         logger.info(f'> _move_to_closest_available_tile_to_main: closest {closest}')
         if closest:            
             self._collision_resolution(target=closest)
@@ -308,9 +313,9 @@ class UnitMission(Mission):
             if self.action:
                 cell = self.tiles.game_state.map.get_cell_by_pos(closest)
                 logger.info(f'> _move_to_closest_available_tile_to_main: cell {cell}')
-                logger.info(f'> _move_to_closest_available_tile_to_main: self.resources len {len(self.resources[res_type])}')
-                self.resources[res_type].discard(cell)
-                logger.info(f'> _move_to_closest_available_tile_to_main: self.resources len after remove {len(self.resources[res_type])}')
+                logger.info(f'> _move_to_closest_available_tile_to_main: self.resources len {len(self.adj_coord_unic)}')
+                self.adj_coord_unic.discard((closest.x, closest.y))
+                logger.info(f'> _move_to_closest_available_tile_to_main: self.resources len after remove {len(self.adj_coord_unic)}')
 
     def _transfer_resource(self) -> None:
         """Transfere resource to cart action
@@ -368,11 +373,11 @@ class UnitMission(Mission):
     def _end_mission(self) -> None:
         """End mission and add object to check_again
         """
-        if self.obj.id in self.missions_state.keys():
-            self.missions_state.pop(self.obj.id, None)
+        if self.obj.id in self.translated.missions_state.keys():
+            self.translated.missions_state.pop(self.obj.id, None)
             self.check_again = self.obj
-            logger.info(f'> _end_mission: i try end mission. missions_state: {self.missions_state}')
-            logger.info(f'> _end_mission: i end mission. missions_state: {self.missions_state}')
+            logger.info(f'> _end_mission: i try end mission. missions_state: {self.translated.missions_state}')
+            logger.info(f'> _end_mission: i end mission. missions_state: {self.translated.missions_state}')
 
     def mission_drop_the_resources(self) -> None:
         """Move to closest city mission
@@ -433,7 +438,7 @@ class WorkerMission(UnitMission):
         logger.info(f'> action_mine_resource: available_pos: {self.available_pos}')
         if self._current_tile_state.is_city:
             logger.info('> action_mine_resource: im in city and go mine')
-            self._move_to_closest_available_tile_to_main(res_type='any')
+            self._move_to_closest_available_tile_to_main()
         else:
             adjacence = self._adjacent_tile_states
             main_now = False
@@ -454,13 +459,14 @@ class WorkerMission(UnitMission):
                 logger.info('> action_mine_resource: im not in city and go mine')
                 if self.tiles.player.researched_uranium():
                     logger.info('> action_mine_resource: im go mine uranium')
-                    self._move_to_closest_available_tile_to_main(res_type='any')
+                    self._move_to_closest_available_tile_to_main()
                 elif self.tiles.player.researched_coal():
                     logger.info('> action_mine_resource: im go mine coal')
-                    self._move_to_closest_available_tile_to_main(res_type='wood_coal')
+                    # self._move_to_closest_available_tile_to_main(res_type='wood_coal')
+                    self._move_to_closest_available_tile_to_main()
                 else:
                     logger.info('> action_mine_resource: im go mine wood')
-                    self._move_to_closest_available_tile_to_main(res_type='wood')
+                    # self._move_to_closest_available_tile_to_main(res_type='wood')
         
 
     def mission_buld_the_city(self) -> None:
@@ -518,12 +524,12 @@ class Perform:
         self, 
         tiles: TilesCollection, 
         states: TileStatesCollection,
-        missions_state: MissionsState,
+        translated: TransitionStates,
         obj_: GameActiveObject
         ) -> None:
         self.tiles = tiles
         self.states = states
-        self.missions_state = missions_state
+        self.translated = translated
         self.obj  = obj_
 
 
@@ -536,7 +542,7 @@ class PerformMissions(Perform):
         self, 
         cls_: Union[WorkerMission, CartMission, CityMission],
         mission: str = None
-        ) -> Tuple[Missions, MissionsState, GameActiveObject]:
+        ) -> Tuple[Missions, GameActiveObject]:
         """Iterate missions for get all missions for all objects
 
         Args:
@@ -545,12 +551,12 @@ class PerformMissions(Perform):
             mission (str, optional): mission. Defaults to None
 
         Returns:
-            missions, missions_state and check_again
+            missions and check_again
         """
         perform = cls_(
             tiles=self.tiles,
             states=self.states,
-            missions_state=self.missions_state,
+            translated=self.translated,
             obj_=self.obj
             )
         if mission:
@@ -563,7 +569,7 @@ class PerformMissions(Perform):
             for met in per:
                 class_method = getattr(cls_, met)
                 class_method(perform)
-        return perform.missions, perform.missions_state, perform.check_again
+        return perform.missions, perform.check_again
 
     def perform_missions(self) -> Tuple[
         Missions,
@@ -573,7 +579,7 @@ class PerformMissions(Perform):
         """Set or cancel missions and set missions_statement
 
         Returns:
-            missions. missions_state and check_again
+            missions and check_again
         """
         if self.obj.can_act():
             if isinstance(self.obj, Unit):
@@ -584,12 +590,12 @@ class PerformMissions(Perform):
                 if self.obj.is_cart():
                     logger.info('> perform_missions: im cart')
                     cls_ = CartMission
-                if self.obj.id in self.missions_state.keys():
+                if self.obj.id in self.translated.missions_state.keys():
                     logger.info('> perform_missions: i have mission from previous turn - ' +
-                        f'{self.missions_state[self.obj.id]}')
+                        f'{self.translated.missions_state[self.obj.id]}')
                     return self._iterate_missions(
                         cls_=cls_,
-                        mission=self.missions_state[self.obj.id]
+                        mission=self.translated.missions_state[self.obj.id]
                         )
             if isinstance(self.obj, CityTile):
                 logger.info('> perform_missions: im citytile')
@@ -609,14 +615,13 @@ class PerformActions(Perform):
         self, 
         tiles: TilesCollection, 
         states: TileStatesCollection,
-        missions_state: MissionsState,
+        translated: TransitionStates,
         obj_: GameActiveObject,
         available_pos: UnicPos,
-        resources: Resources
         ) -> None:
-        super().__init__(tiles, states, missions_state, obj_)
+        super().__init__(tiles, states, translated, obj_)
         self.available_pos = available_pos
-        self.resources = resources
+        self.adj_coord_unic = translated.adj_coord_unic.copy()
 
     def _get_action(
         self, 
@@ -635,7 +640,7 @@ class PerformActions(Perform):
         perform = cls_(
             tiles=self.tiles,
             states=self.states,
-            missions_state=self.missions_state,
+            translated=self.translated,
             obj_=self.obj
             )
         logger.info(f'> _get_action mission: {mission}')
@@ -657,7 +662,7 @@ class PerformActions(Perform):
             if self.obj.is_worker():
                 logger.info('> perform_actions: im worker')
                 cls_ = WorkerMission
-                cls_.resources = self.resources
+                cls_.adj_coord_unic = self.adj_coord_unic
             if self.obj.is_cart():
                 logger.info('> perform_actions: im cart')
                 cls_ = CartMission
