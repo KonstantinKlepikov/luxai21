@@ -153,7 +153,7 @@ class CityMission(Mission):
         if not self.tiles.player.researched_uranium():
             logger.info('> citytile mission_research added')
             self.missions['missions'].append(name)
-            
+
     def action_research(self) -> None:
         """Citytile research action
         """
@@ -424,42 +424,6 @@ class WorkerMission(UnitMission):
         else:
             logger.info('> mission_mine_resource: im empty')
             self.missions['missions'].append(name)
-    
-    # def action_mine_resource(self) -> None:
-    #     """Worker action for mining resources
-    #     """
-    #     logger.info('> action_mine_resource: im here')
-    #     logger.info(f'> action_mine_resource: available_pos: {self.available_pos}')
-    #     if self._current_tile_state.is_city:
-    #         logger.info('> action_mine_resource: im in city and go mine')
-    #         self._move_to_closest(tiles=self.tiles.resources)
-    #     else:
-    #         adjacence = self._adjacent_tile_states
-    #         main_now = False
-    #         for state in adjacence: 
-    #             if state.is_wood:
-    #                 logger.info('> action_mine_resource: i mine wood')
-    #                 main_now = True
-    #                 break
-    #             elif self.tiles.player.researched_coal() and state.is_coal:
-    #                 logger.info('> action_mine_resource: i mine coal')
-    #                 main_now = True
-    #                 break
-    #             elif self.tiles.player.researched_uranium() and state.is_uranium:
-    #                 logger.info('action_mine_resource: i mine uranium')
-    #                 main_now = True
-    #                 break
-    #         if not main_now:
-    #             logger.info('> action_mine_resource: im not in city and go mine')
-    #             if self.tiles.player.researched_uranium():
-    #                 logger.info('> action_mine_resource: im go mine uranium')
-    #                 self._move_to_closest(tiles=self.tiles.uraniums)
-    #             elif self.tiles.player.researched_coal():
-    #                 logger.info('> action_mine_resource: im go mine coal')
-    #                 self._move_to_closest(tiles=self.tiles.coals)
-    #             else:
-    #                 logger.info('> action_mine_resource: im go mine wood')
-    #                 self._move_to_closest(tiles=self.tiles.woods)
 
     def action_mine_resource(self) -> None: # FIXME: rewrite if hamburger
         """Worker action for mining resources

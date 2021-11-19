@@ -130,7 +130,7 @@ Missions = Dict[str, Union[Unit, CityTile, List[MissionName]]]
 
 # scoring
 Rewards = List[List[int]]
-Intermediate = Dict[str, str]
+CrossGameScore = Dict[str, str]
 
 # game actions
 Actions = List[str]

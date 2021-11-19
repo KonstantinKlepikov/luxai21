@@ -90,8 +90,8 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
     agent_train.gen_const = gen_const
     # agent_train.genome = gen_const.convert_day_genome(vector=individual)
     agent_train.genome = gen_const.convert_daily_genome(vector=individual)
-    agent_train.intermediate = {}
-    agent_train.game_eval = -1
+    agent_train.cross_game_score = {}
+    agent_train.game_num = -1
     agent_train.missions_state = {}
     rewards = evaluate(
         'lux_ai_2021',
@@ -109,12 +109,12 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
     
     # day plus night final scoring
     # mean_r = final_scoring.day_plus_night_final_scoring(
-    #     intermediate=agent_train.intermediate
+    #     cross_game_score=agent_train.cross_game_score
     #     )
     
     # each day final scoring
     mean_r = final_scoring.each_day_final_scoring(
-        intermediate=agent_train.intermediate
+        cross_game_score=agent_train.cross_game_score
         )
 
     return mean_r,

@@ -3,7 +3,9 @@ from lux.game_objects import Player
 from lux.game_objects import Unit, City, CityTile
 from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
-from bots.utility import UnicPos, GameObjects, GameActiveObject
+from bots.utility import (
+    UnicPos, GameObjects, GameActiveObject, MissionsState
+)
 import os, sys
 from typing import List, Tuple, Union, Dict, Set
 
@@ -16,6 +18,13 @@ if os.path.exists("/kaggle"):  # check if we're on a kaggle server
     logger.addHandler(handler)
 else:
     from loguru import logger  # log to file locally
+
+
+class TransitionStates:
+    """Statement transition to next turn"""
+    
+    def __init__(self) -> None:
+        self.mission_state: MissionsState = {}
 
 
 class TilesCollection:
