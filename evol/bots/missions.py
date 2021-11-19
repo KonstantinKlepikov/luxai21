@@ -23,7 +23,7 @@ else:
 
 
 class Mission:
-    """Base class, provides constructhor and methods
+    """Base class, provides constructor and methods
     for some calculations with object, that can act
     
     NOTE: We add mission as key to self.action dict. As value we add
@@ -127,7 +127,7 @@ class CityMission(Mission):
         if CityMission.current_turn != states.turn:
             CityMission.current_turn = states.turn
             CityMission.build_units_counter = 0
-            logger.warning(f'=====Turn {self.current_turn} =====')
+            # logger.warning(f'=====Turn {self.current_turn} =====')
 
     @property
     def _can_build(self) -> bool:  # TODO: move to StatesCollection
@@ -137,13 +137,13 @@ class CityMission(Mission):
         """
         if self.__can_build is None:
             city_units_diff = len(self.tiles.player_citytiles) - len(self.tiles.player_units)
-            logger.warning(f'Cities: {", ".join(get_id(city) for city in self.tiles.player_cities)}; '
-                           f'Citytiles: {", ".join(str(tile.pos) for tile in self.tiles.player_citytiles)}; '
-                           f'Units: {len(self.tiles.player_units)}')
+            # logger.warning(f'Cities: {", ".join(get_id(city) for city in self.tiles.player_cities)}; '
+            #                f'Citytiles: {", ".join(str(tile.pos) for tile in self.tiles.player_citytiles)}; '
+            #                f'Units: {len(self.tiles.player_units)}')
             if city_units_diff > 0:
                 self.__can_build = (city_units_diff - CityMission.build_units_counter) > 0
-                logger.warning(f'Tile {get_id(self.obj)}; {self.__can_build}; '
-                               f'counter={CityMission.build_units_counter}')
+                # logger.warning(f'Tile {get_id(self.obj)}; {self.__can_build}; '
+                #                f'counter={CityMission.build_units_counter}')
         return self.__can_build
 
     def mission_research(self) -> None:
@@ -170,7 +170,6 @@ class CityMission(Mission):
             if not self.build_unit:
                 CityMission.build_units_counter += 1
                 self.build_unit = True
-            logger.warning(f'BW Counter={CityMission.build_units_counter}')
 
     def action_build_worker(self) -> None:
         """Citytile build worker action
@@ -188,7 +187,6 @@ class CityMission(Mission):
             if not self.build_unit:
                 CityMission.build_units_counter += 1
                 self.build_unit = True
-            logger.warning(f'BC Counter={CityMission.build_units_counter}')
 
     def action_build_cart(self) -> None:
         """Citytile build cart action
@@ -224,7 +222,7 @@ class UnitMission(Mission):
         return self.states.get_state(pos=self.obj.pos)
     
     @property 
-    def _adjacent_tile_states(self) -> List[TileState]: # TODO: move to independed class
+    def _adjacent_tile_states(self) -> List[TileState]: # TODO: move to independent class
         """Get list of statements of adjacent tiles
 
         Returns:
@@ -312,7 +310,7 @@ class UnitMission(Mission):
                 logger.info(f'> _move_to_closest_available_tile_to_main: self.resources len after remove {len(self.resources[res_type])}')
 
     def _transfer_resource(self) -> None:
-        """Transfere resource to cart action
+        """Transfer resource to cart action
         
         NOTE: transfer(dest_id, resourceType, amount): str - returns the transfer action. Will 
         transfer from this Unit the selected Resource type by the desired amount to the Unit 
@@ -388,7 +386,7 @@ class UnitMission(Mission):
             else:
                 logger.info('> mission_drop_the_resources: im not in city')
                 if self.tiles.player_citytiles:
-                    logger.info('> mission_drop_the_resources: citityles is exist')
+                    logger.info('> mission_drop_the_resources: citytile is exist')
                     self.missions['missions'].append(name)
         else:
             logger.info('> mission_drop_the_resources: im empty and drop this mission')
@@ -408,7 +406,7 @@ class UnitMission(Mission):
 
 
 class WorkerMission(UnitMission):
-    """Worker missions with his posible actions
+    """Worker missions with his possible actions
     """
 
     def mission_mine_resource(self) -> None:
@@ -498,32 +496,32 @@ class WorkerMission(UnitMission):
                     self._move_to_closest_available_tile_to_main(res_type='wood')
         
 
-    def mission_buld_the_city(self) -> None:
+    def mission_build_the_city(self) -> None:
         """Worker mission to build a city
         """
-        name = self.mission_buld_the_city.__name__
+        name = self.mission_build_the_city.__name__
         if self.obj.get_cargo_space_left():
-            logger.info('> mission_buld_the_city: im empty and drop this mission')
+            logger.info('> mission_build_the_city: im empty and drop this mission')
             self._end_mission()
         else:
-            logger.info('> mission_buld_the_city: im fool and can build city')
+            logger.info('> mission_build_the_city: im fool and can build city')
             self.missions['missions'].append(name)
                 
-    def action_buld_the_city(self) -> None:
+    def action_build_the_city(self) -> None:
         """Worker action to build a city
         """
-        logger.info('> action_buld_the_city: im here')
+        logger.info('> action_build_the_city: im here')
         if self.obj.can_build(self.tiles.game_state.map):
-            logger.info('> action_buld_the_city: i build the city')
+            logger.info('> action_build_the_city: i build the city')
             self.action = self.obj.build_city()
         else:
-            logger.info('> action_buld_the_city: i move random')
+            logger.info('> action_build_the_city: i move random')
             seq = list(cs.DIRECTIONS)
             self.action = self.obj.move(random.choice(seq=seq))
 
 
 class CartMission(UnitMission):
-    """Cart missions with his posible actions
+    """Cart missions with his possible actions
     """
 
     def mission_cart_harvest(self) -> None:
@@ -531,10 +529,10 @@ class CartMission(UnitMission):
         """
         name = self.mission_cart_harvest.__name__
         if not self.obj.get_cargo_space_left():
-            logger.info('> mission_cart_harvest: im empty')
+            logger.info('> mission_cart_harvest: im full')  # get_cargo_space_left() == 0
             self._end_mission()
         else:
-            logger.info('> mission_cart_harvest: im fool and got to closest worker')
+            logger.info('> mission_cart_harvest: im empty and got to closest worker')
             self.missions['missions'].append(name)
 
     def action_cart_harvest(self) -> None:
@@ -542,6 +540,50 @@ class CartMission(UnitMission):
         """
         logger.info('> action_cart_harvest: im here and go to closest worker')
         self._move_to_closest(tiles=self.tiles.player_workers)
+
+    def mission_cart_move_to_group(self) -> None:
+        """Cart mission: move to group of workers
+        """
+
+        logger.warning(f'=====Turn {self.states.turn} =====')
+        name = self.mission_cart_move_to_group.__name__
+        if not self.obj.get_cargo_space_left():
+            logger.info('> mission_cart_harvest: im full')
+            logger.warning(f'> mission_cart_move_to_group: '
+                           f'im here and go to closest worker {self.obj.get_cargo_space_left()}')
+            self._end_mission()
+        else:
+            logger.info('> mission_cart_move_to_group: i have space and move to closest worker')
+            logger.warning(f'> mission_cart_move_to_group: '
+                           f'i have space and move to closest worker {self.obj.get_cargo_space_left()}')
+            self.missions['missions'].append(name)
+
+    def action_cart_move_to_group(self) -> None:
+        """Cart action: move to group of workers
+        """
+        logger.info('> action_cart_move_to_center_point: im here and go to group of workers')
+        n = 3                   # FIXME: temporal solution
+
+        min_dist = (math.inf, self.obj.pos)
+        cells = [self.obj.pos] + self._current_tile_state.adjacent
+        logger.warning(f'>>action_cart_move_to_group: >>>>>>>>>> {self.obj.id}')
+        logger.warning(f'cells: {[str(cell) for cell in cells]}')
+        for cell in cells:
+            if cell not in self.states.tiles.workers_pos or self.states.get_state(cell).is_city:
+                logger.warning(f'Cell {str(cell)}')
+                workers = [(pos, cell.distance_to(pos)) for pos in self.tiles.player_workers_pos]
+                logger.warning(f'Workers: {[f"{str(x[0])} d={x[1]}" for x in workers]}')
+                workers.sort(key=lambda x: x[1])
+                closest_units = workers[:n]
+                logger.warning(f'Closest workers: {[str(x[0]) for x in closest_units]}')
+                dist_sum = sum(elem[1] for elem in closest_units)
+                logger.warning(f'{dist_sum=}, {min_dist[0]=}')
+                if dist_sum < min_dist[0]:
+                    min_dist = (dist_sum, cell)
+            else:
+                logger.warning(f'cell {str(cell)} is busy')
+            logger.warning(f'min_dist final = {min_dist[0]} {str(min_dist[1])}')
+        self._collision_resolution(target=min_dist[1])
 
 
 class Perform:
@@ -559,7 +601,7 @@ class Perform:
         self.tiles = tiles
         self.states = states
         self.missions_state = missions_state
-        self.obj  = obj_
+        self.obj = obj_
 
 
 class PerformMissions(Perform):
@@ -575,7 +617,7 @@ class PerformMissions(Perform):
         """Iterate missions for get all missions for all objects
 
         Args:
-            cls (Union[WorkerMission, CartMission, CityMission]): mission class
+            cls_ (Union[WorkerMission, CartMission, CityMission]): mission class
             of object
             mission (str, optional): mission. Defaults to None
 
@@ -589,9 +631,9 @@ class PerformMissions(Perform):
             obj_=self.obj
             )
         if mission:
-            logger.info(f'> _iterate_missionss mission: {mission}')
+            logger.info(f'> _iterate_missions mission: {mission}')
             class_method = getattr(cls_, mission)
-            logger.info(f'> _iterate_missionss class_method: {class_method}')
+            logger.info(f'> _iterate_missions class_method: {class_method}')
             class_method(perform)
         else:
             per = [method for method in dir(cls_) if method.startswith('mission_')]
@@ -631,7 +673,8 @@ class PerformMissions(Perform):
                 cls_ = CityMission
             logger.info('> perform_missions: no mission from previous turn')
             return self._iterate_missions(cls_=cls_, mission=None)
-        
+
+
 class PerformActions(Perform):
     """This class construct all possible actions for all objects
     that can act
@@ -685,7 +728,7 @@ class PerformActions(Perform):
         """Set action
 
         Returns:
-            str: choosed action
+            str: chosen action
         """
         if isinstance(self.obj, Unit):
             logger.info('> perform_actions: im unit')
@@ -702,4 +745,3 @@ class PerformActions(Perform):
             logger.info('> perform_actions: im citytile')
             cls_ = CityMission
         return self._get_action(cls_=cls_, mission=miss)
-
