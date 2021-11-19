@@ -1,5 +1,6 @@
 from lux.game import Game
 from bots.genutil import GenConstruct
+from bots.statements import TransitionStates
 import bots.bot as bot
 import os, sys, json
 
@@ -21,7 +22,7 @@ gen_const = GenConstruct()
 # genome = gen_const.convert_day_genome(vector=genome_list)
 genome = gen_const.convert_daily_genome(vector=genome_list)
 game_state = None
-missions_state = {}
+transited = TransitionStates()
 
 def agent(observation, configuration):
 
@@ -41,7 +42,7 @@ def agent(observation, configuration):
     # Bot code
     if game_state.turn == 0:
         # drop missions_state each game
-        missions_state = {}
+        transited.mission_state = {}
 
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
@@ -51,7 +52,7 @@ def agent(observation, configuration):
         game_state=game_state,
         player=player,
         opponent=opponent,
-        missions_state=missions_state,
+        transited=transited,
         gen_const=gen_const
         )
 

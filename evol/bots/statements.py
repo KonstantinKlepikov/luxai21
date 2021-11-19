@@ -4,7 +4,8 @@ from lux.game_objects import Unit, City, CityTile
 from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
 from bots.utility import (
-    UnicPos, GameObjects, GameActiveObject, MissionsState
+    UnicPos, GameObjects, GameActiveObject, MissionsState,
+    ResourceAndAdjaced
 )
 import os, sys
 from typing import List, Tuple, Union, Dict, Set
@@ -25,6 +26,7 @@ class TransitionStates:
     
     def __init__(self) -> None:
         self.mission_state: MissionsState = {}
+        res_and_adj: ResourceAndAdjaced = {}
 
 
 class TilesCollection:

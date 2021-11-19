@@ -1,7 +1,7 @@
 from bots.genutil import GenConstruct
 from lux.game import Game
 from lux.game_objects import CityTile, Player, Unit
-from bots.statements import MultiCollection
+from bots.statements import MultiCollection, TransitionStates
 from bots.missions import PerformMissions, PerformActions
 from bots.utility import (
     MissionsState, Missions, Actions, MissionsChoosed
@@ -27,11 +27,11 @@ class BotPipe:
     def __init__(
         self,
         collection: MultiCollection,
-        missions_state: MissionsState,
+        transited: TransitionStates,
         genome: List[namedtuple]
     ) -> None:
         self.collection = collection
-        self.missions_state = missions_state
+        self.missions_state = transited.mission_state
         self.genome = genome
         self.available_pos = collection.contested.tiles_free.copy()
         self.player_own = collection.tiles.player_own
@@ -239,7 +239,7 @@ def get_bot_actions(
     game_state: Game,
     player: Player,
     opponent: Player,
-    missions_state: MissionsState,
+    transited: TransitionStates,
     gen_const: GenConstruct = None
     ) -> Tuple[Actions, MissionsState]:
     """Get bot actions
@@ -262,7 +262,7 @@ def get_bot_actions(
         opponent=opponent
     )
     
-    pipe = BotPipe(collection=collection, missions_state=missions_state, genome=genome)
+    pipe = BotPipe(collection=collection, transited=transited, genome=genome)
     
     logger.info('======Set missions, missions_state, check_again======')
     pipe.init_missions_and_state_and_check_again()
