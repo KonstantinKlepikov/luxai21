@@ -1,6 +1,6 @@
 from lux.game_map import Position, Cell
 import os, sys
-from typing import List, Tuple, Union, Dict
+from typing import List, Dict
 
 if os.path.exists("/kaggle"):  # check if we're on a kaggle server
     import logging
