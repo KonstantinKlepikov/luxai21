@@ -1,6 +1,5 @@
 from lux.game_constants import GAME_CONSTANTS as cs
 from lux.game_objects import Unit, CityTile
-from lux.game_map import Position
 from lux.game_map import Cell
 from typing import List, Dict, NamedTuple, Union, Set, Tuple
 from collections import namedtuple
@@ -86,7 +85,6 @@ GameActiveObject = Union[Unit, CityTile]
 GameObjects = List[Union[Cell, CityTile, Unit]]
 Resources = Dict[str, List[Cell]]
 Coord = Tuple[int, int]
-ResourceAndAdjaced = [Tuple[Coord], Position]
 
 # positions
 UnicPos = Set[Tuple[int]]

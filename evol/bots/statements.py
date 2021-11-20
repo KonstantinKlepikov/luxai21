@@ -5,10 +5,11 @@ from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
 from bots.utility import (
     UnicPos, GameObjects, GameActiveObject, MissionsState,
-    ResourceAndAdjaced, Coord
+    Coord
 )
 import os, sys
 from typing import List, Tuple, Union, Dict, Set
+from collections import ChainMap
 
 if os.path.exists("/kaggle"):  # check if we're on a kaggle server
     import logging
@@ -26,8 +27,8 @@ class TransitionStates:
     
     def __init__(self) -> None:
         self.missions_state: MissionsState = {}
-        self.res_and_adj: ResourceAndAdjaced = {}
         self.adj_coord_unic: Set(Coord) = set()
+        self.adj_stack: ChainMap = ChainMap()
 
 
 class TilesCollection:
@@ -149,16 +150,20 @@ class TilesCollection:
     def _set_res_types(self) -> None:
         """Set sequence of all resource types
         """
+        resources = []
         woods = []
         coals = []
         uraniums = []
-        for cell in self.resources:
-            if cell.resource.type == cs.RESOURCE_TYPES.WOOD:
-                woods.append(cell)
-            if cell.resource.type == cs.RESOURCE_TYPES.COAL:
-                coals.append(cell)
-            if cell.resource.type == cs.RESOURCE_TYPES.URANIUM:
-                uraniums.append(cell)
+        for cell in self.map_cells:
+            if cell.has_resource():
+                resources.append(cell)
+                if cell.resource.type == cs.RESOURCE_TYPES.WOOD:
+                    woods.append(cell)
+                elif cell.resource.type == cs.RESOURCE_TYPES.COAL:
+                    coals.append(cell)
+                elif cell.resource.type == cs.RESOURCE_TYPES.URANIUM:
+                    uraniums.append(cell)
+        self.__resources = resources
         self.__woods = woods
         self.__coals = coals
         self.__uraniums = uraniums
@@ -740,7 +745,7 @@ class TilesCollection:
                 - road (int): 0.
         """
         if self.__resources is None:
-            self.__resources = [cell for cell in self.map_cells if cell.has_resource()]
+            self._set_res_types()
         return self.__resources
 
     @property
@@ -1196,6 +1201,8 @@ class TileStatesCollection:
 
     @property
     def player_active_obj_to_state(self) -> None:
+        """init all player unit objects in collection of tile states
+        """
         if self.__player_active_obj_to_state is None:
             carts = self.tiles.player_carts
             workers = self.tiles.player_workers
@@ -1209,6 +1216,8 @@ class TileStatesCollection:
 
     @property
     def opponent_active_obj_to_state(self) -> None:
+        """init all opponent unit objects in collection of tile states
+        """
         if self.__opponent_active_obj_to_state is None:
             carts = self.tiles.opponent_carts
             workers = self.tiles.opponent_workers
@@ -1267,145 +1276,196 @@ class ContestedTilesCollection:
         return self.__tiles_free
 
 
-class AdjacentToResourceTilesCollection:
+# class AdjacentToResourceTilesCollection:
 
+#     def __init__(
+#         self,
+#         tiles: TilesCollection,
+#         states: TileStatesCollection
+#         ) -> None:
+
+#         self.tiles = tiles
+#         self.states = states
+
+#         self.__empty_adjacent_wood = None
+#         self.__empty_adjacent_coal = None
+#         self.__empty_adjacent_uranium = None
+#         self.__empty_adjacent_wood_and_coal = None
+#         self.__empty_adjacent_wood_and_uranium = None
+#         self.__empty_adjacent_coal_and_uranium = None
+#         self.__empty_adjacent_any = None
+
+#     @property
+#     def empty_adjacent_wood(self) -> Set[Cell]:
+#         """
+#         Collects set of all empty adjacent to wood cells
+
+#         Returns:
+#             Set[Cell]
+#         """
+#         if self.__empty_adjacent_wood is None:
+#             adj_to = set()
+#             for pos in self.tiles.woods_pos:
+#                 state = self.states.get_state(pos=pos)
+#                 for adj_pos in state.adjacent:
+#                     adj_state = self.states.get_state(pos=adj_pos)
+#                     if adj_state.is_empty:
+#                         cell = self.tiles.game_state.map.get_cell_by_pos(adj_pos)
+#                         adj_to.add((cell))
+#             self.__empty_adjacent_wood = adj_to
+#         return self.__empty_adjacent_wood
+    
+#     @property
+#     def empty_adjacent_coal(self) -> Set[Cell]:
+#         """
+#         Collects set of all empty adjacent to coal cells
+
+#         Returns:
+#             Set[Cell]
+#         """
+#         if self.__empty_adjacent_coal is None:
+#             adj_to = set()
+#             for pos in self.tiles.coals_pos:
+#                 state = self.states.get_state(pos=pos)
+#                 for adj_pos in state.adjacent:
+#                     adj_state = self.states.get_state(pos=adj_pos)
+#                     if adj_state.is_empty:
+#                         cell = self.tiles.game_state.map.get_cell_by_pos(adj_pos)
+#                         adj_to.add((cell))
+#             self.__empty_adjacent_coal = adj_to
+#         return self.__empty_adjacent_coal
+    
+#     @property
+#     def empty_adjacent_uranium(self) -> Set[Cell]:
+#         """
+#         Collects set of all empty adjacent to uranium cells
+
+#         Returns:
+#             Set[Cell]
+#         """
+#         if self.__empty_adjacent_uranium is None:
+#             adj_to = set()
+#             for pos in self.tiles.uraniums_pos:
+#                 state = self.states.get_state(pos=pos)
+#                 for adj_pos in state.adjacent:
+#                     adj_state = self.states.get_state(pos=adj_pos)
+#                     if adj_state.is_empty:
+#                         cell = self.tiles.game_state.map.get_cell_by_pos(adj_pos)
+#                         adj_to.add((cell))
+#             self.__empty_adjacent_uranium = adj_to
+#         return self.__empty_adjacent_uranium
+
+#     @property
+#     def empty_adjacent_wood_and_coal(self) -> Set[Cell]:
+#         """
+#         Collects set of all empty cells, adjacent to wood and coal
+        
+#         Returns:
+#             Set[Cell]
+#         """
+#         if self.__empty_adjacent_wood_and_coal is None:
+#             self.__empty_adjacent_wood_and_coal = set().union(
+#                     self.empty_adjacent_wood,
+#                     self.empty_adjacent_coal
+#                     )
+#         return self.__empty_adjacent_wood_and_coal
+    
+#     @property
+#     def empty_adjacent_coal_and_uranium(self) -> Set[Cell]:
+#         """
+#         Collects set of all empty cells, adjacent to coal and uranium
+        
+#         Returns:
+#            Set[Cell]
+#         """
+#         if self.__empty_adjacent_coal_and_uranium is None:
+#             self.__empty_adjacent_coal_and_uranium = set().union(
+#                 self.empty_adjacent_coal,
+#                 self.empty_adjacent_uranium
+#                 )
+#         return self.__empty_adjacent_coal_and_uranium
+    
+#     @property
+#     def empty_adjacent_wood_and_uranium(self) -> Set[Cell]:
+#         """
+#         Collects set of all empty cells, adjacent to wood and uranium
+        
+#         Returns:
+#             Set[Cell]
+#         """
+#         if self.__empty_adjacent_wood_and_uranium is None:
+#             self.__empty_adjacent_wood_and_uranium = set().union(
+#                 self.empty_adjacent_wood,
+#                 self.empty_adjacent_uranium
+#                 )
+#         return self.__empty_adjacent_wood_and_uranium
+
+#     @property
+#     def empty_adjacent_any(self) -> Set[Cell]:
+#         """
+#         Collects set of all empty cells, adjacent to any resource
+        
+#         Returns:
+#             Set[Cell]
+#         """
+#         if self.__empty_adjacent_any is None:
+#             self.__empty_adjacent_any = set().union(
+#                 self.empty_adjacent_wood,
+#                 self.empty_adjacent_coal,
+#                 self.empty_adjacent_uranium
+#                 )
+#         return self.__empty_adjacent_any
+
+
+class AdjacentToResourceCollection:
+    
     def __init__(
         self,
         tiles: TilesCollection,
-        states: TileStatesCollection
+        states: TileStatesCollection,
         ) -> None:
-
         self.tiles = tiles
         self.states = states
-
-        self.__empty_adjacent_wood = None
-        self.__empty_adjacent_coal = None
-        self.__empty_adjacent_uranium = None
-        self.__empty_adjacent_wood_and_coal = None
-        self.__empty_adjacent_wood_and_uranium = None
-        self.__empty_adjacent_coal_and_uranium = None
+        self.adj_coord_unic: Set(Coord) = set()
         self.__empty_adjacent_any = None
+        self.__empty_adjacent_wood = None
+        self.__empty_adjacent_wood_coal = None
+        
+    def _set_empty_adjacent_res(self) -> None:
+        any_ = []
+        wood = []
+        wood_coal = []
+        for coord in self.adj_coord_unic:
+            cell = self.states.tiles.game_state.map.get_cell_by_pos(Position(coord[0], coord[1]))
+            state = self.states.get_state(cell.pos)
+            if state.is_empty:
+                if self.tiles.player.researched_uranium():
+                    any_.append(cell)
+                if state.is_wood:
+                    wood.append(cell)
+                if self.tiles.player.researched_coal() and (state.is_wood or state.is_coal):
+                    wood_coal.append(cell)
+        self.__empty_adjacent_any = any_
+        self.__empty_adjacent_wood = wood
+        self.__empty_adjacent_wood_coal = wood_coal
 
     @property
-    def empty_adjacent_wood(self) -> Set[Cell]:
-        """
-        Collects set of all empty adjacent to wood cells
+    def empty_adjacent_any(self) -> List[Cell]:
+        if self.__empty_adjacent_any is None:
+            self._set_empty_adjacent_res()
+        return self.__empty_adjacent_any
 
-        Returns:
-            Set[Cell]
-        """
+    @property
+    def empty_adjacent_wood(self) -> List[Cell]:
         if self.__empty_adjacent_wood is None:
-            adj_to = set()
-            for pos in self.tiles.woods_pos:
-                state = self.states.get_state(pos=pos)
-                for adj_pos in state.adjacent:
-                    adj_state = self.states.get_state(pos=adj_pos)
-                    if adj_state.is_empty:
-                        cell = self.tiles.game_state.map.get_cell_by_pos(adj_pos)
-                        adj_to.add((cell))
-            self.__empty_adjacent_wood = adj_to
+            self._set_empty_adjacent_res()
         return self.__empty_adjacent_wood
     
     @property
-    def empty_adjacent_coal(self) -> Set[Cell]:
-        """
-        Collects set of all empty adjacent to coal cells
-
-        Returns:
-            Set[Cell]
-        """
-        if self.__empty_adjacent_coal is None:
-            adj_to = set()
-            for pos in self.tiles.coals_pos:
-                state = self.states.get_state(pos=pos)
-                for adj_pos in state.adjacent:
-                    adj_state = self.states.get_state(pos=adj_pos)
-                    if adj_state.is_empty:
-                        cell = self.tiles.game_state.map.get_cell_by_pos(adj_pos)
-                        adj_to.add((cell))
-            self.__empty_adjacent_coal = adj_to
-        return self.__empty_adjacent_coal
-    
-    @property
-    def empty_adjacent_uranium(self) -> Set[Cell]:
-        """
-        Collects set of all empty adjacent to uranium cells
-
-        Returns:
-            Set[Cell]
-        """
-        if self.__empty_adjacent_uranium is None:
-            adj_to = set()
-            for pos in self.tiles.uraniums_pos:
-                state = self.states.get_state(pos=pos)
-                for adj_pos in state.adjacent:
-                    adj_state = self.states.get_state(pos=adj_pos)
-                    if adj_state.is_empty:
-                        cell = self.tiles.game_state.map.get_cell_by_pos(adj_pos)
-                        adj_to.add((cell))
-            self.__empty_adjacent_uranium = adj_to
-        return self.__empty_adjacent_uranium
-
-    @property
-    def empty_adjacent_wood_and_coal(self) -> Set[Cell]:
-        """
-        Collects set of all empty cells, adjacent to wood and coal
-        
-        Returns:
-            Set[Cell]
-        """
-        if self.__empty_adjacent_wood_and_coal is None:
-            self.__empty_adjacent_wood_and_coal = set().union(
-                    self.empty_adjacent_wood,
-                    self.empty_adjacent_coal
-                    )
-        return self.__empty_adjacent_wood_and_coal
-    
-    @property
-    def empty_adjacent_coal_and_uranium(self) -> Set[Cell]:
-        """
-        Collects set of all empty cells, adjacent to coal and uranium
-        
-        Returns:
-           Set[Cell]
-        """
-        if self.__empty_adjacent_coal_and_uranium is None:
-            self.__empty_adjacent_coal_and_uranium = set().union(
-                self.empty_adjacent_coal,
-                self.empty_adjacent_uranium
-                )
-        return self.__empty_adjacent_coal_and_uranium
-    
-    @property
-    def empty_adjacent_wood_and_uranium(self) -> Set[Cell]:
-        """
-        Collects set of all empty cells, adjacent to wood and uranium
-        
-        Returns:
-            Set[Cell]
-        """
-        if self.__empty_adjacent_wood_and_uranium is None:
-            self.__empty_adjacent_wood_and_uranium = set().union(
-                self.empty_adjacent_wood,
-                self.empty_adjacent_uranium
-                )
-        return self.__empty_adjacent_wood_and_uranium
-
-    @property
-    def empty_adjacent_any(self) -> Set[Cell]:
-        """
-        Collects set of all empty cells, adjacent to any resource
-        
-        Returns:
-            Set[Cell]
-        """
-        if self.__empty_adjacent_any is None:
-            self.__empty_adjacent_any = set().union(
-                self.empty_adjacent_wood,
-                self.empty_adjacent_coal,
-                self.empty_adjacent_uranium
-                )
-        return self.__empty_adjacent_any
+    def empty_adjacent_wood_coal(self) -> List[Cell]:
+        if self.__empty_adjacent_wood_coal is None:
+            self._set_empty_adjacent_res()
+        return self.__empty_adjacent_wood_coal
 
 
 class MultiCollection:
@@ -1426,7 +1486,11 @@ class MultiCollection:
             tiles=self.tiles,
             states=self.states
             )
-        self.tiles_resource = AdjacentToResourceTilesCollection(
+        # self.tiles_resource = AdjacentToResourceTilesCollection(
+        #     tiles=self.tiles,
+        #     states=self.states
+        #     )
+        self.adjcollection = AdjacentToResourceCollection(
             tiles=self.tiles,
             states=self.states
-            )
+        )

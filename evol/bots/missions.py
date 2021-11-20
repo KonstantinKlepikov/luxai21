@@ -299,11 +299,22 @@ class UnitMission(Mission):
             
     def _move_to_closest_available_tile_to_main(self, res_type: str = 'any') -> None:
         """Get move to closest available tile to main
+        
+        Args:
+            res_type (str): type of mining resources, defoult 'any'
+            Optional: 'any', 'wood', wood_coal'            
         """
-        cells = [
-            self.states.tiles.game_state.map.get_cell_by_pos(Position(coord[0], coord[1]))
-            for coord in self.adj_coord_unic
-            ]
+        cells = []
+        for coord in self.adj_coord_unic:
+            cell = self.states.tiles.game_state.map.get_cell_by_pos(Position(coord[0], coord[1]))
+            state = self.states.get_state(cell.pos)
+            if state.is_empty:
+                if res_type == 'any':
+                    cells.append(cell)
+                elif res_type == 'wood' and state.is_wood:
+                    cells.append(cell)
+                elif res_type == 'wood_coal' and (state.is_wood or state.is_coal):
+                    cells.append(cell)
         logger.info(f'> _move_to_closest_available_tile_to_main: cells {len(cells)}')
         closest = self._get_closest_pos(cells)
         logger.info(f'> _move_to_closest_available_tile_to_main: closest {closest}')
@@ -437,11 +448,11 @@ class WorkerMission(UnitMission):
         logger.info('> action_mine_resource: im here')
         logger.info(f'> action_mine_resource: available_pos: {self.available_pos}')
         if self._current_tile_state.is_city:
-            logger.info('> action_mine_resource: im in city and go mine')
-            self._move_to_closest_available_tile_to_main()
-        else:
-            adjacence = self._adjacent_tile_states
+            logger.info('> action_mine_resource: im in city')
             main_now = False
+        else:
+            main_now = False
+            adjacence = self._adjacent_tile_states
             for state in adjacence: 
                 if state.is_wood:
                     logger.info('> action_mine_resource: i mine wood')
@@ -455,18 +466,19 @@ class WorkerMission(UnitMission):
                     logger.info('action_mine_resource: i mine uranium')
                     main_now = True
                     break
-            if not main_now:
-                logger.info('> action_mine_resource: im not in city and go mine')
-                if self.tiles.player.researched_uranium():
-                    logger.info('> action_mine_resource: im go mine uranium')
-                    self._move_to_closest_available_tile_to_main()
-                elif self.tiles.player.researched_coal():
-                    logger.info('> action_mine_resource: im go mine coal')
-                    # self._move_to_closest_available_tile_to_main(res_type='wood_coal')
-                    self._move_to_closest_available_tile_to_main()
-                else:
-                    logger.info('> action_mine_resource: im go mine wood')
-                    # self._move_to_closest_available_tile_to_main(res_type='wood')
+        if not main_now:
+            logger.info('> action_mine_resource: im go mine')
+            # if self.tiles.player.researched_uranium():
+            #     logger.info('> action_mine_resource: im go mine uranium')
+            #     self._move_to_closest_available_tile_to_main(res_type='any')
+            # elif self.tiles.player.researched_coal():
+            #     logger.info('> action_mine_resource: im go mine coal')
+            #     self._move_to_closest_available_tile_to_main(res_type='wood_coal')
+            # else:
+            #     logger.info('> action_mine_resource: im go mine wood')
+            #     self._move_to_closest_available_tile_to_main(res_type='wood')
+            
+            self._move_to_closest_available_tile_to_main()
         
 
     def mission_buld_the_city(self) -> None:

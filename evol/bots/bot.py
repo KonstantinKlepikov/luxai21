@@ -8,7 +8,7 @@ from bots.utility import (
     MissionsState, Missions, Actions, MissionsChoosed,
     GameActiveObject
 )
-from collections import namedtuple
+from collections import ChainMap, namedtuple
 from typing import List, Tuple
 import os, sys, random
 
@@ -51,42 +51,28 @@ class BotPipe:
         difference from adjacent set
         """
         if self.collection.tiles.game_state.turn == 0:
-            # res coordinates and adjacent coordinates
-            self.transited.res_and_adj = {
-                tuple(self.collection.states.get_state(pos=pos).adjacent_dir_tuples.values()): pos
-                for pos in self.collection.tiles.resources_pos
-            }
-            logger.info(f'> update_resource_statements: res_and_adj {len(self.transited.res_and_adj)}')
-            # set of adjacent coordinates
-            self.transited.adj_coord_unic = {
-                coord
-                for val in self.transited.res_and_adj.keys()
-                for coord in val
-                if self.collection.states.get_state(Position(coord[0], coord[1])).is_empty
-                }
+            d = {}
+            for cell in self.collection.tiles.resources:
+                state = self.collection.states.get_state(pos=cell.pos)
+                adjaced = state.adjacent_dir_tuples.values()
+                d[(cell.pos.x, cell.pos.y)] = tuple(adjaced)
+                self.transited.adj_coord_unic.update(adjaced)
+            self.transited.adj_stack = ChainMap(d)
+            logger.info(f'> update_resource_statements: d {len(d)}')
             logger.info(f'> update_resource_statements: adj_coord_unic {len(self.transited.adj_coord_unic)}')
         else:
-            # new set of resources
-            d = {
-                coords: self.transited.res_and_adj[coords]
-                for coords in self.transited.res_and_adj.keys()
-                if self.collection.tiles.game_state.map.get_cell_by_pos(self.transited.res_and_adj[coords]).has_resource()
-                }
-            logger.info(f'> update_resource_statements: res_and_adj {len(self.transited.res_and_adj)}')
             logger.info(f'> update_resource_statements: adj_coord_unic {len(self.transited.adj_coord_unic)}')
-            logger.info(f'> update_resource_statements: d {len(d)}')
-            un = {
-                coord 
-                for seq
-                in d.keys()
-                for coord in seq
-                if self.collection.states.get_state(Position(coord[0], coord[1])).is_empty 
+            d = {(cell.pos.x, cell.pos.y): None for cell in self.collection.tiles.resources}
+            stack = self.transited.adj_stack.new_child(d)
+            diff = {
+                coord
+                for val in stack.values()
+                if val != None
+                for coord in val
                 }
-            # diff = {coord for val in d for coord in val}
-            logger.info(f'> update_resource_statements: diff {len(un)}')
-            self.transited.res_and_adj = d
-            self.transited.adj_coord_unic = un
-            logger.info(f'> update_resource_statements: res_and_adj {len(self.transited.res_and_adj)}')
+            self.transited.adj_coord_unic = self.transited.adj_coord_unic - diff
+            self.transited.adj_stack = stack.parents
+            logger.info(f'> update_resource_statements: d {len(d)}')
             logger.info(f'> update_resource_statements: adj_coord_unic {len(self.transited.adj_coord_unic)}')
 
     def init_missions_and_state_and_check_again(self):
