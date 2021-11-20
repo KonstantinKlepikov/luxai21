@@ -905,7 +905,7 @@ class TileState:
         """Is owned by player
         """
         if self.__is_owned_by_player is None:
-            if self.cell in self.tiles.player_own:
+            if self.cell.pos in self.tiles.player_own_pos:
                 self.__is_owned_by_player = True
                 self.__is_owned = True
             else:
@@ -917,7 +917,7 @@ class TileState:
         """Is owned by opponent
         """
         if self.__is_owned_by_opponent is None:
-            if self.cell in self.tiles.opponent_own:
+            if self.cell.pos in self.tiles.opponent_own_pos:
                 self.__is_owned_by_opponent = True
                 self.__is_owned = True
             else:
@@ -1152,12 +1152,13 @@ class ContestedTilesCollection:
             AvailablePos: sequence of tiles positions
         """
         if self.__tiles_free is None:
+            not_free = set()
             all_ = self.tiles_to_move
             for pos in all_:
                 tile_state = self.states.get_state(pos=Position(pos[0], pos[1]))
                 if tile_state.is_owned_by_opponent:
-                    all_.discard(pos)
-            self.__tiles_free  = all_
+                    not_free.add(pos)
+            self.__tiles_free = all_ - not_free
         return self.__tiles_free
 
 
