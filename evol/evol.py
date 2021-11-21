@@ -250,7 +250,7 @@ def main():
     # Hall of Fame info and best bot:
     # print("Hall of Fame Individuals = ", *hof.items, sep="\n")
     # print("Best Ever Individual = ", hof.items[0])
-    with open("bots_dump/best_bot_{timestamp}.json", "w") as f:
+    with open(f"bots_dump/best_bot_{timestamp}.json", "w") as f:
         json.dump(hof.items[0], f)
         
     with open(f"bots_dump/best_bot.json", "w") as f:

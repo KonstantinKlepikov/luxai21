@@ -262,36 +262,36 @@ class UnitMission(Mission):
         if closest:            
             self._collision_resolution(target=closest)
             
-    def _move_to_closest_available_tile_to_main(self) -> None:
+    def _move_to_closest_available_tile_to_mine(self) -> None:
         """Get move to closest available tile to main
         """
         self.collection.adjcollection.adj_coord_unic = self.adj_coord_unic
         logger.info(
-            '> _move_to_closest_available_tile_to_main: len adj_coord_unic '
+            '> _move_to_closest_available_tile_to_mine: len adj_coord_unic '
             f'{len(self.adj_coord_unic)}'
             )
         if self.collection.tiles.player.researched_uranium():
-            logger.info('> _move_to_closest_available_tile_to_main: im go mine uranium')
+            logger.info('> _move_to_closest_available_tile_to_mine: im go mine uranium')
             cells = self.collection.adjcollection.empty_adjacent_any
         elif self.collection.tiles.player.researched_coal():
-            logger.info('> _move_to_closest_available_tile_to_main: im go mine coal')
+            logger.info('> _move_to_closest_available_tile_to_mine: im go mine coal')
             cells = self.collection.adjcollection.empty_adjacent_wood_coal
         else:
-            logger.info('> _move_to_closest_available_tile_to_main: im go mine wood')
+            logger.info('> _move_to_closest_available_tile_to_mine: im go mine wood')
             cells = self.collection.adjcollection.empty_adjacent_wood
 
-        logger.info(f'> _move_to_closest_available_tile_to_main: cells {len(cells)}')
+        logger.info(f'> _move_to_closest_available_tile_to_mine: cells {len(cells)}')
         closest = self._get_closest_pos(cells)
-        logger.info(f'> _move_to_closest_available_tile_to_main: closest {closest}')
+        logger.info(f'> _move_to_closest_available_tile_to_mine: closest {closest}')
         if closest:            
             self._collision_resolution(target=closest)
-            logger.info(f'> _move_to_closest_available_tile_to_main: action {self.action}')
+            logger.info(f'> _move_to_closest_available_tile_to_mine: action {self.action}')
             if self.action:
                 cell = self.collection.tiles.game_state.map.get_cell_by_pos(closest)
-                logger.info(f'> _move_to_closest_available_tile_to_main: cell {cell}')
+                logger.info(f'> _move_to_closest_available_tile_to_mine: cell {cell}')
                 self.adj_coord_unic.discard((closest.x, closest.y))
                 logger.info(
-                    '> _move_to_closest_available_tile_to_main: len adj_coord_unic after remove '
+                    '> _move_to_closest_available_tile_to_mine: len adj_coord_unic after remove '
                     f'{len(self.adj_coord_unic)}'
                     )
 
@@ -431,7 +431,7 @@ class WorkerMission(UnitMission):
                     main_now = True
                     break
         if not main_now:            
-            self._move_to_closest_available_tile_to_main()
+            self._move_to_closest_available_tile_to_mine()
         
 
     def mission_buld_the_city(self) -> None:
