@@ -1,5 +1,5 @@
 from bots.statements import TilesCollection
-from bots.utility import ALL_MORNINGS, Rewards, Intermediate
+from bots.utility import ALL_MORNINGS, Rewards, CrossGameScore
 import statistics
 
 
@@ -63,7 +63,7 @@ class FinalScoring:
         rewards = [l[0] for l in self.rewards]
         return statistics.mean(rewards)
     
-    def day_plus_night_final_scoring(self, intermediate: Intermediate) -> int:
+    def day_plus_night_final_scoring(self, cross_game_score: CrossGameScore) -> int:
         """Get scoring, calculated at end of each night
         and weighted closest to end of game
         
@@ -75,28 +75,28 @@ class FinalScoring:
         Use day_plus_night_turn_scoring() from TurnScoring in agent_train.py
 
         Args:
-            intermediate: dict with number of cycles as keys
+            cross_game_score: dict with number of cycles as keys
             and scorinhgs as values
 
         Returns:
             int: mean scoring
         """
-        in_rewards = list(intermediate.values())
+        in_rewards = list(cross_game_score.values())
         rewards = [l[0] * 9 for l in self.rewards]
         zipped_rewards = zip(in_rewards, rewards)
         sum_rewards = [x + y for (x, y) in zipped_rewards]
         return statistics.mean(sum_rewards)
     
-    def each_day_final_scoring(self, intermediate: Intermediate) -> int:
+    def each_day_final_scoring(self, cross_game_score: CrossGameScore) -> int:
         """Get scoring, calculated at end of each turn of game and
         weighted by turn number.
 
         Args:
-            intermediate: dict with number of cycles as keys
+            cross_game_score: dict with number of cycles as keys
             and scorinhgs as values
 
         Returns:
             int: mean scoring
         """
-        in_rewards = list(intermediate.values())
+        in_rewards = list(cross_game_score.values())
         return statistics.mean(in_rewards)

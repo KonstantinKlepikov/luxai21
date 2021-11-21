@@ -3,9 +3,13 @@ from lux.game_objects import Player
 from lux.game_objects import Unit, City, CityTile
 from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
-from bots.utility import AvailablePos
+from bots.utility import (
+    UnicPos, GameObjects, GameActiveObject, MissionsState,
+    Coord
+)
 import os, sys
 from typing import List, Tuple, Union, Dict, Set
+from collections import ChainMap
 
 if os.path.exists("/kaggle"):  # check if we're on a kaggle server
     import logging
@@ -18,6 +22,15 @@ else:
     from loguru import logger  # log to file locally
 
 
+class TransitionStates:
+    """Statement transition to next turn"""
+    
+    def __init__(self) -> None:
+        self.missions_state: MissionsState = {}
+        self.adj_coord_unic: Set(Coord) = set()
+        self.adj_stack: ChainMap = ChainMap()
+
+
 class TilesCollection:
     """Get massive of tiles"""
 
@@ -28,6 +41,7 @@ class TilesCollection:
 
         self.__map_cells = None
         self.__map_cells_pos = None
+        self.__map_cells_pos_unic = None
 
         self.player_units = player.units
         self.__player_units_pos = None
@@ -61,7 +75,9 @@ class TilesCollection:
 
         self.__own = None
         self.__own_pos = None
+        self.__own_pos_unic = None
         self.__empty_pos = None
+        self.__empty_pos_unic = None
 
         self.__workers = None
         self.__workers_pos = None
@@ -86,9 +102,85 @@ class TilesCollection:
         self.__coals_pos = None
         self.__uraniums = None
         self.__uraniums_pos = None
+        
+        self.__city_units_diff = None
+        self.build_units_counter = 0
+        
+    def _pos(self, seq: GameObjects) -> List[Position]:
+        """Get sequence of positions
+
+        Args:
+            seq (GameObjects): sequence of objects
+
+        Returns:
+            List[Position]: list of Positions objects
+        """
+        return [cell.pos for cell in seq]
+    
+    def _unic_pos(self, seq: List[Position]) -> UnicPos:
+        """Get sequence of unic tuples of coordinates
+
+        Args:
+            seq (List[Position]): sequence of positions
+
+        Returns:
+            UnicPos: set of tupples
+        """
+        return {(pos.x, pos.y) for pos in seq}
+    
+    def _unit_ids(self, seq: List[GameActiveObject]) -> List[str]:
+        """Get sequence of unit id-s
+
+        Args:
+            seq (GameObjects): sequence of objects
+
+        Returns:
+            List[str]: list of ids
+        """
+        return [cell.id for cell in seq]
+    
+    def _city_ids(self, seq: List[City]) -> List[str]:
+        """Get sequence of city id-s
+
+        Args:
+            seq (GameObjects): sequence of objects
+
+        Returns:
+            List[str]: list of ids
+        """
+        return [cell.cityid for cell in seq]
+    
+    def _set_res_types(self) -> None:
+        """Set sequence of all resource types
+        """
+        resources = []
+        woods = []
+        coals = []
+        uraniums = []
+        for cell in self.map_cells:
+            if cell.has_resource():
+                resources.append(cell)
+                if cell.resource.type == cs.RESOURCE_TYPES.WOOD:
+                    woods.append(cell)
+                elif cell.resource.type == cs.RESOURCE_TYPES.COAL:
+                    coals.append(cell)
+                elif cell.resource.type == cs.RESOURCE_TYPES.URANIUM:
+                    uraniums.append(cell)
+        self.__resources = resources
+        self.__woods = woods
+        self.__coals = coals
+        self.__uraniums = uraniums
+        
+    def cities_can_build(self) -> bool:
+        """Cititiles can build
+
+        Returns:
+            bool: 
+        """
+        return (self.city_units_diff - self.build_units_counter) > 0
 
     @property
-    def map_cells(self) -> List[Cell]: # FIXME: to expensive. Calculate in first turn and recalculate later
+    def map_cells(self) -> List[Cell]:
         """
         Returns cells object of map.
 
@@ -114,8 +206,21 @@ class TilesCollection:
             List[Position]: game_map.Position object
         """
         if self.__map_cells_pos is None:
-            self.__map_cells_pos = [cell.pos for cell in self.map_cells]
+            self.__map_cells_pos = self._pos(self.map_cells)
         return self.__map_cells_pos
+    
+    @property
+    def map_cells_pos_unic(self) -> UnicPos:
+        """
+        Returns swquence of all positions.
+
+        Args:
+        Returns:
+            UnicPos: set of tuples
+        """
+        if self.__map_cells_pos_unic is None:
+            self.__map_cells_pos_unic = self._unic_pos(self.map_cells_pos)
+        return self.__map_cells_pos_unic
 
     # player
     @property
@@ -128,7 +233,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinate of the Unit (x: int, y: int).
         """
         if self.__player_units_pos is None:
-            self.__player_units_pos = [unit.pos for unit in self.player_units]
+            self.__player_units_pos = self.player_carts_pos + self.player_workers_pos
         return self.__player_units_pos
 
     @property
@@ -160,7 +265,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinate of the worker (x: int, y: int).
         """
         if self.__player_workers_pos is None:
-            self.__player_workers_pos = [unit.pos for unit in self.player_workers]
+            self.__player_workers_pos = self._pos(self.player_workers)
         return self.__player_workers_pos
 
     @property
@@ -192,7 +297,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinates of the cart (x: int, y: int).
         """
         if self.__player_carts_pos is None:
-            self.__player_carts_pos = [unit.pos for unit in self.player_carts]
+            self.__player_carts_pos = self._pos(self.player_carts)
         return self.__player_carts_pos
 
     @property
@@ -243,7 +348,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinate of the CityTile (x: int, y: int).
         """
         if self.__player_citytiles_pos is None:
-            self.__player_citytiles_pos = [city.pos for city in self.player_citytiles]
+            self.__player_citytiles_pos = self._pos(self.player_citytiles)
         return self.__player_citytiles_pos
 
     @property
@@ -269,7 +374,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinate of Unit or CityTile (x: int, y: int).
         """
         if self.__player_own_pos is None:
-            self.__player_own_pos = [cell.pos for cell in self.player_own]
+            self.__player_own_pos = self.player_units_pos + self.player_citytiles_pos
         return self.__player_own_pos
 
     # opponent
@@ -283,7 +388,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinate of the Unit (x: int, y: int).
         """
         if self.__opponent_units_pos is None:
-            self.__opponent_units_pos = [unit.pos for unit in self.opponent_units]
+            self.__opponent_units_pos = self.opponent_carts_pos + self.opponent_workers_pos
         return self.__opponent_units_pos
 
     @property
@@ -315,7 +420,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinate of the worker (x: int, y: int).
         """
         if self.__opponent_workers_pos is None:
-            self.__opponent_workers_pos = [unit.pos for unit in self.opponent_workers]
+            self.__opponent_workers_pos = self._pos(self.opponent_workers)
         return self.__opponent_workers_pos
 
     @property
@@ -347,7 +452,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinates of the cart (x: int, y: int).
         """
         if self.__opponent_carts_pos is None:
-            self.__opponent_carts_pos = [unit.pos for unit in self.opponent_carts]
+            self.__opponent_carts_pos = self._pos(self.opponent_carts)
         return self.__opponent_carts_pos
 
     @property
@@ -398,7 +503,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinate of the CityTile (x: int, y: int).
         """
         if self.__opponent_citytiles_pos is None:
-            self.__opponent_citytiles_pos = [city.pos for city in self.opponent_citytiles]
+            self.__opponent_citytiles_pos = self._pos(self.opponent_citytiles)
         return self.__opponent_citytiles_pos
 
     @property
@@ -424,7 +529,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinate of Unit or CityTile (x: int, y: int).
         """
         if self.__opponent_own_pos is None:
-            self.__opponent_own_pos = [cell.pos for cell in self.opponent_own]
+            self.__opponent_own_pos = self.opponent_units_pos + self.opponent_citytiles_pos
         return self.__opponent_own_pos
 
     # owns
@@ -453,6 +558,28 @@ class TilesCollection:
         if self.__own_pos is None:
             self.__own_pos = self.player_own_pos + self.opponent_own_pos
         return self.__own_pos
+    
+    @property
+    def own_pos_unic(self) -> UnicPos:
+        """Returns sequence of unic coordinates, owned by player or opponent
+
+        Returns:
+            UnicPos: set of tuples
+        """
+        if self.__own_pos_unic is None:
+            self.__own_pos_unic = self._unic_pos(self.own_pos)
+        return self.__own_pos_unic
+    
+    @property
+    def empty_pos_unic(self) -> UnicPos:
+        """Returns sequence of unic coordinates of notowned cells
+
+        Returns:
+            UnicPos: set of tuples
+        """
+        if self.__empty_pos_unic is None:
+            self.__empty_pos_unic = self.map_cells_pos_unic - self.own_pos_unic
+        return self.__empty_pos_unic
 
     @property
     def empty_pos(self) -> List[Position]:
@@ -464,10 +591,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinate of the empty Cell (x: int, y: int);
         """
         if self.__empty_pos is None:
-            map = {(pos.x, pos.y) for pos in self.map_cells_pos} # FIXME: move up (?)
-            own= {(pos.x, pos.y) for pos in self.own_pos}
-            diff = map - own
-            self.__empty_pos = [Position(coor[0], coor[1]) for coor in diff]
+            self.__empty_pos = [Position(coor[0], coor[1]) for coor in self.empty_pos_unic]
         return self.__empty_pos
 
     # units
@@ -520,7 +644,6 @@ class TilesCollection:
         """
         if self.__carts is None:
             self.__carts = self.player_carts + self.opponent_carts
-
         return self.__carts
 
     @property
@@ -613,7 +736,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinate of the tile (x: int, y: int).
         """
         if self.__roads_pos is None:
-            self.__roads_pos = [cell.pos for cell in self.roads]
+            self.__roads_pos = self._pos(self.roads)
         return self.__roads_pos
 
     # resources
@@ -633,7 +756,7 @@ class TilesCollection:
                 - road (int): 0.
         """
         if self.__resources is None:
-            self.__resources = [cell for cell in self.map_cells if cell.has_resource()]
+            self._set_res_types()
         return self.__resources
 
     @property
@@ -646,7 +769,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinate of the resource (x: int, y: int).
         """
         if self.__resources_pos is None:
-            self.__resources_pos = [cell.pos for cell in self.resources]
+            self.__resources_pos = self._pos(self.resources)
         return self.__resources_pos
 
     @property
@@ -665,7 +788,7 @@ class TilesCollection:
                 - road (int): 0.
         """
         if self.__woods is None:
-            self.__woods = [cell for cell in self.resources if cell.resource.type == cs.RESOURCE_TYPES.WOOD]
+            self._set_res_types()
         return self.__woods
 
     @property
@@ -678,7 +801,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinate of the wood (x: int, y: int).
         """
         if self.__woods_pos is None:
-            self.__woods_pos = [cell.pos for cell in self.woods]
+            self.__woods_pos = self._pos(self.woods)
         return self.__woods_pos
 
     @property
@@ -697,7 +820,7 @@ class TilesCollection:
                 - road (int): 0.
         """
         if self.__coals is None:
-            self.__coals = [cell for cell in self.resources if cell.resource.type == cs.RESOURCE_TYPES.COAL]
+            self._set_res_types()
         return self.__coals
 
     @property
@@ -710,7 +833,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinate of the coal (x: int, y: int).
         """
         if self.__coals_pos is None:
-            self.__coals_pos = [cell.pos for cell in self.coals]
+            self.__coals_pos = self._pos(self.coals)
         return self.__coals_pos
 
     @property
@@ -729,7 +852,7 @@ class TilesCollection:
                 - road (int): 0.
         """
         if self.__uraniums is None:
-            self.__uraniums = [cell for cell in self.resources if cell.resource.type == cs.RESOURCE_TYPES.URANIUM]
+            self._set_res_types()
         return self.__uraniums
 
     @property
@@ -742,7 +865,7 @@ class TilesCollection:
             List[Position]: game_map.Position object for coordinate of the uranium (x: int, y: int).
         """
         if self.__uraniums_pos is None:
-            self.__uraniums_pos = [cell.pos for cell in self.uraniums]
+            self.__uraniums_pos = self._pos(self.uraniums)
         return self.__uraniums_pos
 
     # identifiers
@@ -756,8 +879,34 @@ class TilesCollection:
             List[str]: city identifier in form 'c_1'
         """
         if self.__player_cities_id is None:
-            self.__player_cities_id = [city.cityid for city in self.player_cities]
+            self.__player_cities_id = self._city_ids(self.player_cities)
         return self.__player_cities_id
+
+    @property
+    def player_workers_id(self) -> List[str]:
+        """
+        Returns list of unique identifiers of Player's workers at a game map.
+
+        Args:
+        Returns:
+            List[str]: city identifier in form 'u_1'
+        """
+        if self.__player_workers_id is None:
+            self.__player_workers_id = self._unit_ids(self.player_workers)
+        return self.__player_workers_id
+
+    @property
+    def player_carts_id(self) -> List[str]:
+        """
+        Returns list of unique identifiers of Player's carts at a game map.
+
+        Args:
+        Returns:
+            List[str]: cart identifier in form 'u_1'
+        """
+        if self.__player_carts_id is None:
+            self.__player_carts_id = self._unit_ids(self.player_carts)
+        return self.__player_carts_id
 
     @property
     def opponent_cities_id(self) -> List[str]:
@@ -769,8 +918,34 @@ class TilesCollection:
             List[str]: city identifier in form 'c_1'
         """
         if self.__opponent_cities_id is None:
-            self.__opponent_cities_id = [city.cityid for city in self.opponent_cities]
+            self.__opponent_cities_id = self._city_ids(self.opponent_cities)
         return self.__opponent_cities_id
+    
+    @property
+    def opponent_workers_id(self) -> List[str]:
+        """
+        Returns list of unique identifiers of Opponent's workers at a game map.
+
+        Args:
+        Returns:
+            List[str]: city identifier in form 'u_1'
+        """
+        if self.__opponent_workers_id is None:
+            self.__opponent_workers_id = self._unit_ids(self.opponent_workers)
+        return self.__opponent_workers_id
+    
+    @property
+    def opponent_carts_id(self) -> List[str]:
+        """
+        Returns list of unique identifiers of Opponent's carts at a game map.
+
+        Args:
+        Returns:
+            List[str]: cart identifier in form 'u_1'
+        """
+        if self.__opponent_carts_id is None:
+            self.__opponent_carts_id = self._unit_ids(self.opponent_carts)
+        return self.__opponent_carts_id
 
     @property
     def cities_id(self) -> List[str]:
@@ -786,32 +961,6 @@ class TilesCollection:
         return self.__cities_id
 
     @property
-    def player_workers_id(self) -> List[str]:
-        """
-        Returns list of unique identifiers of Player's workers at a game map.
-
-        Args:
-        Returns:
-            List[str]: city identifier in form 'u_1'
-        """
-        if self.__player_workers_id is None:
-            self.__player_workers_id = [worker.id for worker in self.player_workers]
-        return self.__player_workers_id
-
-    @property
-    def opponent_workers_id(self) -> List[str]:
-        """
-        Returns list of unique identifiers of Opponent's workers at a game map.
-
-        Args:
-        Returns:
-            List[str]: city identifier in form 'u_1'
-        """
-        if self.__opponent_workers_id is None:
-            self.__opponent_workers_id = [worker.id for worker in self.opponent_workers]
-        return self.__opponent_workers_id
-
-    @property
     def workers_id(self) -> List[str]:
         """
         Returns list of unique identifiers of all workers at a game map.
@@ -825,32 +974,6 @@ class TilesCollection:
         return self.__workers_id
 
     @property
-    def player_carts_id(self) -> List[str]:
-        """
-        Returns list of unique identifiers of Player's carts at a game map.
-
-        Args:
-        Returns:
-            List[str]: cart identifier in form 'u_1'
-        """
-        if self.__player_carts_id is None:
-            self.__player_carts_id = [cart.id for cart in self.player_carts]
-        return self.__player_carts_id
-
-    @property
-    def opponent_carts_id(self) -> List[str]:
-        """
-        Returns list of unique identifiers of Opponent's carts at a game map.
-
-        Args:
-        Returns:
-            List[str]: cart identifier in form 'u_1'
-        """
-        if self.__opponent_carts_id is None:
-            self.__opponent_carts_id = [cart.id for cart in self.opponent_carts]
-        return self.__opponent_carts_id
-
-    @property
     def carts_id(self) -> List[str]:
         """
         Returns list of unique identifiers of all carts at a game map.
@@ -862,6 +985,18 @@ class TilesCollection:
         if self.__carts_id is None:
             self.__carts_id = self.player_carts_id + self.opponent_carts_id
         return self.__carts_id
+    
+    @property
+    def city_units_diff(self) -> int:
+        """Positive difference
+
+        Returns:
+            int: difference player cititiles and units - 0 or more
+        """
+        if self.__city_units_diff is None:
+            diff = len(self.player_citytiles) - len(self.player_units)
+            self.__city_units_diff = diff if diff >= 0 else 0
+        return self.__city_units_diff
 
 
 class TileState:
@@ -900,12 +1035,13 @@ class TileState:
         self.opponent_worker_object: Union[Unit, None] = None
         self.opponent_cart_object: Union[Unit, None] = None
 
+
     @property
     def is_owned_by_player(self) -> bool:
         """Is owned by player
         """
         if self.__is_owned_by_player is None:
-            if self.cell in self.tiles.player_own:
+            if self.cell.pos in self.tiles.player_own_pos:
                 self.__is_owned_by_player = True
                 self.__is_owned = True
             else:
@@ -917,7 +1053,7 @@ class TileState:
         """Is owned by opponent
         """
         if self.__is_owned_by_opponent is None:
-            if self.cell in self.tiles.opponent_own:
+            if self.cell.pos in self.tiles.opponent_own_pos:
                 self.__is_owned_by_opponent = True
                 self.__is_owned = True
             else:
@@ -929,7 +1065,7 @@ class TileState:
         """Is owned by any
         """
         if self.__is_owned is None:
-            self.__is_owned = bool(self.cell in self.tiles.own)
+            self.__is_owned = bool(self.cell.pos in self.tiles.own_pos)
         return self.__is_owned
 
     @property
@@ -969,11 +1105,11 @@ class TileState:
         """Returns type of resource
         """
         if self.__resource_type is None:
-            if self.cell in self.tiles.woods:
+            if self.is_wood:
                 self.__resource_type = cs.RESOURCE_TYPES.WOOD
-            elif self.cell in self.tiles.coals:
+            elif self.is_coal:
                 self.__resource_type = cs.RESOURCE_TYPES.COAL
-            elif self.cell in self.tiles.uraniums:
+            elif self.is_uranium:
                 self.__resource_type = cs.RESOURCE_TYPES.URANIUM
             else:
                 self.__resource_type = 'notype'
@@ -1089,6 +1225,8 @@ class TileStatesCollection:
 
     @property
     def player_active_obj_to_state(self) -> None:
+        """init all player unit objects in collection of tile states
+        """
         if self.__player_active_obj_to_state is None:
             carts = self.tiles.player_carts
             workers = self.tiles.player_workers
@@ -1102,6 +1240,8 @@ class TileStatesCollection:
 
     @property
     def opponent_active_obj_to_state(self) -> None:
+        """init all opponent unit objects in collection of tile states
+        """
         if self.__opponent_active_obj_to_state is None:
             carts = self.tiles.opponent_carts
             workers = self.tiles.opponent_workers
@@ -1129,11 +1269,11 @@ class ContestedTilesCollection:
         self.__tiles_free = None
 
     @property
-    def tiles_to_move(self) -> AvailablePos:
+    def tiles_to_move(self) -> UnicPos:
         """All adjacent to player units tiles
 
         Returns:
-            AvailablePos: sequence of tiles positions
+            UnicPos: sequence of tiles positions
         """
         if self.__tiles_to_move is None:
             all_ = []
@@ -1145,161 +1285,70 @@ class ContestedTilesCollection:
         return self.__tiles_to_move
 
     @property
-    def tiles_free(self) -> AvailablePos:
+    def tiles_free(self) -> UnicPos:
         """Available tiles, exclude opponent cities and units
 
         Returns:
-            AvailablePos: sequence of tiles positions
+            UnicPos: sequence of tiles positions
         """
         if self.__tiles_free is None:
-            all_ = self.tiles_to_move
-            for pos in all_:
+            self.__tiles_free = self.tiles_to_move.copy()
+            for pos in self.tiles_to_move:
                 tile_state = self.states.get_state(pos=Position(pos[0], pos[1]))
                 if tile_state.is_owned_by_opponent:
-                    all_.discard(pos)
-            self.__tiles_free  = all_
+                    self.__tiles_free.discard(pos)
         return self.__tiles_free
 
 
-class AdjacentToResourceTilesCollection:
-
+class AdjacentToResourceCollection:
+    
     def __init__(
         self,
         tiles: TilesCollection,
-        states: TileStatesCollection
+        states: TileStatesCollection,
         ) -> None:
-
         self.tiles = tiles
         self.states = states
-
-        self.__empty_adjacent_wood = None
-        self.__empty_adjacent_coal = None
-        self.__empty_adjacent_uranium = None
-        self.__empty_adjacent_wood_and_coal = None
-        self.__empty_adjacent_wood_and_uranium = None
-        self.__empty_adjacent_coal_and_uranium = None
+        self.adj_coord_unic: Set(Coord) = set()
         self.__empty_adjacent_any = None
+        self.__empty_adjacent_wood = None
+        self.__empty_adjacent_wood_coal = None
+        
+    def _set_empty_adjacent_res(self) -> None:
+        any_ = []
+        wood = []
+        wood_coal = []
+        for coord in self.adj_coord_unic:
+            pos = Position(coord[0], coord[1])
+            cell = self.states.tiles.game_state.map.get_cell_by_pos(pos)
+            state = self.states.get_state(pos)
+            if state.is_empty:
+                any_.append(cell)
+                if state.is_wood:
+                    wood.append(cell)
+                if self.tiles.player.researched_coal() and (state.is_wood or state.is_coal):
+                    wood_coal.append(cell)
+        self.__empty_adjacent_any = any_
+        self.__empty_adjacent_wood = wood
+        self.__empty_adjacent_wood_coal = wood_coal
 
     @property
-    def empty_adjacent_wood(self) -> Set[Cell]:
-        """
-        Collects set of all empty adjacent to wood cells
+    def empty_adjacent_any(self) -> List[Cell]:
+        if self.__empty_adjacent_any is None:
+            self._set_empty_adjacent_res()
+        return self.__empty_adjacent_any
 
-        Returns:
-            Set[Cell]
-        """
+    @property
+    def empty_adjacent_wood(self) -> List[Cell]:
         if self.__empty_adjacent_wood is None:
-            adj_to = set()
-            for pos in self.tiles.woods_pos:
-                state = self.states.get_state(pos=pos)
-                for adj_pos in state.adjacent:
-                    adj_state = self.states.get_state(pos=adj_pos)
-                    if adj_state.is_empty:
-                        cell = self.tiles.game_state.map.get_cell_by_pos(adj_pos)
-                        adj_to.add((cell))
-            self.__empty_adjacent_wood = adj_to
+            self._set_empty_adjacent_res()
         return self.__empty_adjacent_wood
     
     @property
-    def empty_adjacent_coal(self) -> Set[Cell]:
-        """
-        Collects set of all empty adjacent to coal cells
-
-        Returns:
-            Set[Cell]
-        """
-        if self.__empty_adjacent_coal is None:
-            adj_to = set()
-            for pos in self.tiles.coals_pos:
-                state = self.states.get_state(pos=pos)
-                for adj_pos in state.adjacent:
-                    adj_state = self.states.get_state(pos=adj_pos)
-                    if adj_state.is_empty:
-                        cell = self.tiles.game_state.map.get_cell_by_pos(adj_pos)
-                        adj_to.add((cell))
-            self.__empty_adjacent_coal = adj_to
-        return self.__empty_adjacent_coal
-    
-    @property
-    def empty_adjacent_uranium(self) -> Set[Cell]:
-        """
-        Collects set of all empty adjacent to uranium cells
-
-        Returns:
-            Set[Cell]
-        """
-        if self.__empty_adjacent_uranium is None:
-            adj_to = set()
-            for pos in self.tiles.uraniums_pos:
-                state = self.states.get_state(pos=pos)
-                for adj_pos in state.adjacent:
-                    adj_state = self.states.get_state(pos=adj_pos)
-                    if adj_state.is_empty:
-                        cell = self.tiles.game_state.map.get_cell_by_pos(adj_pos)
-                        adj_to.add((cell))
-            self.__empty_adjacent_uranium = adj_to
-        return self.__empty_adjacent_uranium
-
-    @property
-    def empty_adjacent_wood_and_coal(self) -> Set[Cell]:
-        """
-        Collects set of all empty cells, adjacent to wood and coal
-        
-        Returns:
-            Set[Cell]
-        """
-        if self.__empty_adjacent_wood_and_coal is None:
-            self.__empty_adjacent_wood_and_coal = set().union(
-                    self.empty_adjacent_wood,
-                    self.empty_adjacent_coal
-                    )
-        return self.__empty_adjacent_wood_and_coal
-    
-    @property
-    def empty_adjacent_coal_and_uranium(self) -> Set[Cell]:
-        """
-        Collects set of all empty cells, adjacent to coal and uranium
-        
-        Returns:
-           Set[Cell]
-        """
-        if self.__empty_adjacent_coal_and_uranium is None:
-            self.__empty_adjacent_coal_and_uranium = set().union(
-                self.empty_adjacent_coal,
-                self.empty_adjacent_uranium
-                )
-        return self.__empty_adjacent_coal_and_uranium
-    
-    @property
-    def empty_adjacent_wood_and_uranium(self) -> Set[Cell]:
-        """
-        Collects set of all empty cells, adjacent to wood and uranium
-        
-        Returns:
-            Set[Cell]
-        """
-        if self.__empty_adjacent_wood_and_uranium is None:
-            self.__empty_adjacent_wood_and_uranium = set().union(
-                self.empty_adjacent_wood,
-                self.empty_adjacent_uranium
-                )
-        return self.__empty_adjacent_wood_and_uranium
-
-    @property
-    def empty_adjacent_any(self) -> Set[Cell]:
-        """
-        Collects set of all empty cells, adjacent to any resource
-        
-        Returns:
-            Set[Cell]
-        """
-        if self.__empty_adjacent_any is None:
-            self.__empty_adjacent_any = set().union(
-                self.empty_adjacent_wood,
-                self.empty_adjacent_coal,
-                self.empty_adjacent_uranium
-                )
-        return self.__empty_adjacent_any
+    def empty_adjacent_wood_coal(self) -> List[Cell]:
+        if self.__empty_adjacent_wood_coal is None:
+            self._set_empty_adjacent_res()
+        return self.__empty_adjacent_wood_coal
 
 
 class MultiCollection:
@@ -1320,7 +1369,7 @@ class MultiCollection:
             tiles=self.tiles,
             states=self.states
             )
-        self.tiles_resource = AdjacentToResourceTilesCollection(
+        self.adjcollection = AdjacentToResourceCollection(
             tiles=self.tiles,
             states=self.states
-            )
+        )

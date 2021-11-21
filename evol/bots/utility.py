@@ -1,34 +1,8 @@
 from lux.game_constants import GAME_CONSTANTS as cs
-from lux.game_objects import Unit, CityTile, City
+from lux.game_objects import Unit, CityTile
 from lux.game_map import Cell
 from typing import List, Dict, NamedTuple, Union, Set, Tuple
 from collections import namedtuple
-
-
-def get_times_of_days() -> Dict[str, List[int]]:
-    """Get information about days and nights in game statement
-
-    Returns:
-        Dict[List[int]]: dict of lists with index numbers
-    """
-    
-    NIGHT_SOON = 25
-    NIGHT_START = 30
-    NIGHT_END = 39
-
-    days = []
-    evenings = []
-    nights = []
-
-    for day in range(361):
-        day_time = day % 40
-        if NIGHT_SOON <= day_time < NIGHT_START:
-            evenings.append(day)
-        elif NIGHT_START <= day_time <= NIGHT_END:
-            nights.append(day)
-        else:
-            days.append(day)
-    return {'day_list': days, 'evening_list': evenings, 'night_list': nights}
 
 
 def make_constants_nt(const: dict = cs, name: str = 'CONSTANTS') -> namedtuple:
@@ -73,14 +47,6 @@ def make_constants_nt(const: dict = cs, name: str = 'CONSTANTS') -> namedtuple:
     return nt
 
 
-def get_id(map_object: Union[City, Unit]) -> str:
-    """
-    Makes ID from City.cityid or Unit.id
-    Used for representation objects in logging only
-    """
-    return map_object.cityid if "cityid" in dir(map_object) else map_object.id
-
-
 CONSTANTS = make_constants_nt(const=cs)
 
 # day constants
@@ -110,6 +76,7 @@ def day_or_night_number(
         n = current // 40 * 2 + 1
     return n
 
+
 # Types
 
 # objects
@@ -117,9 +84,10 @@ ObjId = str
 GameActiveObject = Union[Unit, CityTile]
 GameObjects = List[Union[Cell, CityTile, Unit]]
 Resources = Dict[str, List[Cell]]
+Coord = Tuple[int, int]
 
 # positions
-AvailablePos = Set[Tuple[int]]
+UnicPos = Set[Tuple[int]]
 
 # missions
 MissionName = str
@@ -130,7 +98,15 @@ Missions = Dict[str, Union[Unit, CityTile, List[MissionName]]]
 
 # scoring
 Rewards = List[List[int]]
-Intermediate = Dict[str, str]
+CrossGameScore = Dict[str, str]
 
 # game actions
 Actions = List[str]
+
+
+def get_id(map_object: GameActiveObject) -> str:
+    """
+    Makes ID from City.cityid or Unit.id
+    Used for representation objects in logging only
+    """
+    return map_object.cityid if "cityid" in dir(map_object) else map_object.id

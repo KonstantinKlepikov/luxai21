@@ -2,6 +2,7 @@ from deap import base, creator, tools, algorithms
 from kaggle_environments import evaluate
 from bots.genutil import GenConstruct
 from bots.scoring import FinalScoring
+from bots.statements import TransitionStates
 import agent_train
 import agent_random
 import numpy as np
@@ -90,9 +91,9 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
     agent_train.gen_const = gen_const
     # agent_train.genome = gen_const.convert_day_genome(vector=individual)
     agent_train.genome = gen_const.convert_daily_genome(vector=individual)
-    agent_train.intermediate = {}
-    agent_train.game_eval = -1
-    agent_train.missions_state = {}
+    agent_train.cross_game_score = {}
+    agent_train.game_num = -1
+    agent_train.transited = TransitionStates()
     rewards = evaluate(
         'lux_ai_2021',
         [agent_train.agent, 'simple_agent'],
@@ -109,12 +110,12 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
     
     # day plus night final scoring
     # mean_r = final_scoring.day_plus_night_final_scoring(
-    #     intermediate=agent_train.intermediate
+    #     cross_game_score=agent_train.cross_game_score
     #     )
     
     # each day final scoring
     mean_r = final_scoring.each_day_final_scoring(
-        intermediate=agent_train.intermediate
+        cross_game_score=agent_train.cross_game_score
         )
 
     return mean_r,
@@ -249,7 +250,7 @@ def main():
     # Hall of Fame info and best bot:
     # print("Hall of Fame Individuals = ", *hof.items, sep="\n")
     # print("Best Ever Individual = ", hof.items[0])
-    with open("bots_dump/best_bot_{timestamp}.json", "w") as f:
+    with open(f"bots_dump/best_bot_{timestamp}.json", "w") as f:
         json.dump(hof.items[0], f)
         
     with open(f"bots_dump/best_bot.json", "w") as f:
