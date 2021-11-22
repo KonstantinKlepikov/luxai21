@@ -5,7 +5,7 @@ from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
 from bots.utility import (
     UnicPos, GameObjects, GameActiveObject, MissionsState,
-    Coord
+    Coord, AD
 )
 import os, sys
 from typing import List, Tuple, Union, Dict, Set
@@ -41,7 +41,8 @@ class TilesCollection:
 
         self.__map_cells = None
         self.__map_cells_pos = None
-        self.__map_cells_pos_unic = None
+        # self.__map_cells_pos_unic = None
+        self.map_cells_pos_unic: UnicPos = AD[game_state.map_height]['unic_pos']
 
         self.player_units = player.units
         self.__player_units_pos = None
@@ -209,18 +210,18 @@ class TilesCollection:
             self.__map_cells_pos = self._pos(self.map_cells)
         return self.__map_cells_pos
     
-    @property
-    def map_cells_pos_unic(self) -> UnicPos:
-        """
-        Returns swquence of all positions.
+    # @property
+    # def map_cells_pos_unic(self) -> UnicPos:
+    #     """
+    #     Returns swquence of all positions.
 
-        Args:
-        Returns:
-            UnicPos: set of tuples
-        """
-        if self.__map_cells_pos_unic is None:
-            self.__map_cells_pos_unic = self._unic_pos(self.map_cells_pos)
-        return self.__map_cells_pos_unic
+    #     Args:
+    #     Returns:
+    #         UnicPos: set of tuples
+    #     """
+    #     if self.__map_cells_pos_unic is None:
+    #         self.__map_cells_pos_unic = self._unic_pos(self.map_cells_pos)
+    #     return self.__map_cells_pos_unic
 
     # player
     @property
