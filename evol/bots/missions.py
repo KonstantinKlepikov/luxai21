@@ -311,7 +311,7 @@ class UnitMission(Mission):
         adjacence = self._adjacent_tile_states
         logger.info(f'> _transfer_resource: adjacence {adjacence}')
 
-        for state in adjacency:
+        for state in adjacence:
             # logger.info(f'> _transfer_resource: state {state}')
             if state.player_cart_object and state.player_cart_object.get_cargo_space_left():
                 # logger.info('> _transfer_resource: cart is adjacent and has empty space')
