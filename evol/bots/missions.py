@@ -1,15 +1,15 @@
 from lux.game_objects import Unit, CityTile
-from lux.game_map import Position, Cell
+from lux.game_map import Position
 from bots.utility import CONSTANTS as cs
 from bots.statements import (
-    MultiCollection, TileState, TransitionStates
+    MultiCollection, TileState, StorageStates
 )
 from bots.utility import (
-    GameActiveObject, GameObjects, MissionsState, 
-    Missions, UnicPos, Coord
+    GameActiveObject, MissionsState, 
+    Missions, UnicPos, Coord, AD
 )
 from typing import List, Tuple, Union, Set
-import os, sys, math, random
+import os, sys, random
 
 if os.path.exists("/kaggle"): # check if we're on a kaggle server
     import logging
@@ -37,7 +37,7 @@ class Mission:
     def __init__(
         self, 
         collection: MultiCollection,
-        translated: TransitionStates,
+        translated: StorageStates,
         obj_: GameActiveObject
         ) -> None:
         self.collection = collection
@@ -46,17 +46,6 @@ class Mission:
         self.missions:  Missions = {'obj': obj_, 'missions': []}
         self.action: str = None
         self.check_again: GameActiveObject = None
-
-    def _get_distance(self, target_pos: Position) -> float:
-        """Get distance between positions
-        Args:
-            target_pos (Position): position object
-
-        Returns:
-            float: the Manhattan (rectilinear) distance 
-        """
-        
-        return self.obj.pos.distance_to(target_pos)
 
     def _get_direction(self, target_pos: Position) -> str:
         """Get direction to target position
@@ -81,8 +70,8 @@ class Mission:
         """Get position by direction"""
                 
         return self.obj.pos.translate(pos_dir, eq)
-    
-    def _get_closest_pos(self, positions: GameObjects) -> Position:
+
+    def _get_closest_pos(self, positions: List[Position]) -> Position:
         """Get closest position
 
         Args:
@@ -91,16 +80,17 @@ class Mission:
         Returns:
             Position: closest Position object
         """
-        closest_dist = math.inf
-        closest_pos = None
-        for position in positions:
-            dist = self.obj.pos.distance_to(position.pos)
-            if dist < closest_dist:
-                closest_dist = dist
-                closest_pos = position
-        if closest_pos:     
-            return closest_pos.pos
-
+        distance = AD[self.collection.tiles.game_state.map_height]['distance'][(self.obj.pos.x, self.obj.pos.y)]
+        dist = {
+            val: key
+            for key, val in distance.items()
+            if Position(key[0], key[1]) in positions
+            }
+        if dist:
+            min_value = min(dist.keys())
+            pos = dist[min_value]
+            closest_pos = Position(pos[0], pos[1])
+            return closest_pos
 
 class CityMission(Mission):
     """Citytile object missions with his possible actions
@@ -114,7 +104,7 @@ class CityMission(Mission):
     def __init__(
         self,
         collection: MultiCollection,
-        translated: TransitionStates,
+        translated: StorageStates,
         obj_: GameActiveObject
         ) -> None:
         super().__init__(collection, translated, obj_)
@@ -174,7 +164,7 @@ class UnitMission(Mission):
     def __init__(
         self,
         collection: MultiCollection,
-        translated: TransitionStates,
+        translated: StorageStates,
         obj_: GameActiveObject
         ) -> None:
         super().__init__(collection, translated, obj_)
@@ -197,7 +187,7 @@ class UnitMission(Mission):
             list of statements of adjacent tiles
         """
         if self.__adjacent_tile_states is None:
-            adjacent = self._current_tile_state.adjacent
+            adjacent = self._current_tile_state.adjacent_pos
             states = []
             for pos in adjacent:
                 tile_state = self.collection.states.get_state(pos=pos)
@@ -213,7 +203,7 @@ class UnitMission(Mission):
             available_pos (UnicPos): dict wih directions and tuple with
             positions x, y
         """
-        adj_dir = self._current_tile_state.adjacent_dir_tuples
+        adj_dir = self._current_tile_state.adjacent_dir_unic_pos
         logger.info(f'> _collision_resolution: available_pos {self.available_pos}')
         logger.info(f'> _collision_resolution: adjacent_dir {adj_dir}')
         logger.info(f'> _collision_resolution: dir_to_target {self.obj.pos.direction_to(target)}')
@@ -252,13 +242,13 @@ class UnitMission(Mission):
                     logger.info(f'> _collision_resolution: broken position {dir}')
                     continue
 
-    def _move_to_closest(self, tiles: List[Cell]) -> None:
+    def _move_to_closest(self, pos: List[Position]) -> None:
         """Get move to closest tile of given type action
 
         Args:
-            tiles (List[Cell]): list of tiles for closest calculation
+            pos (List[Position]): list of positions for closest calculation
         """
-        closest = self._get_closest_pos(tiles)
+        closest = self._get_closest_pos(pos)
         if closest:            
             self._collision_resolution(target=closest)
             
@@ -272,16 +262,16 @@ class UnitMission(Mission):
             )
         if self.collection.tiles.player.researched_uranium():
             logger.info('> _move_to_closest_available_tile_to_mine: im go mine uranium')
-            cells = self.collection.adjcollection.empty_adjacent_any
+            positions = self.collection.adjcollection.empty_adjacent_any_pos
         elif self.collection.tiles.player.researched_coal():
             logger.info('> _move_to_closest_available_tile_to_mine: im go mine coal')
-            cells = self.collection.adjcollection.empty_adjacent_wood_coal
+            positions = self.collection.adjcollection.empty_adjacent_wood_coal_pos
         else:
             logger.info('> _move_to_closest_available_tile_to_mine: im go mine wood')
-            cells = self.collection.adjcollection.empty_adjacent_wood
+            positions = self.collection.adjcollection.empty_adjacent_wood_pos
 
-        logger.info(f'> _move_to_closest_available_tile_to_mine: cells {len(cells)}')
-        closest = self._get_closest_pos(cells)
+        logger.info(f'> _move_to_closest_available_tile_to_mine: pos {len(positions)}')
+        closest = self._get_closest_pos(positions=positions)
         logger.info(f'> _move_to_closest_available_tile_to_mine: closest {closest}')
         if closest:            
             self._collision_resolution(target=closest)
@@ -385,7 +375,7 @@ class UnitMission(Mission):
             self._transfer_resource()
         if not self.action:
             logger.info('> action_drop_the_resources: im go to closest city')
-            self._move_to_closest(tiles=self.collection.tiles.player_citytiles)
+            self._move_to_closest(pos=self.collection.tiles.player_citytiles_pos)
 
 
 class WorkerMission(UnitMission):
@@ -477,7 +467,7 @@ class CartMission(UnitMission):
         """Cart action move to closest resource
         """
         logger.info('> action_cart_harvest: im here and go to closest worker')
-        self._move_to_closest(tiles=self.collection.tiles.player_workers)
+        self._move_to_closest(pos=self.collection.tiles.player_workers_pos)
 
 
 class Perform:
@@ -488,7 +478,7 @@ class Perform:
     def __init__(
         self,
         collection: MultiCollection,
-        translated: TransitionStates,
+        translated: StorageStates,
         obj_: GameActiveObject
         ) -> None:
         self.collection = collection
@@ -576,7 +566,7 @@ class PerformActions(Perform):
     def __init__(
         self,
         collection: MultiCollection,
-        translated: TransitionStates,
+        translated: StorageStates,
         obj_: GameActiveObject,
         available_pos: UnicPos,
         ) -> None:

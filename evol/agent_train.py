@@ -1,5 +1,5 @@
 from lux.game import Game
-from bots.statements import TilesCollection, TransitionStates
+from bots.statements import TilesCollection, StorageStates
 import bots.bot as bot
 from bots.scoring import TurnScoring
 from bots.utility import CrossGameScore
@@ -16,7 +16,7 @@ genome = None
 game_num: int = -1
 # dict where key is a game_num and value is a that game scour
 cross_game_score: CrossGameScore = {}
-transited = TransitionStates()
+storage = StorageStates()
 
 
 def agent(observation, configuration):
@@ -25,7 +25,7 @@ def agent(observation, configuration):
     global genome
     global cross_game_score
     global game_num
-    global transited
+    global storage
 
     # Do not edit
     if observation["step"] == 0:
@@ -52,7 +52,7 @@ def agent(observation, configuration):
         game_num += 1
         cross_game_score[game_num] = 0
         # drop missions_state each game
-        transited.missions_state = {}
+        storage.missions_state = {}
 
     turn_scoring = TurnScoring(
         turn=game_state.turn, 
@@ -74,7 +74,7 @@ def agent(observation, configuration):
         game_state=game_state,
         player=player,
         opponent=opponent,
-        transited=transited,
+        storage=storage,
         gen_const=gen_const
         )
 

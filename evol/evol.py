@@ -2,7 +2,8 @@ from deap import base, creator, tools, algorithms
 from kaggle_environments import evaluate
 from bots.genutil import GenConstruct
 from bots.scoring import FinalScoring
-from bots.statements import TransitionStates
+from bots.statements import StorageStates
+from bots.utility import AD
 import agent_train
 import agent_random
 import numpy as np
@@ -93,7 +94,7 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
     agent_train.genome = gen_const.convert_daily_genome(vector=individual)
     agent_train.cross_game_score = {}
     agent_train.game_num = -1
-    agent_train.transited = TransitionStates()
+    agent_train.storage = StorageStates()
     rewards = evaluate(
         'lux_ai_2021',
         [agent_train.agent, 'simple_agent'],
@@ -264,7 +265,6 @@ def main():
 
     end = datetime.datetime.now().replace(microsecond=0)
     cum = end - start
-    print(f'time on this step: {cum}')
     
     # plot statistics:
     sns.set_style("whitegrid")

@@ -1,6 +1,6 @@
 from lux.game_constants import GAME_CONSTANTS as cs
 from lux.game_objects import Unit, CityTile
-from lux.game_map import Cell
+from lux.game_map import Cell, Position
 from typing import List, Dict, NamedTuple, Union, Set, Tuple
 from collections import namedtuple
 
@@ -84,10 +84,12 @@ ObjId = str
 GameActiveObject = Union[Unit, CityTile]
 GameObjects = List[Union[Cell, CityTile, Unit]]
 Resources = Dict[str, List[Cell]]
-Coord = Tuple[int, int]
+Coord = Tuple[int]
 
 # positions
 UnicPos = Set[Tuple[int]]
+MapData = Union[Dict[Coord, Dict[Coord, Union[str, float]]], Set[Coord]]
+AdjDis = Dict[int, Dict[str, MapData]]
 
 # missions
 MissionName = str
@@ -110,3 +112,52 @@ def get_id(map_object: GameActiveObject) -> str:
     Used for representation objects in logging only
     """
     return map_object.cityid if "cityid" in dir(map_object) else map_object.id
+
+def map_adjacences_and_distancies() -> AdjDis:
+    """Calculate all ajacence for all cells for all sizes
+    Then calculate all distaces between cells
+    
+    Data:
+    
+    {map size: {
+        'adjacence': {coord: list of coord}, 'distance': {coord: {coord: float}}, 'unic_pos': set(coord)}
+        }
+
+    Returns:
+        AdjDis: dict with data
+    """
+    
+    sizes = [12, 16, 24, 32]
+    coord_state = {}
+    for size in sizes:
+        coords = [(x, y) for x in range(size) for y in range(size)]
+        data = {'adjacence': {}, 'distance': {}, 'unic_pos': set()}
+        for coord in coords:
+            x = coord[0]
+            y = coord[1]
+            
+            data['unic_pos'].add(coord)
+
+            current = Position(x, y)
+            adj = {}
+            if (x - 1) >= 0:
+                adj[(x - 1, y)] = 'w'
+            if (y + 1) < size:
+                adj[(x, y + 1)] = 's'
+            if (x + 1) < size:
+                adj[(x + 1, y)] = 'e'
+            if (y - 1) >= 0:
+                adj[(x, y - 1)] = 'n'
+            data['adjacence'][coord] = adj
+            
+            dis = {}
+            for remote in coords:
+                if remote != coord:
+                    dis[remote] = current.distance_to(Position(remote[0], remote[1]))
+            data['distance'][coord] = dis
+
+        coord_state[size] = data
+
+    return coord_state
+
+AD = map_adjacences_and_distancies()
