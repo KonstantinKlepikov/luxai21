@@ -2,7 +2,7 @@ from lux.game import Game
 from bots.statements import TilesCollection, TransitionStates
 import bots.bot as bot
 from bots.scoring import TurnScoring
-from bots.utility import CrossGameScore
+from bots.utility import CrossGameScore, AD
 from loguru import logger
 
 

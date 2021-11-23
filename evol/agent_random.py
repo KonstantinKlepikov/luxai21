@@ -1,5 +1,6 @@
 from lux.game import Game
 from bots.genutil import GenConstruct
+from bots.utility import AD
 import bots.bot as bot
 from bots.statements import TransitionStates
 from loguru import logger

@@ -3,6 +3,7 @@ from kaggle_environments import evaluate
 from bots.genutil import GenConstruct
 from bots.scoring import FinalScoring
 from bots.statements import TransitionStates
+from bots.utility import AD
 import agent_train
 import agent_random
 import numpy as np

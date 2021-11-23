@@ -128,10 +128,14 @@ def map_adjacences_and_distancies() -> AdjDis:
 
             current = Position(x, y)
             adj = {}
-            adj[(x - 1, y)] = 'w' if (x - 1) >= 0 else None
-            adj[(x, y + 1)] = 's' if (y + 1) < size else None
-            adj[(x + 1, y)] = 'e' if (x + 1) < size else None
-            adj[(x, y - 1)] = 'n' if (y - 1) >=0 else None
+            if (x - 1) >= 0:
+                adj[(x - 1, y)] = 'w'
+            if (y + 1) < size:
+                adj[(x, y + 1)] = 's'
+            if (x + 1) < size:
+                adj[(x + 1, y)] = 'e'
+            if (y - 1) >= 0:
+                adj[(x, y - 1)] = 'n'
             data['adjacence'][coord] = adj
             
             dis = {}

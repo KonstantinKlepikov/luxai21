@@ -1,5 +1,6 @@
 from lux.game import Game
 from bots.genutil import GenConstruct
+from bots.utility import AD
 from bots.statements import TransitionStates
 import bots.bot as bot
 import os, sys, json

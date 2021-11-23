@@ -44,9 +44,9 @@ class BotPipe:
     def update_resource_and_unit_statements(self):
         """Update resource and unit statements and set transited between turns statements
         
-        NOTE: calculate position of resources and adjacent set in turn 0
+        NOTE: calculate position of resources and adjaced set in turn 0
         Then in subseqwence turns calculate new positions of resource and remove 
-        difference from adjacent set
+        difference from adjaced set
         """
         logger.info('------update_resource_and_unit_statements------')
         # init all unit objects in collection of tile states
@@ -56,7 +56,7 @@ class BotPipe:
             d = {}
             for cell in self.collection.tiles.resources:
                 state = self.collection.states.get_state(pos=cell.pos)
-                adjaced = state.adjacent_dir_tuples.values()
+                adjaced = state.adjaced_dir_unic_pos.values()
                 d[(cell.pos.x, cell.pos.y)] = tuple(adjaced)
                 self.transited.adj_coord_unic.update(adjaced)
             self.transited.adj_stack = ChainMap(d)
