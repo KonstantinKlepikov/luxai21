@@ -1013,9 +1013,9 @@ class TileState:
         self.__is_cart = None
 
         self.__is_empty = None
-        self.__adjaced_pos = None
+        self.__adjacent_pos = None
         self.__adjacence_dir = None
-        self.__adjaced_dir_unic_pos = None
+        self.__adjacent_dir_unic_pos = None
         self.__adjacence_unic_pos = None
 
         self.player_worker_object: Union[Unit, None] = None
@@ -1161,7 +1161,7 @@ class TileState:
 
     @property
     def adjacence_dir(self) -> Dict[str, Position]:
-        """Calculate dict, where keys are directions, values - positions of adjaced tiles
+        """Calculate dict, where keys are directions, values - positions of adjacent tiles
 
         Returns:
             Dict[str, Position]: dict with positions and directions
@@ -1174,36 +1174,36 @@ class TileState:
             # self.__adjacence_dir = {}
             # for dir in cs.DIRECTIONS:
             #     if dir != 'c':
-            #         adjaced_cell = self.pos.translate(dir, 1)
-            #         if 0 <= adjaced_cell.x < self.map_width and 0 <= adjaced_cell.y < self.map_height:
-            #             self.__adjacence_dir[dir] = adjaced_cell
+            #         adjacent_cell = self.pos.translate(dir, 1)
+            #         if 0 <= adjacent_cell.x < self.map_width and 0 <= adjacent_cell.y < self.map_height:
+            #             self.__adjacence_dir[dir] = adjacent_cell
         return self.__adjacence_dir
 
     @property
-    def adjaced_pos(self) -> List[Position]:
-        """Calculate list of position of adjaced tiles
+    def adjacent_pos(self) -> List[Position]:
+        """Calculate list of position of adjacent tiles
 
         Returns:
             List[Position]: list of positions
         """
-        if self.__adjaced_pos is None:
-            self.__adjaced_pos = list(self.adjacence_dir.values())
-        return self.__adjaced_pos
+        if self.__adjacent_pos is None:
+            self.__adjacent_pos = list(self.adjacence_dir.values())
+        return self.__adjacent_pos
 
     @property
-    def adjaced_dir_unic_pos(self) -> Dict[str, Tuple[int]]:
+    def adjacent_dir_unic_pos(self) -> Dict[str, Tuple[int]]:
         """Calculate dict, where keys are directions, values - tuples of x, y positions
 
         Returns:
             Dict(str, Tuple[int]): dict with directions and tuples with coordinates
         """
-        if self.__adjaced_dir_unic_pos is None:
-            self.__adjaced_dir_unic_pos = {
+        if self.__adjacent_dir_unic_pos is None:
+            self.__adjacent_dir_unic_pos = {
                 val: key
                 for key, val in AD[self.map_width]['adjacence'][(self.pos.x, self.pos.y)].items()
                 }
-            # self.__adjaced_dir_unic_pos = {item[0]: (item[1].x, item[1].y) for item in self.adjacence_dir.items()}
-        return self.__adjaced_dir_unic_pos
+            # self.__adjacent_dir_unic_pos = {item[0]: (item[1].x, item[1].y) for item in self.adjacence_dir.items()}
+        return self.__adjacent_dir_unic_pos
 
 
 class TileStatesCollection:
@@ -1277,7 +1277,7 @@ class ContestedTilesCollection:
 
     @property
     def tiles_to_move(self) -> UnicPos:
-        """All adjaced to player units tiles
+        """All adjacent to player units tiles
 
         Returns:
             UnicPos: sequence of tiles positions
@@ -1316,14 +1316,14 @@ class AdjacentToResourceCollection:
         self.tiles = tiles
         self.states = states
         self.adj_coord_unic: Set(Coord) = set()
-        # self.__empty_adjaced_any = None
-        self.__empty_adjaced_any_pos = None
-        # self.__empty_adjaced_wood = None
-        self.__empty_adjaced_wood_pos = None
-        # self.__empty_adjaced_wood_coal = None
-        self.__empty_adjaced_wood_coal_pos = None
+        # self.__empty_adjacent_any = None
+        self.__empty_adjacent_any_pos = None
+        # self.__empty_adjacent_wood = None
+        self.__empty_adjacent_wood_pos = None
+        # self.__empty_adjacent_wood_coal = None
+        self.__empty_adjacent_wood_coal_pos = None
         
-    # def _set_empty_adjaced_res(self) -> None:
+    # def _set_empty_adjacent_res(self) -> None:
     #     any_ = []
     #     wood = []
     #     wood_coal = []
@@ -1337,11 +1337,11 @@ class AdjacentToResourceCollection:
     #                 wood.append(cell)
     #             if self.tiles.player.researched_coal() and (state.is_wood or state.is_coal):
     #                 wood_coal.append(cell)
-    #     self.__empty_adjaced_any = any_
-    #     self.__empty_adjaced_wood = wood
-    #     self.__empty_adjaced_wood_coal = wood_coal
+    #     self.__empty_adjacent_any = any_
+    #     self.__empty_adjacent_wood = wood
+    #     self.__empty_adjacent_wood_coal = wood_coal
         
-    def _set_empty_adjaced_res_pos(self) -> None:
+    def _set_empty_adjacent_res_pos(self) -> None:
         any_ = []
         wood = []
         wood_coal = []
@@ -1354,9 +1354,9 @@ class AdjacentToResourceCollection:
                     wood.append(pos)
                 if self.tiles.player.researched_coal() and (state.is_wood or state.is_coal):
                     wood_coal.append(pos)
-        self.__empty_adjaced_any_pos = any_
-        self.__empty_adjaced_wood_pos = wood
-        self.__empty_adjaced_wood_coal_pos = wood_coal
+        self.__empty_adjacent_any_pos = any_
+        self.__empty_adjacent_wood_pos = wood
+        self.__empty_adjacent_wood_coal_pos = wood_coal
         
     # def _pos(self, seq: GameObjects) -> List[Position]:
     #     """Get sequence of positions
@@ -1370,40 +1370,40 @@ class AdjacentToResourceCollection:
     #     return [cell.pos for cell in seq]
 
     # @property
-    # def empty_adjaced_any(self) -> List[Cell]:
-    #     if self.__empty_adjaced_any is None:
-    #         self._set_empty_adjaced_res()
-    #     return self.__empty_adjaced_any
+    # def empty_adjacent_any(self) -> List[Cell]:
+    #     if self.__empty_adjacent_any is None:
+    #         self._set_empty_adjacent_res()
+    #     return self.__empty_adjacent_any
     
     @property
-    def empty_adjaced_any_pos(self) -> List[Position]:
-        if self.__empty_adjaced_any_pos is None:
-            self._set_empty_adjaced_res_pos()
-        return self.__empty_adjaced_any_pos
+    def empty_adjacent_any_pos(self) -> List[Position]:
+        if self.__empty_adjacent_any_pos is None:
+            self._set_empty_adjacent_res_pos()
+        return self.__empty_adjacent_any_pos
 
     # @property
-    # def empty_adjaced_wood(self) -> List[Cell]:
-    #     if self.__empty_adjaced_wood is None:
-    #         self._set_empty_adjaced_res()
-    #     return self.__empty_adjaced_wood
+    # def empty_adjacent_wood(self) -> List[Cell]:
+    #     if self.__empty_adjacent_wood is None:
+    #         self._set_empty_adjacent_res()
+    #     return self.__empty_adjacent_wood
     
     @property
-    def empty_adjaced_wood_pos(self) -> List[Position]:
-        if self.__empty_adjaced_wood_pos is None:
-            self._set_empty_adjaced_res_pos()
-        return self.__empty_adjaced_wood_pos
+    def empty_adjacent_wood_pos(self) -> List[Position]:
+        if self.__empty_adjacent_wood_pos is None:
+            self._set_empty_adjacent_res_pos()
+        return self.__empty_adjacent_wood_pos
     
     # @property
-    # def empty_adjaced_wood_coal(self) -> List[Cell]:
-    #     if self.__empty_adjaced_wood_coal is None:
-    #         self._set_empty_adjaced_res()
-    #     return self.__empty_adjaced_wood_coal
+    # def empty_adjacent_wood_coal(self) -> List[Cell]:
+    #     if self.__empty_adjacent_wood_coal is None:
+    #         self._set_empty_adjacent_res()
+    #     return self.__empty_adjacent_wood_coal
     
     @property
-    def empty_adjaced_wood_coal_pos(self) -> List[Position]:
-        if self.__empty_adjaced_wood_coal_pos is None:
-            self._set_empty_adjaced_res_pos()
-        return self.__empty_adjaced_wood_coal_pos
+    def empty_adjacent_wood_coal_pos(self) -> List[Position]:
+        if self.__empty_adjacent_wood_coal_pos is None:
+            self._set_empty_adjacent_res_pos()
+        return self.__empty_adjacent_wood_coal_pos
 
 
 class MultiCollection:
