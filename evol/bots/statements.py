@@ -22,15 +22,6 @@ else:
     from loguru import logger  # log to file locally
 
 
-class TransitionStates:
-    """Statement transition to next turn"""
-    
-    def __init__(self) -> None:
-        self.missions_state: MissionsState = {}
-        self.adj_coord_unic: Set(Coord) = set()
-        self.adj_stack: ChainMap = ChainMap()
-
-
 class TilesCollection:
     """Get massive of tiles"""
 
@@ -1171,12 +1162,6 @@ class TileState:
                 val: Position(key[0], key[1])
                 for key, val in AD[self.map_width]['adjacence'][(self.pos.x, self.pos.y)].items()
                 }
-            # self.__adjacence_dir = {}
-            # for dir in cs.DIRECTIONS:
-            #     if dir != 'c':
-            #         adjacent_cell = self.pos.translate(dir, 1)
-            #         if 0 <= adjacent_cell.x < self.map_width and 0 <= adjacent_cell.y < self.map_height:
-            #             self.__adjacence_dir[dir] = adjacent_cell
         return self.__adjacence_dir
 
     @property
@@ -1202,7 +1187,6 @@ class TileState:
                 val: key
                 for key, val in AD[self.map_width]['adjacence'][(self.pos.x, self.pos.y)].items()
                 }
-            # self.__adjacent_dir_unic_pos = {item[0]: (item[1].x, item[1].y) for item in self.adjacence_dir.items()}
         return self.__adjacent_dir_unic_pos
 
 
@@ -1307,6 +1291,8 @@ class ContestedTilesCollection:
 
 
 class AdjacentToResourceCollection:
+    """Calculate adjacence to resourse
+    """
     
     def __init__(
         self,
@@ -1316,30 +1302,9 @@ class AdjacentToResourceCollection:
         self.tiles = tiles
         self.states = states
         self.adj_coord_unic: Set(Coord) = set()
-        # self.__empty_adjacent_any = None
         self.__empty_adjacent_any_pos = None
-        # self.__empty_adjacent_wood = None
         self.__empty_adjacent_wood_pos = None
-        # self.__empty_adjacent_wood_coal = None
         self.__empty_adjacent_wood_coal_pos = None
-        
-    # def _set_empty_adjacent_res(self) -> None:
-    #     any_ = []
-    #     wood = []
-    #     wood_coal = []
-    #     for coord in self.adj_coord_unic:
-    #         pos = Position(coord[0], coord[1])
-    #         cell = self.states.tiles.game_state.map.get_cell_by_pos(pos)
-    #         state = self.states.get_state(pos)
-    #         if state.is_empty:
-    #             any_.append(cell)
-    #             if state.is_wood:
-    #                 wood.append(cell)
-    #             if self.tiles.player.researched_coal() and (state.is_wood or state.is_coal):
-    #                 wood_coal.append(cell)
-    #     self.__empty_adjacent_any = any_
-    #     self.__empty_adjacent_wood = wood
-    #     self.__empty_adjacent_wood_coal = wood_coal
         
     def _set_empty_adjacent_res_pos(self) -> None:
         any_ = []
@@ -1357,47 +1322,18 @@ class AdjacentToResourceCollection:
         self.__empty_adjacent_any_pos = any_
         self.__empty_adjacent_wood_pos = wood
         self.__empty_adjacent_wood_coal_pos = wood_coal
-        
-    # def _pos(self, seq: GameObjects) -> List[Position]:
-    #     """Get sequence of positions
-
-    #     Args:
-    #         seq (GameObjects): sequence of objects
-
-    #     Returns:
-    #         List[Position]: list of Positions objects
-    #     """
-    #     return [cell.pos for cell in seq]
-
-    # @property
-    # def empty_adjacent_any(self) -> List[Cell]:
-    #     if self.__empty_adjacent_any is None:
-    #         self._set_empty_adjacent_res()
-    #     return self.__empty_adjacent_any
     
     @property
     def empty_adjacent_any_pos(self) -> List[Position]:
         if self.__empty_adjacent_any_pos is None:
             self._set_empty_adjacent_res_pos()
         return self.__empty_adjacent_any_pos
-
-    # @property
-    # def empty_adjacent_wood(self) -> List[Cell]:
-    #     if self.__empty_adjacent_wood is None:
-    #         self._set_empty_adjacent_res()
-    #     return self.__empty_adjacent_wood
     
     @property
     def empty_adjacent_wood_pos(self) -> List[Position]:
         if self.__empty_adjacent_wood_pos is None:
             self._set_empty_adjacent_res_pos()
         return self.__empty_adjacent_wood_pos
-    
-    # @property
-    # def empty_adjacent_wood_coal(self) -> List[Cell]:
-    #     if self.__empty_adjacent_wood_coal is None:
-    #         self._set_empty_adjacent_res()
-    #     return self.__empty_adjacent_wood_coal
     
     @property
     def empty_adjacent_wood_coal_pos(self) -> List[Position]:
@@ -1428,3 +1364,13 @@ class MultiCollection:
             tiles=self.tiles,
             states=self.states
         )
+
+
+class StorageStates:
+    """Statement storage for transition it to subsequent turns
+    """
+    
+    def __init__(self) -> None:
+        self.missions_state: MissionsState = {}
+        self.adj_coord_unic: Set(Coord) = set()
+        self.adj_stack: ChainMap = ChainMap()

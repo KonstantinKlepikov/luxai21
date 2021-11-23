@@ -114,6 +114,18 @@ def get_id(map_object: GameActiveObject) -> str:
     return map_object.cityid if "cityid" in dir(map_object) else map_object.id
 
 def map_adjacences_and_distancies() -> AdjDis:
+    """Calculate all ajacence for all cells for all sizes
+    Then calculate all distaces between cells
+    
+    Data:
+    
+    {map size: {
+        'adjacence': {coord: list of coord}, 'distance': {coord: {coord: float}}, 'unic_pos': set(coord)}
+        }
+
+    Returns:
+        AdjDis: dict with data
+    """
     
     sizes = [12, 16, 24, 32]
     coord_state = {}

@@ -1,8 +1,8 @@
 from lux.game_objects import Unit, CityTile
-from lux.game_map import Position, Cell
+from lux.game_map import Position
 from bots.utility import CONSTANTS as cs
 from bots.statements import (
-    MultiCollection, TileState, TransitionStates
+    MultiCollection, TileState, StorageStates
 )
 from bots.utility import (
     GameActiveObject, MissionsState, 
@@ -37,7 +37,7 @@ class Mission:
     def __init__(
         self, 
         collection: MultiCollection,
-        translated: TransitionStates,
+        translated: StorageStates,
         obj_: GameActiveObject
         ) -> None:
         self.collection = collection
@@ -46,17 +46,6 @@ class Mission:
         self.missions:  Missions = {'obj': obj_, 'missions': []}
         self.action: str = None
         self.check_again: GameActiveObject = None
-
-    # def _get_distance(self, target_pos: Position) -> float:
-    #     """Get distance between positions
-    #     Args:
-    #         target_pos (Position): position object
-
-    #     Returns:
-    #         float: the Manhattan (rectilinear) distance 
-    #     """
-        
-    #     return self.obj.pos.distance_to(target_pos)
 
     def _get_direction(self, target_pos: Position) -> str:
         """Get direction to target position
@@ -81,26 +70,7 @@ class Mission:
         """Get position by direction"""
                 
         return self.obj.pos.translate(pos_dir, eq)
-    
-    # def _get_closest_pos(self, positions: GameObjects) -> Position:
-    #     """Get closest position
 
-    #     Args:
-    #         positions (list): list of objects
-
-    #     Returns:
-    #         Position: closest Position object
-    #     """
-    #     closest_dist = math.inf
-    #     closest_pos = None
-    #     for position in positions:
-    #         dist = self.obj.pos.distance_to(position.pos)
-    #         if dist < closest_dist:
-    #             closest_dist = dist
-    #             closest_pos = position
-    #     if closest_pos:     
-    #         return closest_pos.pos
-        
     def _get_closest_pos(self, positions: List[Position]) -> Position:
         """Get closest position
 
@@ -134,7 +104,7 @@ class CityMission(Mission):
     def __init__(
         self,
         collection: MultiCollection,
-        translated: TransitionStates,
+        translated: StorageStates,
         obj_: GameActiveObject
         ) -> None:
         super().__init__(collection, translated, obj_)
@@ -194,7 +164,7 @@ class UnitMission(Mission):
     def __init__(
         self,
         collection: MultiCollection,
-        translated: TransitionStates,
+        translated: StorageStates,
         obj_: GameActiveObject
         ) -> None:
         super().__init__(collection, translated, obj_)
@@ -508,7 +478,7 @@ class Perform:
     def __init__(
         self,
         collection: MultiCollection,
-        translated: TransitionStates,
+        translated: StorageStates,
         obj_: GameActiveObject
         ) -> None:
         self.collection = collection
@@ -596,7 +566,7 @@ class PerformActions(Perform):
     def __init__(
         self,
         collection: MultiCollection,
-        translated: TransitionStates,
+        translated: StorageStates,
         obj_: GameActiveObject,
         available_pos: UnicPos,
         ) -> None:

@@ -1,7 +1,6 @@
 from lux.game import Game
 from bots.genutil import GenConstruct
-from bots.utility import AD
-from bots.statements import TransitionStates
+from bots.statements import StorageStates
 import bots.bot as bot
 import os, sys, json
 
@@ -23,13 +22,13 @@ gen_const = GenConstruct()
 # genome = gen_const.convert_day_genome(vector=genome_list)
 genome = gen_const.convert_daily_genome(vector=genome_list)
 game_state = None
-transited = TransitionStates()
+storage = StorageStates()
 
 def agent(observation, configuration):
 
     global game_state
     global genome
-    global transited
+    global storage
 
     # Do not edit
     if observation["step"] == 0:
@@ -43,7 +42,7 @@ def agent(observation, configuration):
     # Bot code
     if game_state.turn == 0:
         # drop missions_state each game
-        transited.missions_state = {}
+        storage.missions_state = {}
 
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
@@ -53,7 +52,7 @@ def agent(observation, configuration):
         game_state=game_state,
         player=player,
         opponent=opponent,
-        transited=transited,
+        storage=storage,
         gen_const=gen_const
         )
 
