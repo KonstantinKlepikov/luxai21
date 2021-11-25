@@ -1,8 +1,8 @@
 from lux.game import Game
-from bots.statements import TilesCollection, StorageStates
+from bots.statements import TilesCollection, GameSpace, SubGameSpace
 import bots.bot as bot
 from bots.scoring import TurnScoring
-from bots.utility import CrossGameScore
+# from bots.utility import CrossGameScore
 from loguru import logger
 
 
@@ -11,21 +11,16 @@ logger.info('Start Logging agent_train.py...')
 game_state = None
 gen_const = None
 genome = None
-# This parametr defines the game number in a series 
-# of games with the same individual
-game_num: int = -1
-# dict where key is a game_num and value is a that game scour
-cross_game_score: CrossGameScore = {}
-storage = StorageStates()
+subgame_space: SubGameSpace = None
+game_space = GameSpace()
 
 
 def agent(observation, configuration):
 
     global game_state
     global genome
-    global cross_game_score
-    global game_num
-    global storage
+    global game_space
+    global subgame_space
 
     # Do not edit
     if observation["step"] == 0:
@@ -49,10 +44,15 @@ def agent(observation, configuration):
     
     if game_state.turn == 0:
         # score additional scoring for each game
-        game_num += 1
-        cross_game_score[game_num] = 0
+        subgame_space.game_num += 1
+        subgame_space.cross_game_score[subgame_space.game_num] = 0
+        # set game state of turn 0
+        game_space.set_map_cells(map=game_state.map)
+        game_space.set_map_positions(size=game_state.map_height)
         # drop missions_state each game
-        storage.missions_state = {}
+        game_space.missions_state = {}
+    else:
+        game_space.set_map_cells(map=game_state.map)
 
     turn_scoring = TurnScoring(
         turn=game_state.turn, 
@@ -66,7 +66,7 @@ def agent(observation, configuration):
     score = turn_scoring.each_turn_scoring(weighted=False)
     
     if score:
-        cross_game_score[game_num] =+ score
+        subgame_space.cross_game_score[subgame_space.game_num] =+ score
     # end scoring
 
     actions = bot.get_bot_actions(
@@ -74,7 +74,7 @@ def agent(observation, configuration):
         game_state=game_state,
         player=player,
         opponent=opponent,
-        storage=storage,
+        game_space=game_space,
         gen_const=gen_const
         )
 

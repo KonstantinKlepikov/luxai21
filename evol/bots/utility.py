@@ -105,14 +105,6 @@ CrossGameScore = Dict[str, str]
 # game actions
 Actions = List[str]
 
-
-def get_id(map_object: GameActiveObject) -> str:
-    """
-    Makes ID from City.cityid or Unit.id
-    Used for representation objects in logging only
-    """
-    return map_object.cityid if "cityid" in dir(map_object) else map_object.id
-
 def map_adjacences_and_distancies() -> AdjDis:
     """Calculate all ajacence for all cells for all sizes
     Then calculate all distaces between cells
