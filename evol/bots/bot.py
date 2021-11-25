@@ -1,7 +1,7 @@
 from bots.genutil import GenConstruct
 from lux.game import Game
 from lux.game_objects import CityTile, Player, Unit
-from bots.statements import MultiCollection, StorageStates
+from bots.statements import TurnSpace, GameSpace
 from bots.missions import PerformMissions, PerformActions
 from bots.utility import (
     MissionsState, Missions, Actions, MissionsChoosed,
@@ -25,16 +25,10 @@ class BotPipe:
     """Bot pipline class
     """
     
-    def __init__(
-        self,
-        collection: MultiCollection,
-        storage: StorageStates,
-        genome: List[namedtuple]
-    ) -> None:
-        self.collection = collection
-        self.storage = storage
+    def __init__(self, turn_space: TurnSpace, genome: List[namedtuple]) -> None:
+        self.turn_space = turn_space
         self.genome = genome
-        self.available_pos = collection.contested.tiles_free.copy()
+        self.available_pos = turn_space.contested.tiles_free.copy()
         self.actions: Actions = []
         self.missions_per_object: List[Missions] = []
         self.missions_choosed: MissionsChoosed = []
@@ -42,61 +36,62 @@ class BotPipe:
         self.check_again: GameActiveObject = None
         
     def update_resource_and_unit_statements(self):
-        """Update resource and unit statements and set storage between turns statements
+        """Update resource and unit statements and set game_space between turns statements
         
         NOTE: calculate position of resources and adjacent set in turn 0
         Then in subseqwence turns calculate new positions of resource and remove 
         difference from adjacent set
         """
         logger.info('------update_resource_and_unit_statements------')
-        # init all unit objects in collection of tile states
-        self.collection.states.player_active_obj_to_state
+        # init all unit objects in turn_space of tile states
+        self.turn_space.states.player_active_obj_to_state
 
-        if self.collection.tiles.game_state.turn == 0:
+        if self.turn_space.tiles.game_state.turn == 0:
             d = {}
-            for cell in self.collection.tiles.resources:
-                state = self.collection.states.get_state(pos=cell.pos)
+            for cell in self.turn_space.game_space.resources:
+                state = self.turn_space.states.get_state(pos=cell.pos)
                 adjacent = state.adjacence_unic_pos
                 d[(cell.pos.x, cell.pos.y)] = tuple(adjacent)
-                self.storage.adj_coord_unic.update(adjacent)
-            self.storage.adj_stack = ChainMap(d)
+                self.turn_space.game_space.adj_coord_unic.update(adjacent)
+            self.turn_space.game_space.adj_stack = ChainMap(d)
             logger.info(f'> update_resource_and_unit_statements: d {len(d)}')
-            logger.info(f'> update_resource_and_unit_statements: adj_coord_unic {len(self.storage.adj_coord_unic)}')
+            logger.info(f'> update_resource_and_unit_statements: adj_coord_unic {len(self.turn_space.game_space.adj_coord_unic)}')
         else:
-            logger.info(f'> update_resource_and_unit_statements: adj_coord_unic {len(self.storage.adj_coord_unic)}')
-            d = {(cell.pos.x, cell.pos.y): None for cell in self.collection.tiles.resources}
-            stack = self.storage.adj_stack.new_child(d)
+            logger.info(f'> update_resource_and_unit_statements: adj_coord_unic {len(self.turn_space.game_space.adj_coord_unic)}')
+            d = {(cell.pos.x, cell.pos.y): None for cell in self.turn_space.game_space.resources}
+            logger.info(f'> update_resource_and_unit_statements: d {len(d)}')
+            stack = self.turn_space.game_space.adj_stack.new_child(d)
+            logger.info(f'> update_resource_and_unit_statements: stack {len(stack)}')
             diff = {
                 coord
                 for val in stack.values()
                 if val != None
                 for coord in val
                 }
-            self.storage.adj_coord_unic = self.storage.adj_coord_unic - diff
-            logger.info(f'> update_resource_and_unit_statements: d {len(d)}')
-            logger.info(f'> update_resource_and_unit_statements: adj_coord_unic {len(self.storage.adj_coord_unic)}')
+            logger.info(f'> update_resource_and_unit_statements: diff {len(diff)}')
+            self.turn_space.game_space.adj_coord_unic = self.turn_space.game_space.adj_coord_unic - diff
+            logger.info(f'> update_resource_and_unit_statements: adj_coord_unic {len(self.turn_space.game_space.adj_coord_unic)}')
 
     def init_missions_and_state_and_check_again(self):
         """init missions, missions_state and check_again variable
         """
         logger.info('------init_missions_and_state_and_check_again------')
-        logger.info(f'> init_missions_and_state_and_check_again: player_own: {self.collection.tiles.player_own}')
-        for obj_ in self.collection.tiles.player_own:
+        logger.info(f'> init_missions_and_state_and_check_again: player_own: {self.turn_space.tiles.player_own}')
+        for obj_ in self.turn_space.tiles.player_own:
             logger.info(f'>>>>>>Obj: {obj_}<<<<<<')
             act = PerformMissions(
-                collection=self.collection,
-                translated=self.storage,
+                turn_space=self.turn_space,
                 obj_=obj_
             )
             try:
                 self.missions, self.check_again = act.perform_missions()
                 logger.info(f'> init_missions_and_state_and_check_again: : missions: {self.missions}')
-                logger.info(f'> init_missions_and_state_and_check_again: : Missions_state: {self.storage.missions_state}')
+                logger.info(f'> init_missions_and_state_and_check_again: : Missions_state: {self.turn_space.game_space.missions_state}')
                 logger.info(f'> init_missions_and_state_and_check_again: : Check again: {self.check_again}')
                 self.missions_per_object.append(self.missions)
                 if self.check_again:
-                    self.collection.tiles.player_own.append(self.check_again)
-                    logger.info(f'init_missions_and_state_and_check_again: player_own: {self.collection.tiles.player_own}')
+                    self.turn_space.tiles.player_own.append(self.check_again)
+                    logger.info(f'init_missions_and_state_and_check_again: player_own: {self.turn_space.tiles.player_own}')
             except TypeError:
                 logger.info(f'> init_missions_and_state_and_check_again: No one can get mission')
     
@@ -120,8 +115,8 @@ class BotPipe:
             # add missions_state of unit to transfer statement
             # in next turn of game
             if isinstance(miss['obj'], Unit):
-                self.storage.missions_state[miss['obj'].id] = c[0]
-                logger.info(f'> _get_mission: missions_state added: {self.storage.missions_state}')
+                self.turn_space.game_space.missions_state[miss['obj'].id] = c[0]
+                logger.info(f'> _get_mission: missions_state added: {self.turn_space.game_space.missions_state}')
 
     def _set_mission_for_single_object(
         self,
@@ -143,7 +138,7 @@ class BotPipe:
             # use genome section for each turn
             if (key == "mission_build_worker") or (key == "mission_build_cart"):
                 logger.info(f'> _set_mission_for_single_object: mission buld worker or cart')
-                if self.collection.tiles.cities_can_build():
+                if self.turn_space.tiles.cities_can_build():
                     logger.info(f'> _set_mission_for_single_object: i can build units')
                     possible_missions[key] = chrome[key]
                     build = True
@@ -151,9 +146,9 @@ class BotPipe:
                 possible_missions[key] = chrome[key]
             logger.info(f'> _set_mission_for_single_object: possible_missions: {possible_missions}')
         if build:
-            self.collection.tiles.build_units_counter += 1
+            self.turn_space.tiles.build_units_counter += 1
             logger.info(f'> _set_mission_for_single_object: counter '
-                        f'{self.collection.tiles.build_units_counter}')
+                        f'{self.turn_space.tiles.build_units_counter}')
 
         if possible_missions:
             # get list of possible missions
@@ -240,7 +235,7 @@ class BotPipe:
         logger.info(f'> set_mission_for_each_object: {self.missions_per_object}')
         logger.info(f'> set_mission_for_each_object: method {method}')
         if self.missions_per_object:
-            chrome = self.genome[self.collection.tiles.game_state.turn]._asdict()
+            chrome = self.genome[self.turn_space.tiles.game_state.turn]._asdict()
             for miss in self.missions_per_object:
                 logger.info(f'> set_mission_for_each_object: obj {miss["obj"]}')
                 if method == 'simple':
@@ -260,14 +255,13 @@ class BotPipe:
         if self.missions_choosed:
             for miss in self.missions_choosed:
                 act = PerformActions(
-                    collection=self.collection,
-                    translated= self.storage,
+                    turn_space=self.turn_space,
                     obj_=miss[0],
                     available_pos=self.available_pos,
                 )
                 try:
                     action = act.perform_actions(miss=miss[1])
-                    logger.info(f'> set_action_for_each_mission_in_mission_choosedchoosed action: {action}')
+                    logger.info(f'> set_action_for_each_mission_in_mission_choosed: choosed action: {action}')
                     if action:
                         self.actions.append(action)
                 except TypeError:
@@ -278,30 +272,32 @@ def get_bot_actions(
     game_state: Game,
     player: Player,
     opponent: Player,
-    storage: StorageStates,
+    game_space: GameSpace,
     gen_const: GenConstruct = None
-    ) -> Tuple[Actions, MissionsState]:
+    ) -> Tuple[Actions, TurnSpace]:
     """Get bot actions
 
     Args:
         genome (List[namedtuple]): missions genome
         game_state (Game): game state object
         player (Player): player object
-        opponent (Player): opponent object
+        opponent (Player): opponent objectgame_space: GameSpace,
+        game_space: GameSpace,
         missions_state (MissionsState): ict with id of object and his mission
 
     Returns:
-        Tuple[Actions, MissionsState]: [description]
+        Tuple[Actions, TurnSpace]
     """
     logger.info('======set game objects and define variables======')
     
-    collection = MultiCollection(
+    turn_space = TurnSpace(
         game_state=game_state,
+        game_space=game_space,
         player=player,
         opponent=opponent
     )
     
-    pipe = BotPipe(collection=collection, storage=storage, genome=genome)
+    pipe = BotPipe(turn_space=turn_space, genome=genome)
     
     logger.info('======Update resource and unit statements======')
     pipe.update_resource_and_unit_statements()
@@ -318,6 +314,6 @@ def get_bot_actions(
 
     logger.info(f'> bot: available_pos: {pipe.available_pos}')
     logger.info(f'> bot: Actions: {pipe.actions}')
-    logger.info(f'> bot: missions_state: {pipe.storage.missions_state}')
+    logger.info(f'> bot: missions_state: {pipe.turn_space.game_space.missions_state}')
     
-    return pipe.actions
+    return pipe.actions, turn_space

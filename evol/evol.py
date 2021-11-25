@@ -2,7 +2,7 @@ from deap import base, creator, tools, algorithms
 from kaggle_environments import evaluate
 from bots.genutil import GenConstruct
 from bots.scoring import FinalScoring
-from bots.statements import StorageStates
+from bots.statements import GameSpace, SubGameSpace
 from bots.utility import AD
 import agent_train
 import agent_random
@@ -92,9 +92,8 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
     agent_train.gen_const = gen_const
     # agent_train.genome = gen_const.convert_day_genome(vector=individual)
     agent_train.genome = gen_const.convert_daily_genome(vector=individual)
-    agent_train.cross_game_score = {}
-    agent_train.game_num = -1
-    agent_train.storage = StorageStates()
+    agent_train.subgame_space = SubGameSpace()
+    agent_train.game_space = GameSpace()
     rewards = evaluate(
         'lux_ai_2021',
         [agent_train.agent, 'simple_agent'],
@@ -111,12 +110,12 @@ def GameScoreFitness(individual: List[int]) -> Tuple[float]:
     
     # day plus night final scoring
     # mean_r = final_scoring.day_plus_night_final_scoring(
-    #     cross_game_score=agent_train.cross_game_score
+    #     cross_game_score=agent_train.subgame_space.cross_game_score
     #     )
     
     # each day final scoring
     mean_r = final_scoring.each_day_final_scoring(
-        cross_game_score=agent_train.cross_game_score
+        cross_game_score=agent_train.subgame_space.cross_game_score
         )
 
     return mean_r,

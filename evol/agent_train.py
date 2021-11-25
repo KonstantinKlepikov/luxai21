@@ -1,8 +1,7 @@
 from lux.game import Game
-from bots.statements import TilesCollection, StorageStates
+from bots.statements import GameSpace, SubGameSpace
 import bots.bot as bot
 from bots.scoring import TurnScoring
-from bots.utility import CrossGameScore
 from loguru import logger
 
 
@@ -11,21 +10,16 @@ logger.info('Start Logging agent_train.py...')
 game_state = None
 gen_const = None
 genome = None
-# This parametr defines the game number in a series 
-# of games with the same individual
-game_num: int = -1
-# dict where key is a game_num and value is a that game scour
-cross_game_score: CrossGameScore = {}
-storage = StorageStates()
+subgame_space: SubGameSpace = None
+game_space = GameSpace()
 
 
 def agent(observation, configuration):
 
     global game_state
     global genome
-    global cross_game_score
-    global game_num
-    global storage
+    global game_space
+    global subgame_space
 
     # Do not edit
     if observation["step"] == 0:
@@ -37,26 +31,33 @@ def agent(observation, configuration):
         game_state._update(observation["updates"])
 
     # Bot code
+    if game_state.turn == 0:
+        # drop missions_state each game
+        game_space.missions_state = {}
+    game_space.set_map_statements(game_state=game_state)
+    
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
-    
-    # experimental cross_game_score scoring for fitness function
-    tiles = TilesCollection(
+
+    actions, turn_space = bot.get_bot_actions(
+        genome=genome,
         game_state=game_state,
         player=player,
-        opponent=opponent
-    )
-    
+        opponent=opponent,
+        game_space=game_space,
+        gen_const=gen_const
+        )
+
+    # start scoring
+
     if game_state.turn == 0:
         # score additional scoring for each game
-        game_num += 1
-        cross_game_score[game_num] = 0
-        # drop missions_state each game
-        storage.missions_state = {}
-
+        subgame_space.game_num += 1
+        subgame_space.cross_game_score[subgame_space.game_num] = 0
+    
     turn_scoring = TurnScoring(
         turn=game_state.turn, 
-        tiles=tiles
+        tiles=turn_space.tiles
         )
     
     # day plus night scoring
@@ -66,16 +67,8 @@ def agent(observation, configuration):
     score = turn_scoring.each_turn_scoring(weighted=False)
     
     if score:
-        cross_game_score[game_num] =+ score
-    # end scoring
+        subgame_space.cross_game_score[subgame_space.game_num] =+ score
 
-    actions = bot.get_bot_actions(
-        genome=genome,
-        game_state=game_state,
-        player=player,
-        opponent=opponent,
-        storage=storage,
-        gen_const=gen_const
-        )
+    # end scoring
 
     return actions

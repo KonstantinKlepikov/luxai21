@@ -163,14 +163,14 @@ class Storage:
     """
     
     def __init__(self) -> None:
-        self.storage = {}
+        self.game_space = {}
         self.counter = 0
         
-    def set_storage(self, massive: np.array) -> None:
+    def set_game_space(self, massive: np.array) -> None:
         
-        self.storage[self.counter] = massive
+        self.game_space[self.counter] = massive
         self.counter += 1
         
-    def get_storage(self) -> dict:
+    def get_game_space(self) -> dict:
         
-        return self.storage
+        return self.game_space

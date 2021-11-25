@@ -1,7 +1,7 @@
 from lux.game import Game
 from bots.genutil import GenConstruct
 import bots.bot as bot
-from bots.statements import StorageStates
+from bots.statements import GameSpace
 from loguru import logger
 import datetime
 
@@ -12,7 +12,7 @@ gen_const = GenConstruct()
 # genome = gen_const.init_day_genome()
 genome = gen_const.init_daily_genome()
 game_state = None
-storage = StorageStates()
+game_space = GameSpace()
 
 
 def agent(observation, configuration):
@@ -35,19 +35,20 @@ def agent(observation, configuration):
     if game_state.turn == 0:
         logger.info('Agent is running!')
         # drop missions_state each game
-        storage.missions_state = {}
+        game_space.missions_state = {}
+    game_space.set_map_statements(game_state=game_state)
 
     logger.info(f'-------------------> Start random turn {game_state.turn} <')
-    logger.info(f'missions_state: {storage.missions_state}')
+    logger.info(f'missions_state: {game_space.missions_state}')
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
 
-    actions = bot.get_bot_actions(
+    actions, _ = bot.get_bot_actions(
         genome=genome,
         game_state=game_state,
         player=player,
         opponent=opponent,
-        storage=storage,
+        game_space=game_space,
         gen_const=gen_const
         )
 
