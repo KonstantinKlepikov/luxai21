@@ -48,7 +48,7 @@ class BotPipe:
 
         if self.turn_space.tiles.game_state.turn == 0:
             d = {}
-            for cell in self.turn_space.tiles.resources:
+            for cell in self.turn_space.game_space.resources:
                 state = self.turn_space.states.get_state(pos=cell.pos)
                 adjacent = state.adjacence_unic_pos
                 d[(cell.pos.x, cell.pos.y)] = tuple(adjacent)
@@ -58,7 +58,7 @@ class BotPipe:
             logger.info(f'> update_resource_and_unit_statements: adj_coord_unic {len(self.turn_space.game_space.adj_coord_unic)}')
         else:
             logger.info(f'> update_resource_and_unit_statements: adj_coord_unic {len(self.turn_space.game_space.adj_coord_unic)}')
-            d = {(cell.pos.x, cell.pos.y): None for cell in self.turn_space.tiles.resources}
+            d = {(cell.pos.x, cell.pos.y): None for cell in self.turn_space.game_space.resources}
             logger.info(f'> update_resource_and_unit_statements: d {len(d)}')
             stack = self.turn_space.game_space.adj_stack.new_child(d)
             logger.info(f'> update_resource_and_unit_statements: stack {len(stack)}')
@@ -274,18 +274,19 @@ def get_bot_actions(
     opponent: Player,
     game_space: GameSpace,
     gen_const: GenConstruct = None
-    ) -> Tuple[Actions, MissionsState]:
+    ) -> Tuple[Actions, TurnSpace]:
     """Get bot actions
 
     Args:
         genome (List[namedtuple]): missions genome
         game_state (Game): game state object
         player (Player): player object
-        opponent (Player): opponent object
+        opponent (Player): opponent objectgame_space: GameSpace,
+        game_space: GameSpace,
         missions_state (MissionsState): ict with id of object and his mission
 
     Returns:
-        Tuple[Actions, MissionsState]: [description]
+        Tuple[Actions, TurnSpace]
     """
     logger.info('======set game objects and define variables======')
     
@@ -315,4 +316,4 @@ def get_bot_actions(
     logger.info(f'> bot: Actions: {pipe.actions}')
     logger.info(f'> bot: missions_state: {pipe.turn_space.game_space.missions_state}')
     
-    return pipe.actions
+    return pipe.actions, turn_space

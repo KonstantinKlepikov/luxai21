@@ -2,7 +2,7 @@ from lux.game_objects import Unit, CityTile
 from lux.game_map import Position
 from bots.utility import CONSTANTS as cs
 from bots.statements import (
-    TurnSpace, TileState, GameSpace
+    TurnSpace, TileState
 )
 from bots.utility import (
     GameActiveObject, MissionsState, 
@@ -96,8 +96,6 @@ class CityMission(Mission):
     NOTE: Citytile can't add his missions to missions_state, because
     its missions is continue no longer than one turn
     """
-    # current_turn = -1
-    # build_units_counter = 0 # FIXME: FIXME: FIXME: remove if is ok
 
     def __init__(
         self,

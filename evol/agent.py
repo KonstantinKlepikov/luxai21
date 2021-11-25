@@ -41,18 +41,14 @@ def agent(observation, configuration):
 
     # Bot code
     if game_state.turn == 0:
-        # set game state of turn 0
-        game_space.set_map_cells(map=game_state.map)
-        game_space.set_map_positions(size=game_state.map_height)
         # drop missions_state each game
         game_space.missions_state = {}
-    else:
-        game_space.set_map_cells(map=game_state.map)
+    game_space.set_map_statements(game_state=game_state)
 
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
 
-    actions = bot.get_bot_actions(
+    actions, _ = bot.get_bot_actions(
         genome=genome,
         game_state=game_state,
         player=player,

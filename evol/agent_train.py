@@ -1,8 +1,7 @@
 from lux.game import Game
-from bots.statements import TilesCollection, GameSpace, SubGameSpace
+from bots.statements import GameSpace, SubGameSpace
 import bots.bot as bot
 from bots.scoring import TurnScoring
-# from bots.utility import CrossGameScore
 from loguru import logger
 
 
@@ -32,31 +31,33 @@ def agent(observation, configuration):
         game_state._update(observation["updates"])
 
     # Bot code
+    if game_state.turn == 0:
+        # drop missions_state each game
+        game_space.missions_state = {}
+    game_space.set_map_statements(game_state=game_state)
+    
     player = game_state.players[observation.player]
     opponent = game_state.players[(observation.player + 1) % 2]
-    
-    # experimental cross_game_score scoring for fitness function
-    tiles = TilesCollection(
+
+    actions, turn_space = bot.get_bot_actions(
+        genome=genome,
         game_state=game_state,
         player=player,
-        opponent=opponent
-    )
-    
+        opponent=opponent,
+        game_space=game_space,
+        gen_const=gen_const
+        )
+
+    # start scoring
+
     if game_state.turn == 0:
         # score additional scoring for each game
         subgame_space.game_num += 1
         subgame_space.cross_game_score[subgame_space.game_num] = 0
-        # set game state of turn 0
-        game_space.set_map_cells(map=game_state.map)
-        game_space.set_map_positions(size=game_state.map_height)
-        # drop missions_state each game
-        game_space.missions_state = {}
-    else:
-        game_space.set_map_cells(map=game_state.map)
-
+    
     turn_scoring = TurnScoring(
         turn=game_state.turn, 
-        tiles=tiles
+        tiles=turn_space.tiles
         )
     
     # day plus night scoring
@@ -67,15 +68,7 @@ def agent(observation, configuration):
     
     if score:
         subgame_space.cross_game_score[subgame_space.game_num] =+ score
-    # end scoring
 
-    actions = bot.get_bot_actions(
-        genome=genome,
-        game_state=game_state,
-        player=player,
-        opponent=opponent,
-        game_space=game_space,
-        gen_const=gen_const
-        )
+    # end scoring
 
     return actions

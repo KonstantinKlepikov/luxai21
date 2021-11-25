@@ -1,7 +1,7 @@
 from lux.game import Game
 from lux.game_objects import Player
 from lux.game_objects import Unit, City, CityTile
-from lux.game_map import Position, Cell, GameMap
+from lux.game_map import Position, Cell
 from bots.utility import CONSTANTS as cs
 from bots.utility import (
     UnicPos, GameObjects, GameActiveObject, MissionsState,
@@ -46,189 +46,53 @@ class GameSpace:
         self.missions_state: MissionsState = {}
         self.adj_coord_unic: Set(Coord) = set()
         self.adj_stack: ChainMap = ChainMap()
+        
+        self.resources: List[Cell] = None
+        self.woods: List[Cell] = None
+        self.coals: List[Cell] = None
+        self.uraniums: List[Cell] = None
 
-        self.__resources = None
-        self.__resources_pos = None
-        self.__woods = None
-        self.__woods_pos = None
-        self.__coals = None
-        self.__coals_pos = None
-        self.__uraniums = None
-        self.__uraniums_pos = None
+        self.resources_pos: List[Position] = None
+        # self.woods_pos: List[Position] = None
+        # self.coals_pos: List[Position] = None
+        # self.uraniums_pos: List[Position] = None
 
-    def _pos(self, seq: GameObjects) -> List[Position]:
-        """Get sequence of positions
-
-        Args:
-            seq (GameObjects): sequence of objects
-
-        Returns:
-            List[Position]: list of Positions objects
-        """
-        return [cell.pos for cell in seq]
-    
-    def _set_res_types(self) -> None:
+    def _set_res_types(self, game_state: Game, seq: List[Position]) -> None:
         """Set sequence of all resource types
         """
         resources = []
+        resources_pos = []
         woods = []
         coals = []
         uraniums = []
-        for cell in self.map_cells:
+        for pos in seq:
+            cell = game_state.map.get_cell_by_pos(pos)
             if cell.has_resource():
                 resources.append(cell)
+                resources_pos.append(pos)
                 if cell.resource.type == cs.RESOURCE_TYPES.WOOD:
                     woods.append(cell)
                 elif cell.resource.type == cs.RESOURCE_TYPES.COAL:
                     coals.append(cell)
                 elif cell.resource.type == cs.RESOURCE_TYPES.URANIUM:
                     uraniums.append(cell)
-        self.__resources = resources
-        self.__woods = woods
-        self.__coals = coals
-        self.__uraniums = uraniums
+        self.resources = resources
+        self.resources_pos = resources_pos
+        self.woods = woods
+        self.coals = coals
+        self.uraniums = uraniums
 
-    def set_map_cells(self, map: GameMap) -> None:
-        """Set map cells collection
-
-        Args:
-            map (List[List[Cell])): collection of map cells
+    def set_map_statements(self, game_state: Game) -> None:
+        """Set map cells and positions
         """
-        self.map_cells = [cell for row in map.map for cell in row]
-
-    def set_map_positions(self, size: int) -> None:
-        """Set map positions collection
-        """
-        self.map_cells_pos = self._pos(self.map_cells)
-        self.map_cells_pos_unic: UnicPos = AD[size]['unic_pos']
-
-    @property
-    def resources(self) -> List[Cell]:
-        """
-        Returns list of Cells with resource of any type on game map.
-
-        Args:
-        Returns:
-            List[Cell]: game_map.Cell object. Every Cell contain information about:
-                - citytile (NoneType): None;
-                - pos (Position): game_map.Position object for coordinate of the Cell (x: int, y: int);
-                - resource (Resource): game_map.Resource object. Contains next info:
-                    - amount (int): value of resource;
-                    - type (str); 'wood' or 'coal' or 'uranium'
-                - road (int): 0.
-        """
-        if self.__resources is None:
-            self._set_res_types()
-        return self.__resources
-    
-    @property
-    def resources_pos(self) -> List[Position]:
-        """
-        Returns list of positions of all resources on game map.
-
-        Args:
-        Returns:
-            List[Position]: game_map.Position object for coordinate of the resource (x: int, y: int).
-        """
-        if self.__resources_pos is None:
-            self.__resources_pos = self._pos(self.resources)
-        return self.__resources_pos
-
-    @property
-    def woods(self) -> List[Cell]:
-        """
-        Returns list of Cells with wood resource on game map.
-
-        Args:
-        Returns:
-            List[Cell]: game_map.Cell object. Every Cell contain information about:
-                - citytile (NoneType): None;
-                - pos (Position): game_map.Position object for coordinate of the Cell (x: int, y: int);
-                - resource (Resource): game_map.Resource object. Contains next info:
-                    - amount (int): value of resource;
-                    - type (str); 'wood'
-                - road (int): 0.
-        """
-        if self.__woods is None:
-            self._set_res_types()
-        return self.__woods
-
-    @property
-    def woods_pos(self) -> List[Position]:
-        """
-        Returns list of positions of wood resources on game map.
-
-        Args:
-        Returns:
-            List[Position]: game_map.Position object for coordinate of the wood (x: int, y: int).
-        """
-        if self.__woods_pos is None:
-            self.__woods_pos = self._pos(self.woods)
-        return self.__woods_pos
-
-    @property
-    def coals(self) -> List[Cell]:
-        """
-        Returns list of Cells with coal resource on game map.
-
-        Args:
-        Returns:
-            List[Cell]: game_map.Cell object. Every Cell contain information about:
-                - citytile (NoneType): None;
-                - pos (Position): game_map.Position object for coordinate of the Cell (x: int, y: int);
-                - resource (Resource): game_map.Resource object. Contains next info:
-                    - amount (int): value of resource;
-                    - type (str); 'coal'
-                - road (int): 0.
-        """
-        if self.__coals is None:
-            self._set_res_types()
-        return self.__coals
-
-    @property
-    def coals_pos(self) -> List[Position]:
-        """
-        Returns list of positions of coal resources on game map.
-
-        Args:
-        Returns:
-            List[Position]: game_map.Position object for coordinate of the coal (x: int, y: int).
-        """
-        if self.__coals_pos is None:
-            self.__coals_pos = self._pos(self.coals)
-        return self.__coals_pos
-
-    @property
-    def uraniums(self) -> List[Cell]:
-        """
-        Returns list of Cells with uranium resource on game map.
-
-        Args:
-        Returns:
-            List[Cell]: game_map.Cell object. Every Cell contain information about:
-                - citytile (NoneType): None;
-                - pos (Position): game_map.Position object for coordinate of the Cell (x: int, y: int);
-                - resource (Resource): game_map.Resource object. Contains next info:
-                    - amount (int): value of resource;
-                    - type (str); 'uranium'
-                - road (int): 0.
-        """
-        if self.__uraniums is None:
-            self._set_res_types()
-        return self.__uraniums
-
-    @property
-    def uraniums_pos(self) -> List[Position]:
-        """
-        Returns list of positions of uranium resources on game map.
-
-        Args:
-        Returns:
-            List[Position]: game_map.Position object for coordinate of the uranium (x: int, y: int).
-        """
-        if self.__uraniums_pos is None:
-            self.__uraniums_pos = self._pos(self.uraniums)
-        return self.__uraniums_pos
+        if game_state.turn == 0:
+            self.map_cells = [cell for row in game_state.map.map for cell in row]
+            self.map_cells_pos = [cell.pos for cell in self.map_cells]
+            self.map_cells_pos_unic: UnicPos = AD[game_state.map_height]['unic_pos']
+            self._set_res_types(game_state=game_state, seq=self.map_cells_pos)
+        else:
+            self.map_cells = [game_state.map.get_cell_by_pos(pos) for pos in self.map_cells_pos]
+            self._set_res_types(game_state=game_state, seq=self.resources_pos)
 
 
 class TilesCollection:
@@ -288,15 +152,6 @@ class TilesCollection:
         self.__roads = None
         self.__roads_pos = None
 
-        self.__resources = None
-        self.__resources_pos = None
-        self.__woods = None
-        self.__woods_pos = None
-        self.__coals = None
-        self.__coals_pos = None
-        self.__uraniums = None
-        self.__uraniums_pos = None
-        
         self.__city_units_diff = None
         self.build_units_counter = 0
         
@@ -343,28 +198,7 @@ class TilesCollection:
             List[str]: list of ids
         """
         return [cell.cityid for cell in seq]
-    
-    def _set_res_types(self) -> None:
-        """Set sequence of all resource types
-        """
-        resources = []
-        woods = []
-        coals = []
-        uraniums = []
-        for cell in self.game_space.map_cells:
-            if cell.has_resource():
-                resources.append(cell)
-                if cell.resource.type == cs.RESOURCE_TYPES.WOOD:
-                    woods.append(cell)
-                elif cell.resource.type == cs.RESOURCE_TYPES.COAL:
-                    coals.append(cell)
-                elif cell.resource.type == cs.RESOURCE_TYPES.URANIUM:
-                    uraniums.append(cell)
-        self.__resources = resources
-        self.__woods = woods
-        self.__coals = coals
-        self.__uraniums = uraniums
-        
+
     def cities_can_build(self) -> bool:
         """Cititiles can build
 
@@ -890,135 +724,6 @@ class TilesCollection:
             self.__roads_pos = self._pos(self.roads)
         return self.__roads_pos
 
-    # resources
-    @property
-    def resources(self) -> List[Cell]:
-        """
-        Returns list of Cells with resource of any type on game map.
-
-        Args:
-        Returns:
-            List[Cell]: game_map.Cell object. Every Cell contain information about:
-                - citytile (NoneType): None;
-                - pos (Position): game_map.Position object for coordinate of the Cell (x: int, y: int);
-                - resource (Resource): game_map.Resource object. Contains next info:
-                    - amount (int): value of resource;
-                    - type (str); 'wood' or 'coal' or 'uranium'
-                - road (int): 0.
-        """
-        if self.__resources is None:
-            self._set_res_types()
-        return self.__resources
-
-    @property
-    def resources_pos(self) -> List[Position]:
-        """
-        Returns list of positions of all resources on game map.
-
-        Args:
-        Returns:
-            List[Position]: game_map.Position object for coordinate of the resource (x: int, y: int).
-        """
-        if self.__resources_pos is None:
-            self.__resources_pos = self._pos(self.resources)
-        return self.__resources_pos
-
-    @property
-    def woods(self) -> List[Cell]:
-        """
-        Returns list of Cells with wood resource on game map.
-
-        Args:
-        Returns:
-            List[Cell]: game_map.Cell object. Every Cell contain information about:
-                - citytile (NoneType): None;
-                - pos (Position): game_map.Position object for coordinate of the Cell (x: int, y: int);
-                - resource (Resource): game_map.Resource object. Contains next info:
-                    - amount (int): value of resource;
-                    - type (str); 'wood'
-                - road (int): 0.
-        """
-        if self.__woods is None:
-            self._set_res_types()
-        return self.__woods
-
-    @property
-    def woods_pos(self) -> List[Position]:
-        """
-        Returns list of positions of wood resources on game map.
-
-        Args:
-        Returns:
-            List[Position]: game_map.Position object for coordinate of the wood (x: int, y: int).
-        """
-        if self.__woods_pos is None:
-            self.__woods_pos = self._pos(self.woods)
-        return self.__woods_pos
-
-    @property
-    def coals(self) -> List[Cell]:
-        """
-        Returns list of Cells with coal resource on game map.
-
-        Args:
-        Returns:
-            List[Cell]: game_map.Cell object. Every Cell contain information about:
-                - citytile (NoneType): None;
-                - pos (Position): game_map.Position object for coordinate of the Cell (x: int, y: int);
-                - resource (Resource): game_map.Resource object. Contains next info:
-                    - amount (int): value of resource;
-                    - type (str); 'coal'
-                - road (int): 0.
-        """
-        if self.__coals is None:
-            self._set_res_types()
-        return self.__coals
-
-    @property
-    def coals_pos(self) -> List[Position]:
-        """
-        Returns list of positions of coal resources on game map.
-
-        Args:
-        Returns:
-            List[Position]: game_map.Position object for coordinate of the coal (x: int, y: int).
-        """
-        if self.__coals_pos is None:
-            self.__coals_pos = self._pos(self.coals)
-        return self.__coals_pos
-
-    @property
-    def uraniums(self) -> List[Cell]:
-        """
-        Returns list of Cells with uranium resource on game map.
-
-        Args:
-        Returns:
-            List[Cell]: game_map.Cell object. Every Cell contain information about:
-                - citytile (NoneType): None;
-                - pos (Position): game_map.Position object for coordinate of the Cell (x: int, y: int);
-                - resource (Resource): game_map.Resource object. Contains next info:
-                    - amount (int): value of resource;
-                    - type (str); 'uranium'
-                - road (int): 0.
-        """
-        if self.__uraniums is None:
-            self._set_res_types()
-        return self.__uraniums
-
-    @property
-    def uraniums_pos(self) -> List[Position]:
-        """
-        Returns list of positions of uranium resources on game map.
-
-        Args:
-        Returns:
-            List[Position]: game_map.Position object for coordinate of the uranium (x: int, y: int).
-        """
-        if self.__uraniums_pos is None:
-            self.__uraniums_pos = self._pos(self.uraniums)
-        return self.__uraniums_pos
-
     @property
     def city_units_diff(self) -> int:
         """Positive difference
@@ -1041,7 +746,7 @@ class TileState:
         self.pos = pos
         self.map_width = tiles.game_state.map_width
         self.map_height = tiles.game_state.map_height
-        self.cell = tiles.game_state.map.get_cell(pos.x, pos.y)
+        self.cell = tiles.game_state.map.get_cell_by_pos(pos)
         self.__is_owned_by_player = None
         self.__is_owned_by_opponent = None
         self.__is_owned = None
@@ -1107,7 +812,7 @@ class TileState:
         """Is tile resource
         """
         if self.__is_resource is None:
-            self.__is_resource = bool(self.cell in self.tiles.resources)
+            self.__is_resource = bool(self.cell in self.tiles.game_space.resources)
         return self.__is_resource
 
     @property
@@ -1115,7 +820,7 @@ class TileState:
         """Is tile wood
         """
         if self.__is_wood is None:
-            self.__is_wood = bool(self.cell in self.tiles.woods)
+            self.__is_wood = bool(self.cell in self.tiles.game_space.woods)
         return self.__is_wood
 
     @property
@@ -1123,7 +828,7 @@ class TileState:
         """Is tile wood
         """
         if self.__is_coal is None:
-            self.__is_coal = bool(self.cell in self.tiles.coals)
+            self.__is_coal = bool(self.cell in self.tiles.game_space.coals)
         return self.__is_coal
 
     @property
@@ -1131,7 +836,7 @@ class TileState:
         """Is tile wood
         """
         if self.__is_uranium is None:
-            self.__is_uranium = bool(self.cell in self.tiles.uraniums)
+            self.__is_uranium = bool(self.cell in self.tiles.game_space.uraniums)
         return self.__is_uranium
 
     @property
@@ -1365,7 +1070,6 @@ class AdjacentToResourceCollection:
         any_ = []
         wood = []
         wood_coal = []
-        logger.info(f'_set_empty_adjacent_res_pos: self.adj_coord_unic: {len(self.adj_coord_unic)}')
         for coord in self.adj_coord_unic:
             pos = Position(coord[0], coord[1])
             state = self.states.get_state(pos)
@@ -1381,21 +1085,18 @@ class AdjacentToResourceCollection:
     
     @property
     def empty_adjacent_any_pos(self) -> List[Position]:
-        logger.info(f'empty_adjacent_any_pos: {self.__empty_adjacent_any_pos}')
         if self.__empty_adjacent_any_pos is None:
             self._set_empty_adjacent_res_pos()
         return self.__empty_adjacent_any_pos
     
     @property
     def empty_adjacent_wood_pos(self) -> List[Position]:
-        logger.info(f'empty_adjacent_wood_pos: {self.__empty_adjacent_wood_pos}')
         if self.__empty_adjacent_wood_pos is None:
             self._set_empty_adjacent_res_pos()
         return self.__empty_adjacent_wood_pos
     
     @property
     def empty_adjacent_wood_coal_pos(self) -> List[Position]:
-        logger.info(f'empty_adjacent_wood_coal_pos: {self.__empty_adjacent_wood_coal_pos}')
         if self.__empty_adjacent_wood_coal_pos is None:
             self._set_empty_adjacent_res_pos()
         return self.__empty_adjacent_wood_coal_pos
