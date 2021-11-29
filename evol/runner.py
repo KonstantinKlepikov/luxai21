@@ -2,43 +2,42 @@ from logging import DEBUG
 from kaggle_environments import make
 from loguru import logger
 import os, json
-from dotenv import load_dotenv
+import click
 
 
-load_dotenv(dotenv_path='shared.env')
-PLAYER = os.environ['PLAYER']
-OPPONENT = os.environ['OPPONENT']
-DEBUG = os.environ['DEBUG']
-if DEBUG == 'False': DEBUG == False
-else: DEBUG == True
+@click.command()
+@click.option('--debug', is_flag=True, help='set debug mode')
+@click.option('--player', default='agent_test.py', show_default=True)
+@click.option('--opponent', default='simple_agent', show_default=True)
+@click.option('--path', 'path_to_replay', show_default=True, default='replays/replay.json', type=str)
+def run(debug, player, opponent, path_to_replay):
+    
+    click.echo(f'Start game with player: {player}, opponent: {opponent} with debug: {debug}')
+    logger.remove()
+    logger.add(open(
+        'errorlogs/run_test.log', 'w'),
+        level='INFO',
+        format='{time:HH:mm:ss} | {level} | {message}'
+        )
 
-logger.remove()
-logger.add(open(
-    'errorlogs/run_test.log', 'w'),
-    level='INFO',
-    format='{time:HH:mm:ss} | {level} | {message}'
-    )
-logger.add(open(
-    'errorlogs/run_test_debug.log', 'w'),
-    level='WARNING',
-    format='{time:HH:mm:ss} | {level} | {message}'
-    )
+    logger.info('Start Logging...')
+    logger.info(f'Is logged player: {player}, opponent: {opponent} with debug: {debug}')
 
-logger.info('Start Logging...')
-logger.info(f'Is logged player: {PLAYER}, opponent: {OPPONENT} with debug: {DEBUG}')
+    env = make(
+        'lux_ai_2021',
+        configuration={'loglevel': 1, 'annotations': False},
+        debug=debug
+        )
 
-env = make(
-    'lux_ai_2021',
-    configuration={'loglevel': 1, 'annotations': False},
-    debug=DEBUG
-    )
+    steps = env.run([player, opponent])
 
-steps = env.run([PLAYER, OPPONENT])
+    replay = env.toJSON()
 
-replay = env.toJSON()
+    if os.path.exists(path_to_replay):
+        os.remove(path_to_replay)
+    with open(path_to_replay, "w") as f:
+        json.dump(replay, f)
 
-PATH_TO = 'replays/replay.json'
-if os.path.exists(PATH_TO):
-    os.remove(PATH_TO)
-with open(PATH_TO, "w") as f:
-    json.dump(replay, f)
+
+if __name__ == '__main__':
+    run()

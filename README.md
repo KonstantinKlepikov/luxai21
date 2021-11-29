@@ -15,7 +15,7 @@ sudo lux-ai-2021 main.py main.py --python=python3 --out=replays/replay.json
 make game with python `python runner.py` or set full game options. You can use `agent_test.py` for test options
 
 ```bash
-DEBUG=True PLAYER=agent_test.py OPPONENT=agent_random.py python runner.py
+python runner.py --opponent=agent_random.py --debug
 ```
 
 run visualisation

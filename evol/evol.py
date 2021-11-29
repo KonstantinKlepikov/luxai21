@@ -13,6 +13,7 @@ from typing import List, Tuple
 from loguru import logger
 import os, time, datetime, json, random, multiprocessing
 from dotenv import load_dotenv
+from pprint import pprint
 
 
 logger.remove()
@@ -177,7 +178,7 @@ def eaSimpleWithElitism(
     record = stats.compile(population) if stats else {}
     logbook.record(gen=0, nevals=len(invalid_ind), **record)
     if verbose:
-        print(logbook.stream)
+        pprint(logbook.stream)
 
     # Begin the generational process
     for gen in range(1, ngen + 1):
@@ -207,7 +208,7 @@ def eaSimpleWithElitism(
         record = stats.compile(population) if stats else {}
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
         if verbose:
-            print(logbook.stream)
+            pprint(logbook.stream)
 
     return population, logbook
 
@@ -248,15 +249,15 @@ def main():
     timestamp = time.strftime("%m-%d_%H-%M", time.gmtime())
 
     # Hall of Fame info and best bot:
-    # print("Hall of Fame Individuals = ", *hof.items, sep="\n")
-    # print("Best Ever Individual = ", hof.items[0])
+    # pprint("Hall of Fame Individuals = ", *hof.items, sep="\n")
+    # pprint("Best Ever Individual = ", hof.items[0])
     with open(f"bots_dump/best_bot_{timestamp}.json", "w") as f:
         json.dump(hof.items[0], f)
         
     with open(f"bots_dump/best_bot.json", "w") as f:
         json.dump(hof.items[0], f)
 
-    with open("bots_dump/hall_of_fame.json", "w") as f:
+    with open(f"bots_dump/hall_of_fame_{timestamp}.json", "w") as f:
         json.dump(hof.items, f)
 
     # extract statistics:
