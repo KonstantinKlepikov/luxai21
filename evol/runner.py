@@ -1,4 +1,3 @@
-from logging import DEBUG
 from kaggle_environments import make
 from loguru import logger
 import os, json
@@ -9,7 +8,7 @@ import click
 @click.option('--debug', is_flag=True, help='set debug mode')
 @click.option('--player', default='agent_test.py', show_default=True)
 @click.option('--opponent', default='simple_agent', show_default=True)
-@click.option('--path', 'path_to_replay', show_default=True, default='replays/replay.json', type=str)
+@click.option('--path', 'path_to_replay', show_default=True, default='replays/replay.json')
 def run(debug, player, opponent, path_to_replay):
     
     click.echo(f'Start game with player: {player}, opponent: {opponent} with debug: {debug}')
@@ -20,8 +19,10 @@ def run(debug, player, opponent, path_to_replay):
         format='{time:HH:mm:ss} | {level} | {message}'
         )
 
-    logger.info('Start Logging...')
-    logger.info(f'Is logged player: {player}, opponent: {opponent} with debug: {debug}')
+    logger.info(
+        'Start Logging...'
+        f'Is logged player: {player}, opponent: {opponent} with debug: {debug}'
+        )
 
     env = make(
         'lux_ai_2021',

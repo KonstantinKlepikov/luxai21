@@ -20,7 +20,7 @@ def agent(observation, configuration):
 
     global game_state
     global genome
-    global missions_state
+    global game_space
 
     # Do not edit
     if observation["step"] == 0:

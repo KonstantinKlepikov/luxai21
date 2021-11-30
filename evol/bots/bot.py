@@ -4,8 +4,7 @@ from lux.game_objects import CityTile, Player, Unit
 from bots.statements import TurnSpace, GameSpace
 from bots.missions import PerformMissions, PerformActions
 from bots.utility import (
-    MissionsState, Missions, Actions, MissionsChoosed,
-    GameActiveObject
+    Missions, Actions, MissionsChoosed, GameActiveObject
 )
 from collections import ChainMap, namedtuple
 from typing import List, Tuple
