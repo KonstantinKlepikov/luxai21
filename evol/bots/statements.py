@@ -8,8 +8,10 @@ from bots.utility import (
     Coord, CrossGameScore, AD
 )
 import os, sys
-from typing import List, Tuple, Union, Dict, Set
+from typing import List, Tuple, Union, Dict, Set, Iterable
 from collections import ChainMap
+from functools import cached_property
+from itertools import chain
 
 if os.path.exists("/kaggle"):  # check if we're on a kaggle server
     import logging
@@ -111,28 +113,28 @@ class TilesCollection:
         self.opponent = opponent
 
         self.player_units = player.units
-        self.__player_units_pos = None
-        self.__player_workers = None
-        self.__player_workers_pos = None
-        self.__player_carts = None
-        self.__player_carts_pos = None
-        self.__player_cities = None
-        self.__player_citytiles = None
-        self.__player_citytiles_pos = None
-        self.__player_own = None
-        self.__player_own_pos = None
+        # self.__player_units_pos = None
+        # self.__player_workers = None
+        # self.__player_workers_pos = None
+        # self.__player_carts = None
+        # self.__player_carts_pos = None
+        # self.__player_cities = None
+        # self.__player_citytiles = None
+        # self.__player_citytiles_pos = None
+        # self.__player_own = None
+        # self.__player_own_pos = None
 
         self.opponent_units = opponent.units
-        self.__opponent_units_pos = None
-        self.__opponent_workers = None
-        self.__opponent_workers_pos = None
-        self.__opponent_carts = None
-        self.__opponent_carts_pos = None
-        self.__opponent_cities = None
-        self.__opponent_citytiles = None
-        self.__opponent_citytiles_pos = None
-        self.__opponent_own = None
-        self.__opponent_own_pos = None
+        # self.__opponent_units_pos = None
+        # self.__opponent_workers = None
+        # self.__opponent_workers_pos = None
+        # self.__opponent_carts = None
+        # self.__opponent_carts_pos = None
+        # self.__opponent_cities = None
+        # self.__opponent_citytiles = None
+        # self.__opponent_citytiles_pos = None
+        # self.__opponent_own = None
+        # self.__opponent_own_pos = None
 
         self.__own = None
         self.__own_pos = None
@@ -208,8 +210,21 @@ class TilesCollection:
         return (self.city_units_diff - self.build_units_counter) > 0
 
     # player
-    @property
-    def player_units_pos(self) -> List[Position]:
+    # @property
+    # def player_units_pos(self) -> List[Position]:
+    #     """
+    #     Returns positions of all Player's units.
+
+    #     Args:
+    #     Returns:
+    #         List[Position]: game_map.Position object for coordinate of the Unit (x: int, y: int).
+    #     """
+    #     if self.__player_units_pos is None:
+    #         self.__player_units_pos = self.player_carts_pos + self.player_workers_pos
+    #     return self.__player_units_pos
+    
+    @cached_property
+    def player_units_pos(self) -> Iterable[Position]:
         """
         Returns positions of all Player's units.
 
@@ -217,14 +232,31 @@ class TilesCollection:
         Returns:
             List[Position]: game_map.Position object for coordinate of the Unit (x: int, y: int).
         """
-        if self.__player_units_pos is None:
-            self.__player_units_pos = self.player_carts_pos + self.player_workers_pos
-        return self.__player_units_pos
+        return chain(self.player_carts_pos, self.player_workers_pos)
 
-    @property
+    # @property
+    # def player_workers(self) -> List[Unit]:
+    #     """
+    #     Returns list of Player's workers.
+
+    #     Args:
+    #     Returns:
+    #         List[Unit]: game_object.Unit object. Every Unit contain information:
+    #             - cargo (Cargo): Cargo object | Wood (int): value, Coal (int): value, Uranium (int): value;
+    #             - cooldown (float): Cooldown time for worker;
+    #             - id (str): unique ID for Unit in form u_1;
+    #             - pos (Position): game_map.Position object for coordinate of the worker (x: int, y: int);
+    #             - team (int): team = 0 for Player;
+    #             - type (int): type = 0 for worker.
+    #     """
+    #     if self.__player_workers is None:
+    #         self.__player_workers = [unit for unit in self.player_units if unit.is_worker()]
+    #     return self.__player_workers
+    
+    @cached_property
     def player_workers(self) -> List[Unit]:
         """
-        Returns list of Player's workers.
+        Returns Player's workers.
 
         Args:
         Returns:
@@ -236,27 +268,55 @@ class TilesCollection:
                 - team (int): team = 0 for Player;
                 - type (int): type = 0 for worker.
         """
-        if self.__player_workers is None:
-            self.__player_workers = [unit for unit in self.player_units if unit.is_worker()]
-        return self.__player_workers
+        return [unit for unit in self.player_units if unit.is_worker()]
 
-    @property
+    # @property
+    # def player_workers_pos(self) -> List[Position]:
+    #     """
+    #     Returns list of Player's workers positions.
+
+    #     Args:
+    #     Returns:
+    #         List[Position]: game_map.Position object for coordinate of the worker (x: int, y: int).
+    #     """
+    #     if self.__player_workers_pos is None:
+    #         self.__player_workers_pos = self._pos(self.player_workers)
+    #     return self.__player_workers_pos
+
+    @cached_property
     def player_workers_pos(self) -> List[Position]:
         """
-        Returns list of Player's workers positions.
+        Returns Player's workers positions.
 
         Args:
         Returns:
             List[Position]: game_map.Position object for coordinate of the worker (x: int, y: int).
         """
-        if self.__player_workers_pos is None:
-            self.__player_workers_pos = self._pos(self.player_workers)
-        return self.__player_workers_pos
+        return self._pos(self.player_workers)
 
-    @property
+    # @property
+    # def player_carts(self) -> List[Unit]:
+    #     """
+    #     Returns list of Player's carts.
+
+    #     Args:
+    #     Returns:
+    #         List[Unit]: game_object.Unit object. Every Unit contain information:
+    #             - cargo (Cargo): Cargo object | Wood (int): value, Coal (int): value, Uranium (int): value;
+    #             - cooldown (float): Cooldown time for worker;
+    #             - id (str): unique ID for Unit in form 'u_1';
+    #             - pos (Position): game_map.Position object for coordinates of the cart (x: int, y: int);
+    #             - team (int): team = 0 for Player;
+    #             - type (int): type = 1 for cart.
+    #     """
+    #     if self.__player_carts is None:
+    #         self.__player_carts = [unit for unit in self.player_units if unit.is_cart()]
+    #     return self.__player_carts
+    
+    @cached_property
     def player_carts(self) -> List[Unit]:
         """
-        Returns list of Player's carts.
+        Returns Player's carts.
 
         Args:
         Returns:
@@ -268,27 +328,54 @@ class TilesCollection:
                 - team (int): team = 0 for Player;
                 - type (int): type = 1 for cart.
         """
-        if self.__player_carts is None:
-            self.__player_carts = [unit for unit in self.player_units if unit.is_cart()]
-        return self.__player_carts
+        return [unit for unit in self.player_units if unit.is_cart()]
 
-    @property
+    # @property
+    # def player_carts_pos(self) -> List[Position]:
+    #     """
+    #     Returns list of Player's carts positions.
+
+    #     Args:
+    #     Returns:
+    #         List[Position]: game_map.Position object for coordinates of the cart (x: int, y: int).
+    #     """
+    #     if self.__player_carts_pos is None:
+    #         self.__player_carts_pos = self._pos(self.player_carts)
+    #     return self.__player_carts_pos
+    
+    @cached_property
     def player_carts_pos(self) -> List[Position]:
         """
-        Returns list of Player's carts positions.
+        Returns Player's carts positions.
 
         Args:
         Returns:
             List[Position]: game_map.Position object for coordinates of the cart (x: int, y: int).
         """
-        if self.__player_carts_pos is None:
-            self.__player_carts_pos = self._pos(self.player_carts)
-        return self.__player_carts_pos
+        return self._pos(self.player_carts)
 
-    @property
+    # @property
+    # def player_cities(self) -> List[City]:
+    #     """
+    #     Returns list of Player's Cities.
+
+    #     Args:
+    #     Returns:
+    #         List[City]: game_object.City object. Every City object contains information:
+    #             - cityid (str): Unique ID for the City in form 'c_1';
+    #             - citytiles (List[CityTile]): game_object.CityTile objects forming current City;
+    #             - fuel (float): Quantity of fuel kept in current City;
+    #             - light_upkeep (float): Quantity of fuel required every night for warming;
+    #             - team (int): team = 0 for Player.
+    #     """
+    #     if self.__player_cities is None:
+    #         self.__player_cities = list(self.player.cities.values())
+    #     return self.__player_cities
+    
+    @cached_property
     def player_cities(self) -> List[City]:
         """
-        Returns list of Player's Cities.
+        Returns Player's Cities.
 
         Args:
         Returns:
@@ -299,14 +386,32 @@ class TilesCollection:
                 - light_upkeep (float): Quantity of fuel required every night for warming;
                 - team (int): team = 0 for Player.
         """
-        if self.__player_cities is None:
-            self.__player_cities = list(self.player.cities.values())
-        return self.__player_cities
+        return list(self.player.cities.values())
 
-    @property
+    # @property
+    # def player_citytiles(self) -> List[CityTile]:
+    #     """
+    #     Returns list of Player's CityTiles.
+
+    #     Args:
+    #     Returns:
+    #         List[CityTile]: game_object.CityTile object. Each CityTile object contain information:
+    #         - cityid (srt): Unique ID for the City in form 'c_1';
+    #         - cooldown (float): Cooldown time for current CityTile;
+    #         - pos (Position): game_map.Position object for coordinate of the CityTile (x: int, y: int);
+    #         - team (int): team = 0 for Player.
+    #     """
+    #     if self.__player_citytiles is None:
+    #         citytiles = []
+    #         for city in self.player_cities:
+    #             citytiles = citytiles + city.citytiles
+    #         self.__player_citytiles = citytiles
+    #     return self.__player_citytiles
+    
+    @cached_property
     def player_citytiles(self) -> List[CityTile]:
         """
-        Returns list of Player's CityTiles.
+        Returns Player's CityTiles.
 
         Args:
         Returns:
@@ -316,70 +421,131 @@ class TilesCollection:
             - pos (Position): game_map.Position object for coordinate of the CityTile (x: int, y: int);
             - team (int): team = 0 for Player.
         """
-        if self.__player_citytiles is None:
-            citytiles = []
-            for city in self.player_cities:
-                citytiles = citytiles + city.citytiles
-            self.__player_citytiles = citytiles
-        return self.__player_citytiles
+        citytiles = []
+        for city in self.player_cities:
+            citytiles = citytiles + city.citytiles
+        return citytiles
 
-    @property
+    # @property
+    # def player_citytiles_pos(self) -> List[Position]:
+    #     """
+    #     Returns list of Player's CityTiles positions.
+
+    #     Args:
+    #     Returns:
+    #         List[Position]: game_map.Position object for coordinate of the CityTile (x: int, y: int).
+    #     """
+    #     if self.__player_citytiles_pos is None:
+    #         self.__player_citytiles_pos = self._pos(self.player_citytiles)
+    #     return self.__player_citytiles_pos
+    
+    @cached_property
     def player_citytiles_pos(self) -> List[Position]:
         """
-        Returns list of Player's CityTiles positions.
+        Returns Player's CityTiles positions.
 
         Args:
         Returns:
             List[Position]: game_map.Position object for coordinate of the CityTile (x: int, y: int).
         """
-        if self.__player_citytiles_pos is None:
-            self.__player_citytiles_pos = self._pos(self.player_citytiles)
-        return self.__player_citytiles_pos
+        return self._pos(self.player_citytiles)
 
-    @property
-    def player_own(self) -> List[Union[Unit, CityTile]]:
-        """
-        Returns list of all objects owned by Player.
+    # @property
+    # def player_own(self) -> List[Union[Unit, CityTile]]:
+    #     """
+    #     Returns list of all objects owned by Player.
 
-        Args:
-        Returns:
-            List[Unit, CityTile]: Full list of Player's objects with type Unit or CityTile.
+    #     Args:
+    #     Returns:
+    #         List[Unit, CityTile]: Full list of Player's objects with type Unit or CityTile.
+    #     """
+    #     if self.__player_own is None:
+    #         self.__player_own = self.player_units + self.player_citytiles
+    #     return self.__player_own
+    
+    @cached_property
+    def player_own(self) -> Iterable[Union[Unit, CityTile]]:
         """
-        if self.__player_own is None:
-            self.__player_own = self.player_units + self.player_citytiles
-        return self.__player_own
-
-    @property
-    def player_own_pos(self) -> List[Position]:
-        """
-        Returns list of positions where Player's Units and CityTiles are located.
+        Returns all objects owned by Player.
 
         Args:
         Returns:
-            List[Position]: game_map.Position object for coordinate of Unit or CityTile (x: int, y: int).
+            Iterable[Unit, CityTile]: Player's Unit or CityTile.
         """
-        if self.__player_own_pos is None:
-            self.__player_own_pos = self.player_units_pos + self.player_citytiles_pos
-        return self.__player_own_pos
+        return chain(self.player_units, self.player_citytiles)
+
+    # @property
+    # def player_own_pos(self) -> List[Position]:
+    #     """
+    #     Returns list of positions where Player's Units and CityTiles are located.
+
+    #     Args:
+    #     Returns:
+    #         List[Position]: game_map.Position object for coordinate of Unit or CityTile (x: int, y: int).
+    #     """
+    #     if self.__player_own_pos is None:
+    #         self.__player_own_pos = self.player_units_pos + self.player_citytiles_pos
+    #     return self.__player_own_pos
+    
+    @cached_property
+    def player_own_pos(self) -> Iterable[Position]:
+        """
+        Returns positions where Player's Units and CityTiles are located.
+
+        Args:
+        Returns:
+            Iterable[Position]: game_map.Position object for coordinate of Unit or CityTile (x: int, y: int).
+        """
+        return chain(self.player_units_pos, self.player_citytiles_pos)
 
     # opponent
-    @property
-    def opponent_units_pos(self) -> List[Position]:
+    # @property
+    # def opponent_units_pos(self) -> List[Position]:
+    #     """
+    #     Returns positions of all Opponent's units.
+
+    #     Args:
+    #     Returns:
+    #         List[Position]: game_map.Position object for coordinate of the Unit (x: int, y: int).
+    #     """
+    #     if self.__opponent_units_pos is None:
+    #         self.__opponent_units_pos = self.opponent_carts_pos + self.opponent_workers_pos
+    #     return self.__opponent_units_pos
+    
+    @cached_property
+    def opponent_units_pos(self) -> Iterable[Position]:
         """
         Returns positions of all Opponent's units.
 
         Args:
         Returns:
-            List[Position]: game_map.Position object for coordinate of the Unit (x: int, y: int).
+            Iterable[Position]: game_map.Position object for coordinate of the Unit (x: int, y: int).
         """
-        if self.__opponent_units_pos is None:
-            self.__opponent_units_pos = self.opponent_carts_pos + self.opponent_workers_pos
-        return self.__opponent_units_pos
+        return chain(self.opponent_carts_pos, self.opponent_workers_pos)
 
-    @property
+    # @property
+    # def opponent_workers(self) -> List[Unit]:
+    #     """
+    #     Returns list of Opponent's workers.
+
+    #     Args:
+    #     Returns:
+    #         List[Unit]: game_object.Unit object. Every Unit contain information:
+    #             - cargo (Cargo): Cargo object | Wood (int): value, Coal (int): value, Uranium (int): value;
+    #             - cooldown (float): Cooldown time for worker;
+    #             - id (str): unique ID for Unit in form u_1;
+    #             - pos (Position): game_map.Position object for coordinate of the worker (x: int, y: int);
+    #             - team (int): team = 1 for Opponent;
+    #             - type (int): type = 0 for worker.
+    #     """
+    #     if self.__opponent_workers is None:
+    #         self.__opponent_workers = [unit for unit in self.opponent_units if unit.is_worker()]
+    #     return self.__opponent_workers
+    
+    @cached_property
     def opponent_workers(self) -> List[Unit]:
         """
-        Returns list of Opponent's workers.
+        Returns Opponent's workers.
 
         Args:
         Returns:
@@ -391,27 +557,55 @@ class TilesCollection:
                 - team (int): team = 1 for Opponent;
                 - type (int): type = 0 for worker.
         """
-        if self.__opponent_workers is None:
-            self.__opponent_workers = [unit for unit in self.opponent_units if unit.is_worker()]
-        return self.__opponent_workers
+        return [unit for unit in self.opponent_units if unit.is_worker()]
 
-    @property
+    # @property
+    # def opponent_workers_pos(self) -> List[Position]:
+    #     """
+    #     Returns list of Opponent's workers positions.
+
+    #     Args:
+    #     Returns:
+    #         List[Position]: game_map.Position object for coordinate of the worker (x: int, y: int).
+    #     """
+    #     if self.__opponent_workers_pos is None:
+    #         self.__opponent_workers_pos = self._pos(self.opponent_workers)
+    #     return self.__opponent_workers_pos
+    
+    @cached_property
     def opponent_workers_pos(self) -> List[Position]:
         """
-        Returns list of Opponent's workers positions.
+        Returns Opponent's workers positions.
 
         Args:
         Returns:
             List[Position]: game_map.Position object for coordinate of the worker (x: int, y: int).
         """
-        if self.__opponent_workers_pos is None:
-            self.__opponent_workers_pos = self._pos(self.opponent_workers)
-        return self.__opponent_workers_pos
+        return self._pos(self.opponent_workers)
 
-    @property
+    # @property
+    # def opponent_carts(self) -> List[Unit]:
+    #     """
+    #     Returns list of Opponent's carts.
+
+    #     Args:
+    #     Returns:
+    #         List[Unit]: game_object.Unit object. Every Unit contain information:
+    #             - cargo (Cargo): Cargo object | Wood (int): value, Coal (int): value, Uranium (int): value;
+    #             - cooldown (float): Cooldown time for worker;
+    #             - id (str): unique ID for Unit in form 'u_1';
+    #             - pos (Position): game_map.Position object for coordinates of the cart (x: int, y: int);
+    #             - team (int): team = 1 for Opponent;
+    #             - type (int): type = 1 for cart.
+    #     """
+    #     if self.__opponent_carts is None:
+    #         self.__opponent_carts = [unit for unit in self.opponent_units if unit.is_cart()]
+    #     return self.__opponent_carts
+    
+    @cached_property
     def opponent_carts(self) -> List[Unit]:
         """
-        Returns list of Opponent's carts.
+        Returns Opponent's carts.
 
         Args:
         Returns:
@@ -423,27 +617,54 @@ class TilesCollection:
                 - team (int): team = 1 for Opponent;
                 - type (int): type = 1 for cart.
         """
-        if self.__opponent_carts is None:
-            self.__opponent_carts = [unit for unit in self.opponent_units if unit.is_cart()]
-        return self.__opponent_carts
+        return [unit for unit in self.opponent_units if unit.is_cart()]
 
-    @property
+    # @property
+    # def opponent_carts_pos(self) -> List[Position]:
+    #     """
+    #     Returns list of Opponent's carts positions.
+
+    #     Args:
+    #     Returns:
+    #         List[Position]: game_map.Position object for coordinates of the cart (x: int, y: int).
+    #     """
+    #     if self.__opponent_carts_pos is None:
+    #         self.__opponent_carts_pos = self._pos(self.opponent_carts)
+    #     return self.__opponent_carts_pos
+    
+    @cached_property
     def opponent_carts_pos(self) -> List[Position]:
         """
-        Returns list of Opponent's carts positions.
+        Returns Opponent's carts positions.
 
         Args:
         Returns:
             List[Position]: game_map.Position object for coordinates of the cart (x: int, y: int).
         """
-        if self.__opponent_carts_pos is None:
-            self.__opponent_carts_pos = self._pos(self.opponent_carts)
-        return self.__opponent_carts_pos
+        return self._pos(self.opponent_carts)
 
-    @property
+    # @property
+    # def opponent_cities(self) -> List[City]:
+    #     """
+    #     Returns list of Opponent's Cities.
+
+    #     Args:
+    #     Returns:
+    #         List[City]: game_object.City object. Every City object contains information:
+    #             - cityid (str): Unique ID for the City in form 'c_1';
+    #             - citytiles (List[CityTile]): game_object.CityTile objects forming current City;
+    #             - fuel (float): Quantity of fuel kept in current City;
+    #             - light_upkeep (float): Quantity of fuel required every night for warming;
+    #             - team (int): team = 1 for Opponent.
+    #     """
+    #     if self.__opponent_cities is None:
+    #         self.__opponent_cities = list(self.opponent.cities.values())
+    #     return self.__opponent_cities
+    
+    @cached_property
     def opponent_cities(self) -> List[City]:
         """
-        Returns list of Opponent's Cities.
+        Returns Opponent's Cities.
 
         Args:
         Returns:
@@ -454,14 +675,32 @@ class TilesCollection:
                 - light_upkeep (float): Quantity of fuel required every night for warming;
                 - team (int): team = 1 for Opponent.
         """
-        if self.__opponent_cities is None:
-            self.__opponent_cities = list(self.opponent.cities.values())
-        return self.__opponent_cities
+        return list(self.opponent.cities.values())
 
-    @property
+    # @property
+    # def opponent_citytiles(self) -> List[CityTile]:
+    #     """
+    #     Returns list of Opponent's CityTiles.
+
+    #     Args:
+    #     Returns:
+    #         List[CityTile]: game_object.CityTile object. Each CityTile object contain information:
+    #         - cityid (srt): Unique ID for the City in form 'c_1';
+    #         - cooldown (float): Cooldown time for current CityTile;
+    #         - pos (Position): game_map.Position object for coordinate of the CityTile (x: int, y: int);
+    #         - team (int): team = 1 for Opponent.
+    #     """
+    #     if self.__opponent_citytiles is None:
+    #         citytiles = []
+    #         for city in self.opponent_cities:
+    #             citytiles = citytiles + city.citytiles
+    #         self.__opponent_citytiles = citytiles
+    #     return self.__opponent_citytiles
+    
+    @cached_property
     def opponent_citytiles(self) -> List[CityTile]:
         """
-        Returns list of Opponent's CityTiles.
+        Returns Opponent's CityTiles.
 
         Args:
         Returns:
@@ -471,78 +710,131 @@ class TilesCollection:
             - pos (Position): game_map.Position object for coordinate of the CityTile (x: int, y: int);
             - team (int): team = 1 for Opponent.
         """
-        if self.__opponent_citytiles is None:
-            citytiles = []
-            for city in self.opponent_cities:
-                citytiles = citytiles + city.citytiles
-            self.__opponent_citytiles = citytiles
-        return self.__opponent_citytiles
+        citytiles = []
+        for city in self.opponent_cities:
+            citytiles = citytiles + city.citytiles
+        return citytiles
 
-    @property
+    # @property
+    # def opponent_citytiles_pos(self) -> List[Position]:
+    #     """
+    #     Returns list of Opponent's CityTiles positions.
+
+    #     Args:
+    #     Returns:
+    #         List[Position]: game_map.Position object for coordinate of the CityTile (x: int, y: int).
+    #     """
+    #     if self.__opponent_citytiles_pos is None:
+    #         self.__opponent_citytiles_pos = self._pos(self.opponent_citytiles)
+    #     return self.__opponent_citytiles_pos
+    
+    @cached_property
     def opponent_citytiles_pos(self) -> List[Position]:
         """
-        Returns list of Opponent's CityTiles positions.
+        Returns Opponent's CityTiles positions.
 
         Args:
         Returns:
             List[Position]: game_map.Position object for coordinate of the CityTile (x: int, y: int).
         """
-        if self.__opponent_citytiles_pos is None:
-            self.__opponent_citytiles_pos = self._pos(self.opponent_citytiles)
-        return self.__opponent_citytiles_pos
+        return self._pos(self.opponent_citytiles)
 
-    @property
-    def opponent_own(self) -> List[Union[Unit, CityTile]]:
-        """
-        Returns list of all objects owned by Opponent.
+    # @property
+    # def opponent_own(self) -> List[Union[Unit, CityTile]]:
+    #     """
+    #     Returns list of all objects owned by Opponent.
 
-        Args:
-        Returns:
-            List[Unit, CityTile]: Full list of Opponent's objects with type Unit or CityTile.
+    #     Args:
+    #     Returns:
+    #         List[Unit, CityTile]: Full list of Opponent's objects with type Unit or CityTile.
+    #     """
+    #     if self.__opponent_own is None:
+    #         self.__opponent_own = self.opponent_units + self.opponent_citytiles
+    #     return self.__opponent_own
+    
+    @cached_property
+    def opponent_own(self) -> Iterable[Union[Unit, CityTile]]:
         """
-        if self.__opponent_own is None:
-            self.__opponent_own = self.opponent_units + self.opponent_citytiles
-        return self.__opponent_own
-
-    @property
-    def opponent_own_pos(self) -> List[Position]:
-        """
-        Returns list of positions where Opponent's Units and CityTiles are located.
+        Returns all objects owned by Opponent.
 
         Args:
         Returns:
-            List[Position]: game_map.Position object for coordinate of Unit or CityTile (x: int, y: int).
+            Iterable[Unit, CityTile]: Opponent's objects with type Unit or CityTile.
         """
-        if self.__opponent_own_pos is None:
-            self.__opponent_own_pos = self.opponent_units_pos + self.opponent_citytiles_pos
-        return self.__opponent_own_pos
+        return chain(self.opponent_units, self.opponent_citytiles)
+
+    # @property
+    # def opponent_own_pos(self) -> List[Position]:
+    #     """
+    #     Returns list of positions where Opponent's Units and CityTiles are located.
+
+    #     Args:
+    #     Returns:
+    #         List[Position]: game_map.Position object for coordinate of Unit or CityTile (x: int, y: int).
+    #     """
+    #     if self.__opponent_own_pos is None:
+    #         self.__opponent_own_pos = self.opponent_units_pos + self.opponent_citytiles_pos
+    #     return self.__opponent_own_pos
+    
+    @cached_property
+    def opponent_own_pos(self) -> Iterable[Position]:
+        """
+        Returns positions where Opponent's Units and CityTiles are located.
+
+        Args:
+        Returns:
+            Iterable[Position]: game_map.Position object for coordinate of Unit or CityTile (x: int, y: int).
+        """
+        return chain(self.opponent_units_pos, self.opponent_citytiles_pos)
 
     # owns
-    @property
-    def own(self) -> List[Union[Unit, CityTile]]:
+    # @property
+    # def own(self) -> List[Union[Unit, CityTile]]:
+    #     """
+    #     Returns list of all objects owned by Player and Opponent.
+
+    #     Args:
+    #     Returns:
+    #         List[Unit, CityTile]: Full list of objects with type Unit or CityTile.
+    #     """
+    #     if self.__own is None:
+    #         self.__own = self.player_own + self.opponent_own
+    #     return self.__own
+    
+    @cached_property
+    def own(self) -> Iterable[Union[Unit, CityTile]]:
         """
-        Returns list of all objects owned by Player and Opponent.
+        Returns all objects owned by Player and Opponent.
 
         Args:
         Returns:
-            List[Unit, CityTile]: Full list of objects with type Unit or CityTile.
+            Iterable[Unit, CityTile]: objects with type Unit or CityTile.
         """
-        if self.__own is None:
-            self.__own = self.player_own + self.opponent_own
-        return self.__own
+        return chain(self.player_own, self.opponent_own)
 
-    @property
-    def own_pos(self) -> List[Position]:
+    # @property
+    # def own_pos(self) -> List[Position]:
+    #     """
+    #     Returns list of positions where Player's and Opponent's Units and CityTiles are located.
+
+    #     Args:
+    #     Returns:
+    #         List[Position]: game_map.Position object for coordinate of Unit or CityTile (x: int, y: int).
+    #     """
+    #     if self.__own_pos is None:
+    #         self.__own_pos = self.player_own_pos + self.opponent_own_pos
+    #     return self.__own_pos
+    
+    @cached_property
+    def own_pos(self) -> Iterable[Position]:
         """
-        Returns list of positions where Player's and Opponent's Units and CityTiles are located.
+        Returns positions where Player's and Opponent's Units and CityTiles are located.
 
         Args:
         Returns:
-            List[Position]: game_map.Position object for coordinate of Unit or CityTile (x: int, y: int).
+            Iterable[Position]: game_map.Position object for coordinate of Unit or CityTile (x: int, y: int).
         """
-        if self.__own_pos is None:
-            self.__own_pos = self.player_own_pos + self.opponent_own_pos
-        return self.__own_pos
+        return chain(self.player_own_pos, self.opponent_own_pos)
     
     @property
     def own_pos_unic(self) -> UnicPos:

@@ -38,6 +38,8 @@ def run(debug, player, opponent, path_to_replay):
         os.remove(path_to_replay)
     with open(path_to_replay, "w") as f:
         json.dump(replay, f)
+        
+    click.echo('Game complete')
 
 
 if __name__ == '__main__':
