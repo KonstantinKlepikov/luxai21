@@ -8,6 +8,7 @@ import agent_random
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import networkx as nx
 from typing import List, Tuple
 from loguru import logger
 import os, time, datetime, json, random, multiprocessing
@@ -192,6 +193,7 @@ def main(seed, size, loglevel, annotations, num_of_episodes, agent_):
    
     # Space initialisation
     toolbox = base.Toolbox()
+    history = tools.History()
 
     toolbox.register('GetRnd10', random.randint, 0, 10)
 
@@ -242,9 +244,14 @@ def main(seed, size, loglevel, annotations, num_of_episodes, agent_):
     
     pool = multiprocessing.Pool(processes=NUM_OF_PROCESS)
     toolbox.register("map", pool.map)
+    
+    # Decorate the variation operators for create genetic map
+    toolbox.decorate("mate", history.decorator)
+    toolbox.decorate("mutate", history.decorator)
 
     # create initial population (generation 0):
     population = toolbox.populationCreator(n=POPULATION_SIZE)
+    history.update(population)
 
     # prepare the statistics object:
     stats = tools.Statistics(lambda ind: ind.fitness.values)
@@ -300,6 +307,13 @@ HALL_OF_FAME_SIZE: {HALL_OF_FAME_SIZE}, RANDOM_SEED: {seed}\n\
 GENOME_LENGHT: {GENOME_LENGHT}, Time cumulative: {cum}, date: {timestamp}')
 
     plt.savefig(f'img/evolution_{timestamp}.png')
+    
+    # plot evolution graph
+    graph = nx.DiGraph(history.genealogy_tree)
+    graph = graph.reverse()     # Make the graph top-down
+    colors = [toolbox.evaluate(history.genealogy_history[i])[0] for i in graph]
+    nx.draw(graph, node_color=colors)
+    plt.savefig(f'img/graph_{timestamp}.png')
 
 
 if __name__ == "__main__":
