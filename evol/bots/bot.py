@@ -9,6 +9,7 @@ from bots.utility import (
 from collections import ChainMap, namedtuple
 from typing import List, Tuple
 import os, sys, random
+from collections import deque
 
 
 if os.path.exists("/kaggle"):  # check if we're on a kaggle server
@@ -76,23 +77,47 @@ class BotPipe:
         """
         logger.info('------init_missions_and_state_and_check_again------')
         logger.info(f'> init_missions_and_state_and_check_again: player_own: {self.turn_space.tiles.player_own}')
-        for obj_ in self.turn_space.tiles.player_own:
-            logger.info(f'>>>>>>Obj: {obj_}<<<<<<')
-            act = PerformMissions(
-                turn_space=self.turn_space,
-                obj_=obj_
-            )
+        # for obj_ in self.turn_space.tiles.player_own:
+        #     logger.info(f'>>>>>>Obj: {obj_}<<<<<<')
+        #     act = PerformMissions(
+        #         turn_space=self.turn_space,
+        #         obj_=obj_
+        #     )
+        #     try:
+        #         self.missions, self.check_again = act.perform_missions()
+        #         logger.info(f'> init_missions_and_state_and_check_again: : missions: {self.missions}')
+        #         logger.info(f'> init_missions_and_state_and_check_again: : Missions_state: {self.turn_space.game_space.missions_state}')
+        #         logger.info(f'> init_missions_and_state_and_check_again: : Check again: {self.check_again}')
+        #         self.missions_per_object.append(self.missions)
+        #         if self.check_again:
+        #             self.turn_space.tiles.player_own.append(self.check_again)
+        #             logger.info(f'init_missions_and_state_and_check_again: player_own: {self.turn_space.tiles.player_own}')
+        #     except TypeError:
+        #         logger.info(f'> init_missions_and_state_and_check_again: No one can get mission')
+        
+        deq = deque(self.turn_space.tiles.player_own)
+        while True:
             try:
-                self.missions, self.check_again = act.perform_missions()
-                logger.info(f'> init_missions_and_state_and_check_again: : missions: {self.missions}')
-                logger.info(f'> init_missions_and_state_and_check_again: : Missions_state: {self.turn_space.game_space.missions_state}')
-                logger.info(f'> init_missions_and_state_and_check_again: : Check again: {self.check_again}')
-                self.missions_per_object.append(self.missions)
-                if self.check_again:
-                    self.turn_space.tiles.player_own.append(self.check_again)
-                    logger.info(f'init_missions_and_state_and_check_again: player_own: {self.turn_space.tiles.player_own}')
-            except TypeError:
-                logger.info(f'> init_missions_and_state_and_check_again: No one can get mission')
+                obj_ = deq.pop()
+                logger.info(f'>>>>>>Obj: {obj_}<<<<<<')
+                act = PerformMissions(
+                    turn_space=self.turn_space,
+                    obj_=obj_
+                )
+                try:
+                    self.missions, self.check_again = act.perform_missions()
+                    logger.info(f'> init_missions_and_state_and_check_again: : missions: {self.missions}')
+                    logger.info(f'> init_missions_and_state_and_check_again: : Missions_state: {self.turn_space.game_space.missions_state}')
+                    logger.info(f'> init_missions_and_state_and_check_again: : Check again: {self.check_again}')
+                    self.missions_per_object.append(self.missions)
+                    if self.check_again:
+                        deq.append(self.check_again)
+                        logger.info(f'init_missions_and_state_and_check_again: player_own: {self.turn_space.tiles.player_own}')
+                except TypeError:
+                    logger.info(f'> init_missions_and_state_and_check_again: No one can get mission')
+            except IndexError:
+                logger.info(f'> init_missions_and_state_and_check_again: deque is empty')
+                break
     
     def _set_mission_choosed_and_state(self, miss: Missions, p_miss: List[str], weights: List[float]) -> None:
         """set mission_choosed and missions_state
