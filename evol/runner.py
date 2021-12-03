@@ -39,7 +39,7 @@ def run(debug, player, opponent, path_to_replay):
     with open(path_to_replay, "w") as f:
         json.dump(replay, f)
         
-    click.echo('Game complete')
+    click.echo('Game success!')
 
 
 if __name__ == '__main__':

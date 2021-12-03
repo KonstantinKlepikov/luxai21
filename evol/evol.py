@@ -11,7 +11,7 @@ import seaborn as sns
 import networkx as nx
 from typing import List, Tuple
 from loguru import logger
-import os, time, datetime, json, random, multiprocessing
+import os, time, datetime, json, random, multiprocessing, pickle
 from dotenv import load_dotenv
 import click
 
@@ -68,16 +68,18 @@ def GameScoreFitness(
 
     return mean_r,
 
+
 # define Genetic Algorithm flow with elitism
 def eaSimpleWithElitism(
     population, 
     toolbox, 
     cxpb, 
     mutpb, 
-    ngen, 
+    ngen,
     stats=None,
     halloffame=None, 
-    verbose=__debug__
+    verbose=__debug__,
+    freq=10
     ):
     """This algorithm is similar to DEAP eaSimple() algorithm, with the modification that
     halloffame is used to implement an elitism mechanism. The individuals contained in the
@@ -133,11 +135,18 @@ def eaSimpleWithElitism(
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
         if verbose:
             click.echo(logbook.stream)
+        
+        if gen % freq == 0:
+            # Fill the dictionary using the dict(key=value[, ...]) constructor
+            cp = dict(population=population, generation=gen, halloffame=halloffame,
+                      logbook=logbook, rndstate=random.getstate())
+
+            with open('bots_dump/checkpoint.pkl', "wb") as cp_file:
+                pickle.dump(cp, cp_file)
 
     return population, logbook
 
 
-# Genetic Algorithm flow:
 @click.command()
 @click.option('--seed', default=42, show_default=True, 
               type=int, help='set 0 to remove random seed')
@@ -145,12 +154,15 @@ def eaSimpleWithElitism(
               help='set 12, 16, 24 or 32')
 @click.option('--loglevel', default=0, show_default=True, type=int, 
               help='set 0, 1, 2 or 3')
-@click.option('--annotations', is_flag=True, help='on annotation mode')
+@click.option('-annotations', is_flag=True, help='on annotation mode')
+@click.option('-checkpoint', is_flag=True, help='on checkpoints')
+@click.option('--freq', default=10, show_default=True, 
+              type=int, help='set frequincy of checkpoint')
 @click.option('--episodes', 'num_of_episodes', default=10, show_default=True, 
               type=int, help='set the number of episodes for mean metrics')
 @click.option('--agent', 'agent_', default='simple_agent', show_default=True, 
               type=click.Choice(['simple_agent', 'random']))
-def main(seed, size, loglevel, annotations, num_of_episodes, agent_):
+def main(seed, size, loglevel, annotations, checkpoint, freq, num_of_episodes, agent_):
     
     start = datetime.datetime.now().replace(microsecond=0)
     
@@ -170,7 +182,7 @@ def main(seed, size, loglevel, annotations, num_of_episodes, agent_):
     INDPB_MUTATION = float(os.environ.get('INDPB_M'))/GENOME_LENGHT
     HALL_OF_FAME_SIZE = int(os.environ.get('HALL_OF_FAME_SIZE'))
 
-    # game config
+    # Game config
     config = {
         'annotations': annotations,
         'loglevel': int(loglevel)
@@ -193,17 +205,17 @@ def main(seed, size, loglevel, annotations, num_of_episodes, agent_):
    
     # Space initialisation
     toolbox = base.Toolbox()
-    history = tools.History()
+    # history = tools.History()
 
     toolbox.register('GetRnd10', random.randint, 0, 10)
 
-    # define a single objective, maximizing fitness strategy:
+    # Define a single objective, maximizing fitness strategy
     creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 
-    # create the Individual class based on list:
+    # Create the Individual class based on list
     creator.create("Individual", list, fitness=creator.FitnessMax)
 
-    # create the individual operator to fill up an Individual instance:
+    # Create the individual operator to fill up an Individual instance
     toolbox.register(
         "individualCreator",
         tools.initRepeat,
@@ -212,7 +224,7 @@ def main(seed, size, loglevel, annotations, num_of_episodes, agent_):
         GENOME_LENGHT
         )
 
-    # create the population operator to generate a list of individuals:
+    # Create the population operator to generate a list of individuals
     toolbox.register(
         "populationCreator",
         tools.initRepeat,
@@ -220,19 +232,17 @@ def main(seed, size, loglevel, annotations, num_of_episodes, agent_):
         toolbox.individualCreator
         )
     
-    # register evaluate function
+    # Register evaluate function
     toolbox.register("evaluate", GameScoreFitness, config=config, 
                      num_of_episodes=num_of_episodes, agent_=agent_)
 
-    # Genetic operators
     # Tournament selection with tournament size
     toolbox.register("select", tools.selTournament, tournsize=TOURNAMENT_SIZE)
 
-    # Crossover:
-    # toolbox.register("mate", tools.cxTwoPoint)
+    # Crossover
     toolbox.register("mate", tools.cxUniform, indpb=INDPB_CROSSOVER)
 
-    # Flip-bit mutation:
+    # Flip-bit mutation
     # indpb: Independent probability for each attribute to be flipped
     toolbox.register(
         "mutate",
@@ -242,26 +252,29 @@ def main(seed, size, loglevel, annotations, num_of_episodes, agent_):
         indpb=INDPB_MUTATION
         )
     
+    # Devine multiprocessing 
     pool = multiprocessing.Pool(processes=NUM_OF_PROCESS)
     toolbox.register("map", pool.map)
-    
-    # Decorate the variation operators for create genetic map
-    toolbox.decorate("mate", history.decorator)
-    toolbox.decorate("mutate", history.decorator)
 
-    # create initial population (generation 0):
-    population = toolbox.populationCreator(n=POPULATION_SIZE)
-    history.update(population)
+    # Use picked data
+    if checkpoint:
+        with open('bots_dump/checkpoint.pkl', "r") as cp_file:
+            cp = pickle.load(cp_file)
+        population = cp["population"]
+        logbook = cp["logbook"]
+        hof = cp["halloffame"]
+        random.setstate(cp["rndstate"])
+        click.echo('Checkpoint loaded.')
+    else:
+        population = toolbox.populationCreator(n=POPULATION_SIZE)
+        hof = tools.HallOfFame(HALL_OF_FAME_SIZE)
 
-    # prepare the statistics object:
+    # Prepare the statistics object
     stats = tools.Statistics(lambda ind: ind.fitness.values)
     stats.register("max", np.max)
     stats.register("avg", np.mean)
 
-    # define the hall-of-fame object:
-    hof = tools.HallOfFame(HALL_OF_FAME_SIZE)
-
-    # perform the Genetic Algorithm flow with hof feature added:
+    # Perform the Genetic Algorithm flow with hof feature added
     population, logbook = eaSimpleWithElitism(
         population,
         toolbox,
@@ -270,29 +283,29 @@ def main(seed, size, loglevel, annotations, num_of_episodes, agent_):
         ngen=MAX_GENERATIONS,
         stats=stats,
         halloffame=hof,
-        verbose=True
+        verbose=True,
+        freq=freq
         )
     
     pool.close()
     
     timestamp = time.strftime("%m-%d_%H-%M", time.gmtime())
 
+    # Dump best bot and hall of fame
     with open(f"bots_dump/best_bot_{timestamp}.json", "w") as f:
         json.dump(hof.items[0], f)
-        
     with open(f"bots_dump/best_bot.json", "w") as f:
         json.dump(hof.items[0], f)
-
     with open(f"bots_dump/hall_of_fame_{timestamp}.json", "w") as f:
         json.dump(hof.items, f)
 
-    # extract statistics:
+    # Extract statistics
     maxFitnessValues, meanFitnessValues = logbook.select("max", "avg")
 
     end = datetime.datetime.now().replace(microsecond=0)
     cum = end - start
-    
-    # plot statistics:
+    click.echo(f'Time cumulative: {cum}')
+
     sns.set_style("whitegrid")
     plt.figure(figsize=(8, 11), dpi=140)
     plt.plot(maxFitnessValues, color='red')
@@ -305,15 +318,8 @@ P_CROSSOVER: {P_CROSSOVER}, INDPB_CROSSOVER: {INDPB_CROSSOVER}\n\
 P_MUTATION: {P_MUTATION}, INDPB_MUTATION: {INDPB_MUTATION}\n\
 HALL_OF_FAME_SIZE: {HALL_OF_FAME_SIZE}, RANDOM_SEED: {seed}\n\
 GENOME_LENGHT: {GENOME_LENGHT}, Time cumulative: {cum}, date: {timestamp}')
-
     plt.savefig(f'img/evolution_{timestamp}.png')
-    
-    # plot evolution graph
-    graph = nx.DiGraph(history.genealogy_tree)
-    graph = graph.reverse()     # Make the graph top-down
-    colors = [toolbox.evaluate(history.genealogy_history[i])[0] for i in graph]
-    nx.draw(graph, node_color=colors)
-    plt.savefig(f'img/graph_{timestamp}.png')
+    click.echo(f'Visualisation complete!')
 
 
 if __name__ == "__main__":

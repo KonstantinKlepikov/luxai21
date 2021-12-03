@@ -1,6 +1,6 @@
 from bots.genutil import GenConstruct
 from lux.game import Game
-from lux.game_objects import CityTile, Player, Unit
+from lux.game_objects import Player, Unit
 from bots.statements import TurnSpace, GameSpace
 from bots.missions import PerformMissions, PerformActions
 from bots.utility import (
@@ -43,8 +43,7 @@ class BotPipe:
         difference from adjacent set
         """
         logger.info('------update_resource_and_unit_statements------')
-        # init all unit objects in turn_space of tile states
-        self.turn_space.states.player_active_obj_to_state
+        self.turn_space.states.player_active_obj_to_state # init all objects in turn_space
 
         if self.turn_space.tiles.game_state.turn == 0:
             d = {}
@@ -55,9 +54,11 @@ class BotPipe:
                 self.turn_space.game_space.adj_coord_unic.update(adjacent)
             self.turn_space.game_space.adj_stack = ChainMap(d)
             logger.info(f'> update_resource_and_unit_statements: d {len(d)}')
-            logger.info(f'> update_resource_and_unit_statements: adj_coord_unic {len(self.turn_space.game_space.adj_coord_unic)}')
+            logger.info(f'> update_resource_and_unit_statements: adj_coord_unic '
+                        f'{len(self.turn_space.game_space.adj_coord_unic)}')
         else:
-            logger.info(f'> update_resource_and_unit_statements: adj_coord_unic {len(self.turn_space.game_space.adj_coord_unic)}')
+            logger.info(f'> update_resource_and_unit_statements: adj_coord_unic '
+                        f'{len(self.turn_space.game_space.adj_coord_unic)}')
             d = {(cell.pos.x, cell.pos.y): None for cell in self.turn_space.game_space.resources}
             logger.info(f'> update_resource_and_unit_statements: d {len(d)}')
             stack = self.turn_space.game_space.adj_stack.new_child(d)
@@ -70,30 +71,15 @@ class BotPipe:
                 }
             logger.info(f'> update_resource_and_unit_statements: diff {len(diff)}')
             self.turn_space.game_space.adj_coord_unic = self.turn_space.game_space.adj_coord_unic - diff
-            logger.info(f'> update_resource_and_unit_statements: adj_coord_unic {len(self.turn_space.game_space.adj_coord_unic)}')
+            logger.info(f'> update_resource_and_unit_statements: adj_coord_unic '
+                        f'{len(self.turn_space.game_space.adj_coord_unic)}')
 
     def init_missions_and_state_and_check_again(self):
         """init missions, missions_state and check_again variable
         """
         logger.info('------init_missions_and_state_and_check_again------')
-        logger.info(f'> init_missions_and_state_and_check_again: player_own: {self.turn_space.tiles.player_own}')
-        # for obj_ in self.turn_space.tiles.player_own:
-        #     logger.info(f'>>>>>>Obj: {obj_}<<<<<<')
-        #     act = PerformMissions(
-        #         turn_space=self.turn_space,
-        #         obj_=obj_
-        #     )
-        #     try:
-        #         self.missions, self.check_again = act.perform_missions()
-        #         logger.info(f'> init_missions_and_state_and_check_again: : missions: {self.missions}')
-        #         logger.info(f'> init_missions_and_state_and_check_again: : Missions_state: {self.turn_space.game_space.missions_state}')
-        #         logger.info(f'> init_missions_and_state_and_check_again: : Check again: {self.check_again}')
-        #         self.missions_per_object.append(self.missions)
-        #         if self.check_again:
-        #             self.turn_space.tiles.player_own.append(self.check_again)
-        #             logger.info(f'init_missions_and_state_and_check_again: player_own: {self.turn_space.tiles.player_own}')
-        #     except TypeError:
-        #         logger.info(f'> init_missions_and_state_and_check_again: No one can get mission')
+        logger.info(f'> init_missions_and_state_and_check_again: player_own: '
+                    f'{self.turn_space.tiles.player_own}')
         
         deq = deque(self.turn_space.tiles.player_own)
         while True:
@@ -106,20 +92,29 @@ class BotPipe:
                 )
                 try:
                     self.missions, self.check_again = act.perform_missions()
-                    logger.info(f'> init_missions_and_state_and_check_again: : missions: {self.missions}')
-                    logger.info(f'> init_missions_and_state_and_check_again: : Missions_state: {self.turn_space.game_space.missions_state}')
-                    logger.info(f'> init_missions_and_state_and_check_again: : Check again: {self.check_again}')
+                    logger.info(f'> init_missions_and_state_and_check_again: : missions: '
+                                f'{self.missions}')
+                    logger.info(f'> init_missions_and_state_and_check_again: : Missions_state: '
+                                f'{self.turn_space.game_space.missions_state}')
+                    logger.info(f'> init_missions_and_state_and_check_again: : Check again: '
+                                f'{self.check_again}')
                     self.missions_per_object.append(self.missions)
                     if self.check_again:
                         deq.append(self.check_again)
-                        logger.info(f'init_missions_and_state_and_check_again: player_own: {self.turn_space.tiles.player_own}')
+                        logger.info(f'init_missions_and_state_and_check_again: player_own: '
+                                    f'{self.turn_space.tiles.player_own}')
                 except TypeError:
                     logger.info(f'> init_missions_and_state_and_check_again: No one can get mission')
             except IndexError:
                 logger.info(f'> init_missions_and_state_and_check_again: deque is empty')
                 break
     
-    def _set_mission_choosed_and_state(self, miss: Missions, p_miss: List[str], weights: List[float]) -> None:
+    def _set_mission_choosed_and_state(
+        self,
+        miss: Missions,
+        p_miss: List[str],
+        weights: List[float]
+        ) -> None:
         """set mission_choosed and missions_state
 
         Args:
@@ -140,7 +135,8 @@ class BotPipe:
             # in next turn of game
             if isinstance(miss['obj'], Unit):
                 self.turn_space.game_space.missions_state[miss['obj'].id] = c[0]
-                logger.info(f'> _get_mission: missions_state added: {self.turn_space.game_space.missions_state}')
+                logger.info(f'> _get_mission: missions_state added: '
+                            f'{self.turn_space.game_space.missions_state}')
 
     def _set_mission_for_single_object(
         self,
@@ -168,7 +164,8 @@ class BotPipe:
                     build = True
             else:
                 possible_missions[key] = chrome[key]
-            logger.info(f'> _set_mission_for_single_object: possible_missions: {possible_missions}')
+            logger.info(f'> _set_mission_for_single_object: possible_missions: '
+                        f'{possible_missions}')
         if build:
             self.turn_space.tiles.build_units_counter += 1
             logger.info(f'> _set_mission_for_single_object: counter '
@@ -187,69 +184,7 @@ class BotPipe:
                 pass
             self._set_mission_choosed_and_state(miss=miss, p_miss=p_miss, weights=weights)
 
-    def _set_mission_for_single_object_with_passing( # FIXME: remove or fix mission choice for cities (check can_build)
-        self,
-        miss: Missions,
-        chrome: dict,
-        gen_const: GenConstruct
-        ) -> None:
-        """Set mission for single object with passing probability
-
-        Args:
-            miss (Missions): missions
-            chrome (dict): genome
-        """
-        logger.info('------_set_mission_for_single_object_with_passing------')
-        
-        # get reduced probabilities
-        logger.info(f'> _set_mission_for_single_object_with_passing: chrome: {chrome}')
-        if isinstance(miss['obj'], Unit):
-            if miss['obj'].is_worker():
-                spec =  gen_const.workers_per
-                logger.info('> _set_mission_for_single_object_with_passing: im worker')
-            if miss['obj'].is_cart():
-                spec =  gen_const.carts_per
-                logger.info('> _set_mission_for_single_object_with_passing: im cart')
-        if isinstance(miss['obj'], CityTile):
-            spec = gen_const.citytiles_per
-            logger.info('> _set_mission_for_single_object_with_passing: im cititile')
-        chrome = {key: val for key, val in chrome.items() if key in spec}
-        prob = [val[1] for val in chrome.items()]
-        logger.info(f'> _set_mission_for_single_object_with_passing: chrome after spec: {chrome}')
-        logger.info(f'> _set_mission_for_single_object_with_passing: unweighted prob: {prob}')
-        s = sum(prob)
-        try:
-            prob = [w / s for w in prob]
-            replace = zip(chrome.keys(), prob)
-            for place in replace:
-                chrome[place[0]] = place[1]
-        except ZeroDivisionError:
-            pass
-        logger.info(f'> _set_mission_for_single_object_with_passing: reduced chrome: {chrome}')
-
-        # get missions
-        possible_missions = {}
-        for key in miss['missions']:
-            logger.info(f'> _set_mission_for_single_object_with_passing: Key in miss["missions"]: {key}')
-            # use genome section for each turn
-            possible_missions[key] = chrome[key]
-            logger.info(f'> _set_mission_for_single_object_with_passing: possible_missions: {possible_missions}')
-
-        # get probabilities of all possible missions
-        all_possible_prob = sum(possible_missions.values())
-        logger.info(f'> _set_mission_for_single_object_with_passing: all_possible_prob: {all_possible_prob}')
-        if 0 <= all_possible_prob < 1:
-            possible_missions['pass'] = 1 - all_possible_prob
-        logger.info(f'> _set_mission_for_single_object_with_passing: possible_missions: {possible_missions}')
-
-        if possible_missions:
-            # get list of possible missions
-            p_miss = list(possible_missions.keys())
-            # get list of probabilities of performances
-            weights = list(possible_missions.values())
-            self._set_mission_choosed_and_state(miss=miss, p_miss=p_miss, weights=weights)
-
-    def set_mission_and_state_for_each_object(self, gen_const: GenConstruct, method: str = 'simple') -> None:
+    def set_mission_and_state_for_each_object(self, method: str = 'simple') -> None:
         """Set mission and state for each object
 
         Args:
@@ -264,12 +199,6 @@ class BotPipe:
                 logger.info(f'> set_mission_for_each_object: obj {miss["obj"]}')
                 if method == 'simple':
                     self._set_mission_for_single_object(miss=miss, chrome=chrome)
-                if method == 'passing':
-                    self._set_mission_for_single_object_with_passing(
-                        miss=miss,
-                        chrome=chrome,
-                        gen_const=gen_const
-                        )
 
     def set_action_for_each_mission_in_mission_choosed(self) -> None:
         """Get action for each mission on this turn
@@ -285,7 +214,8 @@ class BotPipe:
                 )
                 try:
                     action = act.perform_actions(miss=miss[1])
-                    logger.info(f'> set_action_for_each_mission_in_mission_choosed: choosed action: {action}')
+                    logger.info(f'> set_action_for_each_mission_in_mission_choosed: '
+                                f'choosed action: {action}')
                     if action:
                         self.actions.append(action)
                 except TypeError:
@@ -330,8 +260,7 @@ def get_bot_actions(
     pipe.init_missions_and_state_and_check_again()
     
     logger.info('======Set mission for each object======')
-    pipe.set_mission_and_state_for_each_object(gen_const=gen_const, method='simple')
-    # pipe.set_mission_and_state_for_each_object(gen_const=gen_const, method='passing')
+    pipe.set_mission_and_state_for_each_object()
     
     logger.info('======Set action for each mission in mission_choosed======')
     pipe.set_action_for_each_mission_in_mission_choosed()

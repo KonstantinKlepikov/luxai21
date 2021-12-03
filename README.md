@@ -39,7 +39,7 @@ kaggle competitions submit -c lux-ai-2021 -f submissions/submission.tar.gz -m "s
 To learn bot use `evol.py` file by command like:
 
 ```bash
-python evol.py --seed=0 --agent=random
+python evol.py --seed=0 -checkpoint --agent=random
 ```
 
 Be carefull - you need define correct parameters.
