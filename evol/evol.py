@@ -258,7 +258,7 @@ def main(seed, size, loglevel, annotations, checkpoint, freq, num_of_episodes, a
 
     # Use picked data
     if checkpoint:
-        with open('bots_dump/checkpoint.pkl', "r") as cp_file:
+        with open('bots_dump/checkpoint.pkl', "rb") as cp_file:
             cp = pickle.load(cp_file)
         population = cp["population"]
         logbook = cp["logbook"]
